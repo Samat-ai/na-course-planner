@@ -28,4 +28,11 @@ jobs:
         run: ruff check .
 
       - name: Tests (pytest)
-        run: pytest -q
+        # Exit code 5 = "no tests collected" — expected until Plan 1 adds tests; treat as ok.
+        run: |
+          set +e
+          pytest -q
+          code=$?
+          set -e
+          if [ "$code" -eq 5 ]; then echo "No tests collected yet — ok."; exit 0; fi
+          exit $code

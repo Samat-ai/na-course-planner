@@ -1387,11 +1387,24 @@ def test_core_partial_when_one_core_course_done():
 Run: `py -3 -m pytest tests/test_cs_program.py -v`
 Expected: FAIL — `FileNotFoundError` (the YAML doesn't exist yet).
 
-- [ ] **Step 3: Author `data/programs/cs-bs-2026.yaml`**
+- [ ] **Step 3: Author `data/programs/cs-bs-2026.yaml` (Claude drafts → human verifies)**
 
-Encode the program per the authoring source above. The file is long; build it section by section, then iterate: run the linter test until `lint_program` returns `[]` (every referenced course must exist in `courses:`). Use `offering: every` unless the catalog states a specific term.
+This is the one **data-authoring** task (not mechanical code). Per the agreed catalog
+strategy (LLM-drafts → human-reviews), the workflow is:
 
-(Build the file, do not paste a placeholder. Verify with Step 4.)
+1. **Claude drafts the full file** from the authoring source
+   (`docs/reference/na-catalog-2026-2027.txt`, BS CS section) — every gen-ed bucket, the CS
+   core, all 5 concentration subgroups, the elective filter, FRSH 1311, and a `courses:`
+   entry (code, title, credits, offering, prereq) for **every referenced course**, with
+   prereqs transcribed from the catalog course descriptions (e.g. COMP 3317 →
+   `all_of[COMP 2313, MATH 1312, min_credits 30]`).
+2. **Human reviews** the draft against the catalog — this is the sign-off the strategy
+   requires; do not skip it. Spot-check credits, prereqs, and the concentration lists.
+3. **Iterate against the tests below**: run the linter test until `lint_program` returns
+   `[]` (every referenced course must exist in `courses:`), then the audit tests.
+
+Use `offering: every` unless the catalog states a specific term (it usually doesn't — see
+the §4.4 "offering data v1 limit" note). Build the real file; never a placeholder.
 
 - [ ] **Step 4: Run test to verify it passes**
 

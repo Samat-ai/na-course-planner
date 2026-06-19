@@ -1079,10 +1079,98 @@ git commit -m "feat: CLI recommend mode + e2e recommendation over the real CS pr
 
 ---
 
+### Task 8: In-progress (`WIP`) course handling
+
+**Files:**
+- Modify: `src/na_planner/roadmap.py`
+- Test: `tests/test_roadmap.py` (add cases)
+
+**Interfaces:**
+- Consumes: `CompletedCourse.in_progress` (Plan 1), `Grade`.
+- Produces: no signature change — refines `recommend`'s working-state seeding.
+
+**Problem this fixes:** Plan 1's `earned_courses` excludes `WIP` (in-progress) courses, which is correct for the *audit* (not yet earned). But the recommender would then (a) **re-recommend a course the student is currently taking** and (b) treat that course as **not satisfying prerequisites** for the following term. Both are wrong for planning.
+
+**Fix:** when `recommend` seeds its working state, also include in-progress (`WIP`) courses as **provisionally passed** (`Grade.A`) with their credits counted — so they are excluded from eligibility (not re-recommended) and satisfy prerequisites for later terms. Truly-earned credit reporting (the audit) is unchanged.
+
+- [ ] **Step 1: Add failing tests**
+
+Append to `tests/test_roadmap.py`:
+```python
+def test_in_progress_course_not_rerecommended_and_unlocks_next():
+    # A -> B (both required); A is currently in progress (WIP).
+    courses = {
+        "A 1000": Course(code="A 1000", credits=3),
+        "B 1000": Course(code="B 1000", credits=3,
+                         prereq=PrereqExpr(kind="course", course="A 1000")),
+    }
+    groups = [RequirementGroup(id="core", name="Core", kind="all_of",
+                               courses=["A 1000", "B 1000"])]
+    prog = Program(code="X", name="X", catalog_year=2026, total_credits_required=6,
+                   courses=courses, groups=groups)
+    student = StudentRecord(
+        program_code="X", catalog_year=2026,
+        completed=[CompletedCourse(code="A 1000", credits=3, grade=Grade.WIP)],
+    )
+    prefs = StudentPreferences(target_credits=6, target_season="fall", target_year=2026)
+    rec = recommend(student, prog, prefs)
+    next_codes = [c.code for c in rec.next_term.courses]
+    assert "A 1000" not in next_codes      # currently in progress — don't re-recommend
+    assert "B 1000" in next_codes          # in-progress A unlocks B's prereq
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `py -3 -m pytest tests/test_roadmap.py::test_in_progress_course_not_rerecommended_and_unlocks_next -v`
+Expected: FAIL — `A 1000` is re-recommended and/or `B 1000` is missing (prereq seen as unmet).
+
+- [ ] **Step 3: Modify the seeding in `recommend`**
+
+In `src/na_planner/roadmap.py`, replace the working-state seeding block:
+```python
+    passed: dict[str, Grade | None] = {}
+    credits: dict[str, float] = {}
+    for e in earned_courses(student):
+        passed[e.code] = e.grade
+        credits[e.code] = e.credits
+    credits_earned = sum(credits.values())
+```
+with:
+```python
+    passed: dict[str, Grade | None] = {}
+    credits: dict[str, float] = {}
+    for e in earned_courses(student):
+        passed[e.code] = e.grade
+        credits[e.code] = e.credits
+    for c in student.completed:                  # in-progress (WIP): assume complete next term
+        if c.in_progress and c.code not in passed:
+            passed[c.code] = Grade.A
+            credits[c.code] = c.credits
+    credits_earned = sum(credits.values())
+```
+
+- [ ] **Step 4: Run test to verify it passes**
+
+Run: `py -3 -m pytest tests/test_roadmap.py -v`
+Expected: PASS (all roadmap tests, including the new one)
+
+- [ ] **Step 5: Run full suite + commit**
+
+Run: `py -3 -m pytest -v`
+Expected: PASS (all)
+
+```bash
+git add src/na_planner/roadmap.py tests/test_roadmap.py
+git commit -m "fix: treat in-progress (WIP) courses as assumed-complete for planning"
+```
+
+---
+
 ## Self-Review
 
 **Spec coverage:**
 - §4.4 planner (eligibility, scoring, greedy selection, course-load rules, roadmap, provisional behavior) → Tasks 2–6. ✅
+- In-progress (`WIP`) handling → Task 8. ✅
 - §4.4 declared-concentration input → Task 1 (`StudentPreferences.declared_concentration`), Task 3 (concentration subgroup remaining). ✅
 - §4.4 free-elective bucket (not auto-filled) → Task 3 (skips `credits_from_filter`), Task 6 (`elective_credits_remaining`). ✅
 - §4.4 offering-data v1 limit → Task 3 `is_offered` (EVERY/ANNUAL always offered). ✅
@@ -1100,4 +1188,8 @@ git commit -m "feat: CLI recommend mode + e2e recommendation over the real CS pr
 - **Roadmap uses greedy provisional picks** for open choice slots; the explicit "leave this open for you to pick" UX lives in Plan 4.
 - **Offering data is sparse** (mostly `every`) until v2's live schedule — term-availability filtering is therefore weak in v1.
 - **Provisional grades = A** in the roadmap projection (assumes the student passes); this only affects min-grade-gated prereqs, which CS does not use.
-- **In-progress (`WIP`) courses are treated as not-yet-earned everywhere** (Plan 1 `earned_courses` excludes them). Consequence: a course the student is *currently taking* still shows as "unmet" and could be **re-recommended** for the next term, and WIP courses do **not** satisfy prereqs for the term after. This is a known gap. The intended fix (a small follow-up before real use): treat `WIP` courses as *assumed-complete for eligibility/requirement purposes* (so they're not re-recommended and they unlock the next term) while still **excluding their credits from "earned"** until graded. Flagged here rather than silently shipped.
+- **In-progress (`WIP`) courses** are handled by **Task 8**: the recommender treats them as
+  assumed-complete (not re-recommended, and they unlock later-term prereqs). Note the
+  *audit* (Plan 1) still reports them as not-yet-earned — a future cosmetic enhancement is to
+  surface an explicit "in progress" status in the audit display, but it does not affect
+  recommendation correctness.

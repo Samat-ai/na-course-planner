@@ -1,0 +1,7 @@
+# Ruff config (standalone; Plan 1 may add [tool.ruff] to pyproject later — keep one source).
+target-version = "py313"
+line-length = 100
+extend-exclude = ["docs", ".claude"]
+
+[lint]
+select = ["E", "F", "I", "UP", "B"]   # pyflakes, pycodestyle, isort, pyupgrade, bugbear

@@ -24,6 +24,7 @@
       {
         "matcher": "Edit|Write|MultiEdit",
         "hooks": [
+          { "type": "command", "command": "py -3 scripts/gen_architecture.py" },
           { "type": "command", "command": "py -3 .claude/hooks/run_tests.py" }
         ]
       }

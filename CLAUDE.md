@@ -36,6 +36,9 @@ py -3 -m uvicorn na_planner.api.app:app --reload   # run the API
 
 ## Where things live
 
+- **Architecture overview:** `docs/ARCHITECTURE.md` (narrative + auto-generated module map).
+  Start here to understand the codebase.
+- **Build/PR workflow:** `CONTRIBUTING.md` (branch per plan, TDD loop, PR → green CI → merge).
 - **Design spec:** `docs/superpowers/specs/2026-06-18-na-course-planner-design.md`
 - **Implementation plans (build in this order):**
   1. `docs/superpowers/plans/2026-06-19-engine-audit.md` — models, catalog, audit

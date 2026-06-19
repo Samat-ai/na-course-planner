@@ -40,21 +40,23 @@ def evaluate_group(
         )
 
     if group.kind == "choose":
+        pool = set(group.courses)
+        pool_counting = [c for c in counting if c.code in pool]
         forced_ok = all(code in applied_codes for code in group.forced)
-        count_ok = group.min_count is None or len(counting) >= group.min_count
-        credits_ok = group.min_credits is None or credits_applied >= group.min_credits
+        count_ok = group.min_count is None or len(pool_counting) >= group.min_count
+        credits_ok = group.min_credits is None or sum(c.credits for c in pool_counting) >= group.min_credits
         satisfied = forced_ok and count_ok and credits_ok
-        satisfied_by = [c.code for c in counting]
+        satisfied_by = [c.code for c in pool_counting]
         remaining = [code for code in group.courses if code not in applied_codes]
         choose_remaining = (
-            max(0, group.min_count - len(counting)) if group.min_count else 0
+            max(0, group.min_count - len(pool_counting)) if group.min_count else 0
         )
-        status = "satisfied" if satisfied else ("partial" if counting else "unmet")
+        status = "satisfied" if satisfied else ("partial" if pool_counting else "unmet")
         return GroupStatus(
             group_id=group.id, name=group.name, status=status,
             credits_required=group.min_credits or 0,
-            credits_applied=credits_applied,
-            courses_required=group.min_count, courses_applied=len(counting),
+            credits_applied=sum(c.credits for c in pool_counting),
+            courses_required=group.min_count, courses_applied=len(pool_counting),
             satisfied_by=satisfied_by, remaining_choices=remaining,
             choose_remaining=choose_remaining,
         )

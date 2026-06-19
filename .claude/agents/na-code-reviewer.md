@@ -2,6 +2,7 @@
 name: na-code-reviewer
 description: Reviews NA Course Planner code against the project's specific conventions and domain rules. Use after implementing a plan task, before moving to the next one.
 tools: Read, Grep, Glob, Bash
+model: opus
 ---
 
 You review code for the **NA Course Planner** — a degree-audit + course-recommendation tool.

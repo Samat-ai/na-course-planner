@@ -1,0 +1,12 @@
+{
+  "program_code": "CS-BS",
+  "catalog_year": 2026,
+  "completed": [
+    {"code": "COMP 1411", "credits": 4, "grade": "A"},
+    {"code": "COMP 1412", "credits": 4, "grade": "B"},
+    {"code": "ENGL 1311", "credits": 3, "grade": "A"}
+  ],
+  "external": [
+    {"source": "AP", "equivalent_code": "MATH 1311", "credits": 3}
+  ]
+}

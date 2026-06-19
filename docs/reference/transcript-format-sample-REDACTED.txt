@@ -1,0 +1,71 @@
+
+===== PAGE 1 =====
+NORTH AMERICAN UNIVERSITY
+ID : 00000000
+Student Name
+Undergraduate Division
+Advisors :Advisor Name
+Course Number Title CR TypeGrade Rpt Hrs Att Hrs Ern Hrs Gpa Qual Pts GPA
+2024-2025 Academic Year : Fall
+Subterm : Fall Full Term
+COMM 1311 Fundamentals of Communication UG A 3.00 3.00 3.00 12.00
+COMP 1314 Computer Literacy and Application UG A 3.00 3.00 3.00 12.00
+COMP 1411 Introduction to CS I UG A 4.00 4.00 4.00 16.00
+FRSH 1311 Freshman Seminar UG A- 3.00 3.00 3.00 11.01
+Subterm Totals : 13.00 13.00 13.00 51.01 3.9200
+Term Totals : 13.00 13.00 13.00 51.01 3.9200
+Probation : Good Standing Cumulative Totals : 13.00 13.00 13.00 51.01 3.9200
+2024-2025 Academic Year : Spring
+Subterm : Spring Full Term
+COMP 1412 Introduction to CS II UG A 4.00 4.00 4.00 16.00
+COMP 2316 Computer Organization UG B+ 3.00 3.00 3.00 9.99
+ENGL 1312 Composition and Rhetoric II UG A- 3.00 3.00 3.00 11.01
+MATH 1313 Pre-Calculus UG A- 3.00 3.00 3.00 11.01
+Subterm Totals : 13.00 13.00 13.00 48.01 3.6900
+Subterm : Winter Mini Subterm1
+ENGL 1311 Composition and Rhetoric I UG A 3.00 3.00 3.00 12.00
+Subterm Totals : 3.00 3.00 3.00 12.00 4.0000
+Term Totals : 16.00 16.00 16.00 60.01 3.7500
+Probation : Good Standing Cumulative Totals : 29.00 29.00 29.00 111.02 3.8300
+2025-2026 Academic Year : Fall
+Subterm : Fall Full Term
+ARTS 1311 Art Appreciation UG A 3.00 3.00 3.00 12.00
+COMP 2313 Data Structures UG A 3.00 3.00 3.00 12.00
+COMP 2415 Systems Programming UG A- 4.00 4.00 4.00 14.68
+GEOL 1311 Earth Science UG A 3.00 3.00 3.00 12.00
+MATH 2314 Calculus I UG A 3.00 3.00 3.00 12.00
+Subterm Totals : 16.00 16.00 16.00 62.68 3.9200
+Term Totals : 16.00 16.00 16.00 62.68 3.9200
+Probation : Good Standing Cumulative Totals : 45.00 45.00 45.00 173.70 3.8600
+2025-2026 Academic Year : Spring
+Subterm : Spring Full Term
+COMP 3321 Database Systems UG A 3.00 3.00 3.00 12.00
+COMP 3322 Software Engineering UG A 3.00 3.00 3.00 12.00
+COMP 3324 Computer Networks UG A 3.00 3.00 3.00 12.00
+HIST 1312 U.S. History II UG A 3.00 3.00 3.00 12.00
+Page : 1 of 2
+===== PAGE 2 =====
+NORTH AMERICAN UNIVERSITY
+ID : 00000000
+Student Name
+Undergraduate Division
+Advisors :Advisor Name
+Course Number Title CR TypeGrade Rpt Hrs Att Hrs Ern Hrs Gpa Qual Pts GPA
+2025-2026 Academic Year : Spring
+MATH 2317 Discrete Mathematics UG A- 3.00 3.00 3.00 11.01
+Subterm Totals : 15.00 15.00 15.00 59.01 3.9300
+Term Totals : 15.00 15.00 15.00 59.01 3.9300
+Probation : Good Standing Cumulative Totals : 60.00 60.00 60.00 232.71 3.8800
+2026-2027 Academic Year : Fall
+Subterm : Fall Full Term
+COMP 3317 Algorithms UG WIP 3.00 0.00 0.00 0.00
+COMP 3318 Operating Systems UG WIP 3.00 0.00 0.00 0.00
+Subterm Totals : 0.00 0.00 0.00 0.00 0.0000
+Term Totals : 0.00 0.00 0.00 0.00 0.0000
+Cumulative Totals : 60.00 60.00 60.00 232.71 3.8800
+Division Cumulative Totals : 60.00 60.00 60.00 232.71 3.8800
+Degree Information :
+(1) 'Bachelor of Science' Date Conferred :
+Major(s)
+Computer Science - Conc: Software Engineering
+Page : 2 of 2

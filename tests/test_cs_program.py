@@ -35,3 +35,14 @@ def test_core_partial_when_one_core_course_done():
     core = next(g for g in result.groups if "core" in g.group_id.lower())
     assert core.status in {"partial", "unmet"}
     assert "COMP 1411" in core.satisfied_by
+
+
+from na_planner.cli import main
+
+
+def test_cli_runs_against_real_program(capsys):
+    student = Path(__file__).parent / "fixtures" / "sample_student.json"
+    code = main([str(CS), str(student)])
+    out = capsys.readouterr().out
+    assert code == 0
+    assert "credits remaining" in out.lower()

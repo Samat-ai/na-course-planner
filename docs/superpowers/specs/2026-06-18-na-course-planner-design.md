@@ -90,18 +90,21 @@ call. This keeps the correctness-critical logic trustworthy.
 - **Input:** PDF upload *or* pasted text.
 - **Extraction:** course rows `(code, title, term, grade, credits)` plus student metadata
   (major(s), **catalog year**, classification, GPA, credits earned).
-- **Known reality (validated 2026-06):** the NA transcript PDF a student saves is
-  **image-only — no text layer** (text extraction returns nothing). So the parser cannot
-  rely on `pdfplumber`-style text extraction of the PDF. Realistic paths (decided in the
-  Plan 2 / ingestion design): (a) student pastes text from the portal's **HTML "unofficial
-  transcript" view**; (b) **OCR** the image PDF; (c) guided manual entry. The
-  always-on confirm screen is the safety net regardless of path.
+- **Known reality (validated 2026-06):** NA exports exist in **two forms** — a
+  **text-extractable PDF** (parses cleanly with `pdfplumber`; format known) and an
+  **image-only PDF** (no text layer; extraction returns nothing). The tool must detect which
+  it got.
+- **v1 ingestion paths (decided, built in Plan 3):** (a) parse the **text-extractable PDF**;
+  (b) parse **pasted transcript text** (same parser); (c) **guided manual entry / edit** via
+  the always-on confirm screen. **OCR of image-only PDFs is deferred** (heavy dependency) —
+  if an uploaded PDF has no text layer, the tool detects it and routes the student to paste
+  or manual entry.
 - **Confirm step (always):** parsed results are shown for the student to verify/edit. The
   student also **adds external credits** here (CLEP / AP / IB / transfer).
 - **Graceful degradation:** if parsing fails, fall back to manual entry — never a dead end.
 - **Output:** an in-memory `StudentRecord`.
 - **Note:** ingestion is **not** part of the engine (Plan 1); it produces the
-  `StudentRecord` the engine consumes, and is designed/built separately (Plan 2).
+  `StudentRecord` the engine consumes, and is designed/built separately (Plan 3).
 - **Validated transcript format (real NA text-PDF export, 2026-06):** a sample is at
   `docs/reference/transcript-format-sample-REDACTED.txt`. Key facts for the parser:
   - Course row: `<CODE> <multi-word title> UG <GRADE> <AttHrs> <ErnHrs> <GpaHrs> <QualPts>`
@@ -181,7 +184,18 @@ call. This keeps the correctness-critical logic trustworthy.
 ### 4.4 Recommendation planner (pure)
 
 - **Input:** `AuditResult` + prerequisite graph + student preferences (credit target /
-  part- vs full-time, difficulty tolerance, target term).
+  part- vs full-time, difficulty tolerance, target term/season, and **declared
+  concentration**).
+- **Concentration (decided):** the student **declares** their concentration (it drives the
+  18-credit `choose_group` branch the planner plans toward); if undeclared, the tool
+  **suggests** the concentration they're closest to completing but does not silently commit.
+- **Free electives (design note):** the planner fills *structured* requirements (core,
+  gen-ed buckets, concentration) with specific courses; the 15 cr of **unrestricted
+  electives** are reported as a remaining **credit bucket** ("15 elective credits to go —
+  any course counts"), not auto-filled with arbitrary courses.
+- **Offering data (v1 limit):** the catalog rarely states per-term offerings (that lives in
+  the portal-gated schedule of classes), so most courses use `offering: every` and
+  term-availability filtering is limited in v1; it sharpens in v2 with live schedule data.
 - **Eligibility filter:** a course is eligible if it is unmet, its prerequisites are
   satisfied, it is offered in the target term, and it has not already been taken.
   - **Prereqs must be satisfied by *prior* terms, not the same term.** A course planned for
@@ -239,12 +253,16 @@ When a requirement group is satisfiable by any one (or N) of several options:
 ### 4.6 Web layer
 
 - **API-first:** FastAPI exposes a clean **JSON API** containing all logic. Endpoints
-  (indicative): `parse`, `confirm`, `audit`, `recommend`, `export`.
-- **Test UI (v1):** deliberately minimal — plain forms/pages whose only job is to exercise
-  the pipeline end-to-end. Throwaway; not the real frontend.
-- **Stateless:** student data rides in the active session only. **"Download my plan"**
-  (PDF/JSON) is the opt-in save. **No transcript database.**
-- The polished frontend is a later, independent phase consuming the same API.
+  (indicative): `parse`, `audit`, `recommend`, `export`.
+- **Stateless — client carries the data (decided):** the browser holds the `StudentRecord`
+  and sends it with each request; the **server stores nothing** (no DB, no server-side
+  session, no transcript in RAM beyond the request). This is the strongest form of the
+  "no stored transcripts" privacy goal — the data lives only in the student's own browser.
+- **Test UI (v1):** deliberately minimal — plain pages/JS whose only job is to exercise the
+  pipeline end-to-end (upload/paste → confirm/edit → dashboard). Throwaway; not the real
+  frontend. The polished frontend is a later, independent phase consuming the same API.
+- **Opt-in export (decided):** "Download my plan" produces **both** a **JSON** file (so the
+  student can re-import next term and skip re-entry) and a human-readable **PDF**.
 
 ---
 

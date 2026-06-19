@@ -31,6 +31,10 @@ GRADE_POINTS: dict[Grade, float] = {
 
 _PASSING_NON_LETTER = {Grade.P}
 
+NON_PASSING_GRADES: frozenset[Grade] = frozenset({
+    Grade.F, Grade.NP, Grade.W, Grade.I, Grade.WIP
+})
+
 
 def is_passing(g: Grade) -> bool:
     if g in _PASSING_NON_LETTER:

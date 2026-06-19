@@ -1,4 +1,4 @@
-from na_planner.grades import Grade, meets_minimum
+from na_planner.grades import Grade, NON_PASSING_GRADES, meets_minimum
 from na_planner.models.audit import AuditResult, CourseAllocation, GroupStatus
 from na_planner.models.catalog import CourseFilter, Program, RequirementGroup
 from na_planner.models.student import EarnedCourse, StudentRecord
@@ -12,7 +12,9 @@ def _counts(course: EarnedCourse, min_grade: Grade | None) -> bool:
     if course.grade is None:        # external credit: treated as passing
         return True
     if min_grade is None:
-        return course.grade not in {Grade.F, Grade.NP, Grade.W, Grade.I, Grade.WIP}
+        return course.grade not in NON_PASSING_GRADES
+    if course.grade in {Grade.P}:   # pass-based grade satisfies any letter minimum
+        return True
     return meets_minimum(course.grade, min_grade)
 
 
@@ -54,7 +56,7 @@ def evaluate_group(
         )
 
     if group.kind == "choose":
-        pool = set(group.courses)
+        pool = set(group.courses) | set(group.forced)
         pool_counting = [c for c in counting if c.code in pool]
         forced_ok = all(code in applied_codes for code in group.forced)
         count_ok = group.min_count is None or len(pool_counting) >= group.min_count
@@ -116,7 +118,7 @@ def evaluate_group(
 def earned_courses(student: StudentRecord) -> list[EarnedCourse]:
     out: list[EarnedCourse] = []
     for c in student.completed:
-        if c.grade in {Grade.F, Grade.NP, Grade.W, Grade.I, Grade.WIP}:
+        if c.grade in NON_PASSING_GRADES:
             continue
         out.append(EarnedCourse(code=c.code, credits=c.credits, grade=c.grade))
     for e in student.external:
@@ -146,6 +148,8 @@ def _specificity(group: RequirementGroup) -> int:
 def _accepts(group: RequirementGroup, course: EarnedCourse, program: Program) -> bool:
     if group.kind == "credits_from_filter" and group.course_filter is not None:
         return course_matches_filter(course.code, group.course_filter, program)
+    if group.kind == "choose_group":
+        return any(_accepts(sub, course, program) for sub in group.subgroups)
     return course.code in _group_member_codes(group)
 
 

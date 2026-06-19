@@ -61,3 +61,7 @@ class Program(BaseModel):
     default_min_grade: Grade | None = None
     courses: dict[str, Course] = {}
     groups: list[RequirementGroup] = []
+
+
+PrereqExpr.model_rebuild()
+RequirementGroup.model_rebuild()

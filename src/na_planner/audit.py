@@ -76,7 +76,8 @@ def evaluate_group(
         )
 
     if group.kind == "credits_from_filter":
-        assert group.course_filter is not None
+        if group.course_filter is None:
+            raise ValueError(f"credits_from_filter group '{group.id}' has no course_filter")
         matching = [c for c in counting
                     if course_matches_filter(c.code, group.course_filter, program)]
         matched_credits = sum(c.credits for c in matching)

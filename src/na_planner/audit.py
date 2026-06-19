@@ -1,7 +1,7 @@
 from na_planner.grades import Grade, meets_minimum
-from na_planner.models.audit import GroupStatus
+from na_planner.models.audit import AuditResult, CourseAllocation, GroupStatus
 from na_planner.models.catalog import CourseFilter, Program, RequirementGroup
-from na_planner.models.student import EarnedCourse
+from na_planner.models.student import EarnedCourse, StudentRecord
 
 
 def _effective_min_grade(group: RequirementGroup, program: Program) -> Grade | None:
@@ -111,3 +111,83 @@ def evaluate_group(
         )
 
     raise ValueError(f"evaluate_group does not handle kind={group.kind!r}")
+
+
+def earned_courses(student: StudentRecord) -> list[EarnedCourse]:
+    out: list[EarnedCourse] = []
+    for c in student.completed:
+        if c.grade in {Grade.F, Grade.NP, Grade.W, Grade.I, Grade.WIP}:
+            continue
+        out.append(EarnedCourse(code=c.code, credits=c.credits, grade=c.grade))
+    for e in student.external:
+        out.append(EarnedCourse(code=e.equivalent_code, credits=e.credits, grade=None))
+    return out
+
+
+def _group_member_codes(group: RequirementGroup) -> set[str]:
+    codes = set(group.courses) | set(group.forced)
+    for sub in group.subgroups:
+        codes |= _group_member_codes(sub)
+    return codes
+
+
+def _specificity(group: RequirementGroup) -> int:
+    if group.kind == "all_of":
+        return 3
+    if group.kind in {"choose", "choose_group"}:
+        return 2
+    if group.kind == "credits_from_filter":
+        if group.course_filter and group.course_filter.unrestricted:
+            return 0
+        return 1
+    return 0
+
+
+def _accepts(group: RequirementGroup, course: EarnedCourse, program: Program) -> bool:
+    if group.kind == "credits_from_filter" and group.course_filter is not None:
+        return course_matches_filter(course.code, group.course_filter, program)
+    return course.code in _group_member_codes(group)
+
+
+def allocate(
+    earned: list[EarnedCourse], program: Program
+) -> dict[str, list[EarnedCourse]]:
+    ordered = sorted(
+        enumerate(program.groups), key=lambda iv: (-_specificity(iv[1]), iv[0])
+    )
+    result: dict[str, list[EarnedCourse]] = {}
+    for course in earned:
+        for _, group in ordered:
+            if _accepts(group, course, program):
+                result.setdefault(group.id, []).append(course)
+                break
+    return result
+
+
+def audit(student: StudentRecord, program: Program) -> AuditResult:
+    earned = earned_courses(student)
+    alloc = allocate(earned, program)
+    statuses = [
+        evaluate_group(g, alloc.get(g.id, []), program) for g in program.groups
+    ]
+    assigned_codes = {c.code for courses in alloc.values() for c in courses}
+    allocations = []
+    for group_id, courses in alloc.items():
+        for c in courses:
+            allocations.append(
+                CourseAllocation(code=c.code, credits=c.credits, group_id=group_id)
+            )
+    for c in earned:
+        if c.code not in assigned_codes:
+            allocations.append(
+                CourseAllocation(code=c.code, credits=c.credits, group_id=None)
+            )
+    total_earned = sum(c.credits for c in earned)
+    return AuditResult(
+        program_code=program.code, catalog_year=program.catalog_year,
+        groups=statuses, allocations=allocations,
+        total_credits_required=program.total_credits_required,
+        total_credits_earned=total_earned,
+        credits_remaining=max(0.0, program.total_credits_required - total_earned),
+        is_complete=all(s.status == "satisfied" for s in statuses),
+    )

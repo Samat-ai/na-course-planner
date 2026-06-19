@@ -61,3 +61,50 @@ def test_min_grade_blocks_satisfaction():
                              courses=["COMP 1411"], min_grade=Grade.C)
     applied = [EarnedCourse(code="COMP 1411", credits=4, grade=Grade.D)]
     assert evaluate_group(group, applied, prog).status == "unmet"
+
+
+from na_planner.audit import course_matches_filter
+from na_planner.models.catalog import CourseFilter
+
+
+def test_course_matches_filter_level_and_subject():
+    prog = _program({"COMP 3317": Course(code="COMP 3317", credits=3)})
+    filt = CourseFilter(min_level=3000, subjects=["COMP"])
+    assert course_matches_filter("COMP 3317", filt, prog) is True
+    assert course_matches_filter("COMP 1411", filt, prog) is False
+    assert course_matches_filter("MATH 3318", filt, prog) is False
+
+
+def test_credits_from_filter_group():
+    prog = _program({
+        "COMP 3317": Course(code="COMP 3317", credits=3),
+        "COMP 3318": Course(code="COMP 3318", credits=3),
+        "COMP 1411": Course(code="COMP 1411", credits=4),
+    })
+    group = RequirementGroup(
+        id="upper", name="Upper CS", kind="credits_from_filter",
+        course_filter=CourseFilter(min_level=3000, subjects=["COMP"]), min_credits=6,
+    )
+    applied = [EarnedCourse(code="COMP 3317", credits=3, grade=Grade.A),
+               EarnedCourse(code="COMP 1411", credits=4, grade=Grade.A)]
+    assert evaluate_group(group, applied, prog).status == "partial"  # only 3 matching cr
+    applied2 = applied + [EarnedCourse(code="COMP 3318", credits=3, grade=Grade.A)]
+    assert evaluate_group(group, applied2, prog).status == "satisfied"  # 6 matching cr
+
+
+def test_choose_group_concentration():
+    prog = _program({
+        "COMP 4331": Course(code="COMP 4331", credits=3),
+        "COMP 4351": Course(code="COMP 4351", credits=3),
+        "COMP 4361": Course(code="COMP 4361", credits=3),
+    })
+    net = RequirementGroup(id="net", name="Networking", kind="all_of",
+                           courses=["COMP 4331", "COMP 4351"])
+    cyber = RequirementGroup(id="cyber", name="Cyber", kind="all_of",
+                             courses=["COMP 4361"])
+    group = RequirementGroup(id="conc", name="Concentration", kind="choose_group",
+                             subgroups=[net, cyber], choose_groups=1)
+    # cyber's single course done -> one subgroup satisfied -> group satisfied
+    applied = [EarnedCourse(code="COMP 4361", credits=3, grade=Grade.A)]
+    assert evaluate_group(group, applied, prog).status == "satisfied"
+    assert evaluate_group(group, [], prog).status == "unmet"

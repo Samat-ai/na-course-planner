@@ -1,6 +1,6 @@
 from na_planner.grades import Grade, meets_minimum
 from na_planner.models.audit import GroupStatus
-from na_planner.models.catalog import Program, RequirementGroup
+from na_planner.models.catalog import CourseFilter, Program, RequirementGroup
 from na_planner.models.student import EarnedCourse
 
 
@@ -14,6 +14,20 @@ def _counts(course: EarnedCourse, min_grade: Grade | None) -> bool:
     if min_grade is None:
         return course.grade not in {Grade.F, Grade.NP, Grade.W, Grade.I, Grade.WIP}
     return meets_minimum(course.grade, min_grade)
+
+
+def course_matches_filter(code: str, filt: CourseFilter, program: Program) -> bool:
+    if filt.unrestricted:
+        return True
+    parts = code.split()
+    subject = parts[0] if parts else ""
+    number = next((p for p in parts[1:] if p[:1].isdigit()), "0")
+    level = (int(number[0]) * 1000) if number[:1].isdigit() else 0
+    if filt.min_level is not None and level < filt.min_level:
+        return False
+    if filt.subjects and subject not in filt.subjects:
+        return False
+    return True
 
 
 def evaluate_group(
@@ -61,4 +75,38 @@ def evaluate_group(
             choose_remaining=choose_remaining,
         )
 
-    raise ValueError(f"evaluate_group does not yet handle kind={group.kind!r}")
+    if group.kind == "credits_from_filter":
+        assert group.course_filter is not None
+        matching = [c for c in counting
+                    if course_matches_filter(c.code, group.course_filter, program)]
+        matched_credits = sum(c.credits for c in matching)
+        required = group.min_credits or 0
+        satisfied = matched_credits >= required
+        status = "satisfied" if satisfied else ("partial" if matching else "unmet")
+        return GroupStatus(
+            group_id=group.id, name=group.name, status=status,
+            credits_required=required, credits_applied=matched_credits,
+            courses_required=None, courses_applied=len(matching),
+            satisfied_by=[c.code for c in matching], remaining_choices=[],
+            choose_remaining=0,
+        )
+
+    if group.kind == "choose_group":
+        sub_statuses = [evaluate_group(sub, applied, program) for sub in group.subgroups]
+        satisfied_subs = [s for s in sub_statuses if s.status == "satisfied"]
+        satisfied = len(satisfied_subs) >= group.choose_groups
+        remaining = [s.name for s in sub_statuses if s.status != "satisfied"]
+        status = (
+            "satisfied" if satisfied
+            else ("partial" if any(s.status != "unmet" for s in sub_statuses) else "unmet")
+        )
+        return GroupStatus(
+            group_id=group.id, name=group.name, status=status,
+            credits_required=0,
+            credits_applied=sum(s.credits_applied for s in satisfied_subs),
+            courses_required=group.choose_groups, courses_applied=len(satisfied_subs),
+            satisfied_by=[s.group_id for s in satisfied_subs], remaining_choices=remaining,
+            choose_remaining=max(0, group.choose_groups - len(satisfied_subs)),
+        )
+
+    raise ValueError(f"evaluate_group does not handle kind={group.kind!r}")

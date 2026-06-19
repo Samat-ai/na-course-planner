@@ -3,6 +3,7 @@ from pathlib import Path
 from na_planner.audit import audit
 from na_planner.catalog_linter import lint_program
 from na_planner.catalog_loader import load_program
+from na_planner.cli import main
 from na_planner.grades import Grade
 from na_planner.models.student import CompletedCourse, StudentRecord
 
@@ -35,9 +36,6 @@ def test_core_partial_when_one_core_course_done():
     core = next(g for g in result.groups if "core" in g.group_id.lower())
     assert core.status in {"partial", "unmet"}
     assert "COMP 1411" in core.satisfied_by
-
-
-from na_planner.cli import main
 
 
 def test_cli_runs_against_real_program(capsys):

@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import StrEnum
 from typing import Literal
 
 from pydantic import BaseModel
@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from na_planner.grades import Grade
 
 
-class OfferingPattern(str, Enum):
+class OfferingPattern(StrEnum):
     FALL = "fall"
     SPRING = "spring"
     EVERY = "every"

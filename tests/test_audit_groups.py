@@ -1,6 +1,6 @@
-from na_planner.audit import evaluate_group
+from na_planner.audit import course_matches_filter, evaluate_group
 from na_planner.grades import Grade
-from na_planner.models.catalog import Course, Program, RequirementGroup
+from na_planner.models.catalog import Course, CourseFilter, Program, RequirementGroup
 from na_planner.models.student import EarnedCourse
 
 
@@ -61,10 +61,6 @@ def test_min_grade_blocks_satisfaction():
                              courses=["COMP 1411"], min_grade=Grade.C)
     applied = [EarnedCourse(code="COMP 1411", credits=4, grade=Grade.D)]
     assert evaluate_group(group, applied, prog).status == "unmet"
-
-
-from na_planner.audit import course_matches_filter
-from na_planner.models.catalog import CourseFilter
 
 
 def test_course_matches_filter_level_and_subject():

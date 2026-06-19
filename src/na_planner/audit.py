@@ -1,4 +1,4 @@
-from na_planner.grades import Grade, NON_PASSING_GRADES, meets_minimum
+from na_planner.grades import NON_PASSING_GRADES, Grade, meets_minimum
 from na_planner.models.audit import AuditResult, CourseAllocation, GroupStatus
 from na_planner.models.catalog import CourseFilter, Program, RequirementGroup
 from na_planner.models.student import EarnedCourse, StudentRecord
@@ -60,7 +60,10 @@ def evaluate_group(
         pool_counting = [c for c in counting if c.code in pool]
         forced_ok = all(code in applied_codes for code in group.forced)
         count_ok = group.min_count is None or len(pool_counting) >= group.min_count
-        credits_ok = group.min_credits is None or sum(c.credits for c in pool_counting) >= group.min_credits
+        credits_ok = (
+            group.min_credits is None
+            or sum(c.credits for c in pool_counting) >= group.min_credits
+        )
         satisfied = forced_ok and count_ok and credits_ok
         satisfied_by = [c.code for c in pool_counting]
         remaining = [code for code in group.courses if code not in applied_codes]

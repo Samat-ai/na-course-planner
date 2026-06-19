@@ -1,7 +1,6 @@
 from na_planner.catalog_linter import lint_program
 from na_planner.models.catalog import (
     Course,
-    CourseFilter,
     PrereqExpr,
     Program,
     RequirementGroup,

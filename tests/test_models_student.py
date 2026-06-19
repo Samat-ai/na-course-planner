@@ -2,7 +2,6 @@ from na_planner.grades import Grade
 from na_planner.models.student import (
     CompletedCourse,
     EarnedCourse,
-    ExternalCredit,
     StudentRecord,
 )
 

@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class Grade(str, Enum):
+class Grade(StrEnum):
     A = "A"
     A_MINUS = "A-"
     B_PLUS = "B+"
@@ -17,7 +17,7 @@ class Grade(str, Enum):
     P = "P"      # pass (no letter)
     NP = "NP"    # no pass
     W = "W"      # withdrawn
-    I = "I"      # incomplete
+    I = "I"      # incomplete  # noqa: E741
     WIP = "WIP"  # work in progress (NA's real in-progress code on transcripts)
 
 

@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(py -3 -m pytest:*)",
+      "PowerShell(py -3 -m pytest:*)",
+      "Bash(py -3 -m pip install:*)",
+      "PowerShell(py -3 -m pip install:*)",
+      "Bash(py -3 -m na_planner:*)",
+      "PowerShell(py -3 -m na_planner:*)",
+      "Bash(py -3 -m uvicorn:*)",
+      "PowerShell(py -3 -m uvicorn:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git push:*)",
+      "Bash(gh repo:*)",
+      "Bash(gh pr:*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          { "type": "command", "command": "py -3 .claude/hooks/run_tests.py" }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,930 @@
+code: CS-BS
+name: Bachelor of Science in Computer Science
+catalog_year: 2026
+total_credits_required: 120
+default_min_grade: null
+
+# ─────────────────────────────────────────────────────────────────────────────
+# COURSES
+# Every code referenced in groups must appear here.
+# ─────────────────────────────────────────────────────────────────────────────
+courses:
+  # ── Freshman Seminar ──────────────────────────────────────────────────────
+  FRSH 1311:
+    code: FRSH 1311
+    title: Freshman Seminar
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  # ── Composition, Communications, and Foreign Languages ───────────────────
+  COMM 1311:
+    code: COMM 1311
+    title: Fundamentals of Communication
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  COMM 1313:
+    code: COMM 1313
+    title: Public Speaking
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  ENGL 1311:
+    code: ENGL 1311
+    title: Composition and Rhetoric I
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  ENGL 1312:
+    code: ENGL 1312
+    title: Composition and Rhetoric II
+    credits: 3
+    offering: every
+    prereq:
+      kind: course
+      course: ENGL 1311
+
+  SPAN 1311:
+    code: SPAN 1311
+    title: Elementary Spanish
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  # ── Humanities and Fine Arts ──────────────────────────────────────────────
+  ARTS 1311:
+    code: ARTS 1311
+    title: Art Appreciation
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  ENGL 2315:
+    code: ENGL 2315
+    title: Survey of British Literature I
+    credits: 3
+    offering: every
+    prereq:
+      kind: course
+      course: ENGL 1312
+
+  ENGL 2316:
+    code: ENGL 2316
+    title: Survey of American Literature I
+    credits: 3
+    offering: every
+    prereq:
+      kind: course
+      course: ENGL 1312
+
+  ENGL 2317:
+    code: ENGL 2317
+    title: Survey of British Literature II
+    credits: 3
+    offering: every
+    prereq:
+      kind: course
+      course: ENGL 1312
+
+  ENGL 2318:
+    code: ENGL 2318
+    title: Survey of American Literature II
+    credits: 3
+    offering: every
+    prereq:
+      kind: course
+      course: ENGL 1312
+
+  ENGL 2319:
+    code: ENGL 2319
+    title: Survey of World Literature
+    credits: 3
+    offering: every
+    prereq:
+      kind: course
+      course: ENGL 1312
+
+  HIST 1311:
+    code: HIST 1311
+    title: "U.S. History I"
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  HIST 1312:
+    code: HIST 1312
+    title: "U.S. History II"
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  HIST 2311:
+    code: HIST 2311
+    title: World History
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  HIST 2314:
+    code: HIST 2314
+    title: History of Texas
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  MUSI 1306:
+    code: MUSI 1306
+    title: Music Appreciation
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  PHIL 1311:
+    code: PHIL 1311
+    title: Introduction to Logic and Critical Thinking
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  PHIL 1312:
+    code: PHIL 1312
+    title: Professional Ethics
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  PHIL 1313:
+    code: PHIL 1313
+    title: Introduction to Philosophy
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  # ── Social and Behavioral Sciences ───────────────────────────────────────
+  ECON 2311:
+    code: ECON 2311
+    title: Principles of Macroeconomics
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  ECON 2312:
+    code: ECON 2312
+    title: Principles of Microeconomics
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  GOVT 2311:
+    code: GOVT 2311
+    title: "U.S. Government I"
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  GOVT 2312:
+    code: GOVT 2312
+    title: "U.S. Government II"
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  PSYC 2311:
+    code: PSYC 2311
+    title: General Psychology
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  SOCI 2311:
+    code: SOCI 2311
+    title: Introduction to Sociology
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  # ── Natural Sciences and Mathematics ─────────────────────────────────────
+  BIOL 1311:
+    code: BIOL 1311
+    title: Introductory Biology
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  BIOL 1312:
+    code: BIOL 1312
+    title: Nutrition
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  GEOG 2311:
+    code: GEOG 2311
+    title: Human Geography
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  GEOG 2312:
+    code: GEOG 2312
+    title: Regional Geography in the World
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  GEOL 1311:
+    code: GEOL 1311
+    title: Earth Science
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  MATH 1311:
+    code: MATH 1311
+    title: College Algebra
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  MATH 1312:
+    code: MATH 1312
+    title: Statistics
+    credits: 3
+    offering: every
+    prereq:
+      kind: course
+      course: MATH 1311
+
+  MATH 1313:
+    code: MATH 1313
+    title: Pre-Calculus
+    credits: 3
+    offering: every
+    prereq:
+      kind: course
+      course: MATH 1311
+
+  MATH 2314:
+    code: MATH 2314
+    title: Calculus I
+    credits: 3
+    offering: every
+    prereq:
+      kind: course
+      course: MATH 1313
+
+  MATH 2317:
+    code: MATH 2317
+    title: Discrete Mathematics
+    credits: 3
+    offering: every
+    prereq:
+      kind: course
+      course: MATH 1311
+
+  # ── CS Core ───────────────────────────────────────────────────────────────
+  COMP 1314:
+    code: COMP 1314
+    title: Computer Literacy and Applications
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  COMP 1411:
+    code: COMP 1411
+    title: Introduction to Programming I
+    credits: 4
+    offering: every
+    prereq:
+      kind: none
+
+  COMP 1412:
+    code: COMP 1412
+    title: Introduction to Programming II
+    credits: 4
+    offering: every
+    prereq:
+      kind: course
+      course: COMP 1411
+
+  COMP 2313:
+    code: COMP 2313
+    title: Data Structures
+    credits: 3
+    offering: every
+    prereq:
+      kind: course
+      course: COMP 1412
+
+  COMP 2415:
+    code: COMP 2415
+    title: Systems Programming
+    credits: 4
+    offering: every
+    prereq:
+      kind: course
+      course: COMP 1411
+
+  COMP 2316:
+    code: COMP 2316
+    title: Computer Organization
+    credits: 3
+    offering: every
+    prereq:
+      kind: course
+      course: COMP 1411
+
+  COMP 2319:
+    code: COMP 2319
+    title: Introduction to Artificial Intelligence
+    credits: 3
+    offering: every
+    prereq:
+      kind: course
+      course: COMP 1314
+
+  COMP 3317:
+    code: COMP 3317
+    title: Algorithms
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: COMP 2313
+        - kind: course
+          course: MATH 1312
+        - kind: min_credits
+          credits: 30
+
+  COMP 3318:
+    code: COMP 3318
+    title: Operating Systems
+    credits: 3
+    offering: every
+    prereq:
+      kind: course
+      course: COMP 2316
+
+  COMP 3320:
+    code: COMP 3320
+    title: Programming Languages
+    credits: 3
+    offering: every
+    prereq:
+      kind: course
+      course: COMP 2313
+
+  COMP 3321:
+    code: COMP 3321
+    title: Database Systems
+    credits: 3
+    offering: every
+    prereq:
+      kind: min_credits
+      credits: 30
+
+  COMP 3322:
+    code: COMP 3322
+    title: Software Engineering
+    credits: 3
+    offering: every
+    prereq:
+      kind: min_credits
+      credits: 30
+
+  COMP 3324:
+    code: COMP 3324
+    title: Computer Networks
+    credits: 3
+    offering: every
+    prereq:
+      kind: min_credits
+      credits: 30
+
+  # ── Concentration: Computer Networking ───────────────────────────────────
+  COMP 4331:
+    code: COMP 4331
+    title: Cloud Computing
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: COMP 3324
+        - kind: min_credits
+          credits: 60
+
+  COMP 4351:
+    code: COMP 4351
+    title: Network Administration
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: COMP 3324
+        - kind: min_credits
+          credits: 60
+
+  COMP 4352:
+    code: COMP 4352
+    title: Internetworking Technology
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: COMP 3324
+        - kind: min_credits
+          credits: 60
+
+  COMP 4353:
+    code: COMP 4353
+    title: Network Security
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: COMP 3324
+        - kind: min_credits
+          credits: 60
+
+  COMP 4358:
+    code: COMP 4358
+    title: Wireless Networking
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: COMP 3324
+        - kind: min_credits
+          credits: 60
+
+  COMP 4393:
+    code: COMP 4393
+    title: Senior Design Project
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  # ── Concentration: Cybersecurity ─────────────────────────────────────────
+  COMP 4361:
+    code: COMP 4361
+    title: Fundamentals of Cybersecurity
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: COMP 3324
+        - kind: min_credits
+          credits: 60
+
+  COMP 4362:
+    code: COMP 4362
+    title: Ethical Hacking and Penetration Testing
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: COMP 3324
+        - kind: min_credits
+          credits: 60
+
+  COMP 4363:
+    code: COMP 4363
+    title: Cyber Law and Ethics
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: COMP 3324
+        - kind: min_credits
+          credits: 60
+
+  COMP 4364:
+    code: COMP 4364
+    title: AI for Cybersecurity
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: COMP 3324
+        - kind: min_credits
+          credits: 60
+
+  # ── Concentration: Data Analytics ─────────────────────────────────────────
+  COMP 4371:
+    code: COMP 4371
+    title: Big Data Analytics
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: COMP 3322
+        - kind: min_credits
+          credits: 60
+
+  COMP 4372:
+    code: COMP 4372
+    title: Data Visualization
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: COMP 3322
+        - kind: min_credits
+          credits: 60
+
+  COMP 4373:
+    code: COMP 4373
+    title: Data Mining
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: MATH 1312
+        - kind: course
+          course: COMP 3321
+        - kind: min_credits
+          credits: 60
+
+  COMP 4374:
+    code: COMP 4374
+    title: Python for Data Analytics
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: COMP 3322
+        - kind: min_credits
+          credits: 60
+
+  COMP 4375:
+    code: COMP 4375
+    title: Statistical Methods for Data Analytics
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: COMP 3322
+        - kind: min_credits
+          credits: 60
+
+  # ── Concentration: Software Engineering ─────────────────────────────────
+  COMP 4336:
+    code: COMP 4336
+    title: Software Project Management
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: COMP 3322
+        - kind: min_credits
+          credits: 60
+
+  COMP 4337:
+    code: COMP 4337
+    title: Software Requirements and Analysis
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: COMP 3322
+        - kind: min_credits
+          credits: 60
+
+  COMP 4338:
+    code: COMP 4338
+    title: Software Testing and Quality Assurance
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: COMP 3322
+        - kind: min_credits
+          credits: 60
+
+  COMP 4339:
+    code: COMP 4339
+    title: Software Architecture and Design
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: COMP 3322
+        - kind: min_credits
+          credits: 60
+
+  # ── Concentration: Web and Mobile Application Development ─────────────────
+  COMP 4325:
+    code: COMP 4325
+    title: UI/UX Design
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: COMP 3322
+        - kind: min_credits
+          credits: 60
+
+  COMP 4326:
+    code: COMP 4326
+    title: Front-End Web Development
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: COMP 3322
+        - kind: min_credits
+          credits: 60
+
+  COMP 4327:
+    code: COMP 4327
+    title: Back-End Web Development
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: COMP 4326
+        - kind: min_credits
+          credits: 60
+
+  COMP 4328:
+    code: COMP 4328
+    title: Mobile Application Development
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: COMP 3322
+        - kind: min_credits
+          credits: 60
+
+  COMP 4329:
+    code: COMP 4329
+    title: Game Development
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: COMP 3322
+        - kind: min_credits
+          credits: 60
+
+# ─────────────────────────────────────────────────────────────────────────────
+# REQUIREMENT GROUPS
+# ─────────────────────────────────────────────────────────────────────────────
+groups:
+  # ── 1. Freshman Seminar (1 course, 3 cr) ──────────────────────────────────
+  - id: freshman_seminar
+    name: Freshman Seminar
+    kind: all_of
+    courses:
+      - FRSH 1311
+
+  # ── 2. Gen-Ed: Composition, Communications, and Foreign Languages (≥3 courses, ≥9 cr) ──
+  - id: gen_ed_composition_comm
+    name: "Gen-Ed: Composition, Communications, and Foreign Languages"
+    kind: choose
+    min_count: 3
+    forced:
+      - ENGL 1311
+      - ENGL 1312
+    courses:
+      - COMM 1311
+      - COMM 1313
+      - ENGL 1311
+      - ENGL 1312
+      - SPAN 1311
+
+  # ── 3. Gen-Ed: Humanities and Fine Arts (≥2 courses, ≥6 cr) ─────────────
+  - id: gen_ed_humanities
+    name: "Gen-Ed: Humanities and Fine Arts"
+    kind: choose
+    min_count: 2
+    forced:
+      - HIST 1311
+    courses:
+      - ARTS 1311
+      - ENGL 2315
+      - ENGL 2316
+      - ENGL 2317
+      - ENGL 2318
+      - ENGL 2319
+      - HIST 1311
+      - HIST 1312
+      - HIST 2311
+      - HIST 2314
+      - MUSI 1306
+      - PHIL 1311
+      - PHIL 1312
+      - PHIL 1313
+
+  # ── 4. Gen-Ed: Social and Behavioral Sciences (≥2 courses, ≥6 cr) ────────
+  - id: gen_ed_social
+    name: "Gen-Ed: Social and Behavioral Sciences"
+    kind: choose
+    min_count: 2
+    forced:
+      - GOVT 2311
+    courses:
+      - ECON 2311
+      - ECON 2312
+      - GOVT 2311
+      - GOVT 2312
+      - PSYC 2311
+      - SOCI 2311
+
+  # ── 5. Gen-Ed: Natural Sciences and Mathematics (≥4 courses, CS-specific) ─
+  # CS students are required to take MATH 1311, MATH 1313, plus one natural science.
+  # MATH 2314 is also in this category and part of the CS core.
+  # Forced: MATH 1311, MATH 1313; plus one natural science from the list.
+  - id: gen_ed_natural_science_math
+    name: "Gen-Ed: Natural Sciences and Mathematics"
+    kind: choose
+    min_count: 4
+    forced:
+      - MATH 1311
+      - MATH 1313
+    courses:
+      - BIOL 1311
+      - BIOL 1312
+      - GEOG 2311
+      - GEOG 2312
+      - GEOL 1311
+      - MATH 1311
+      - MATH 1313
+      - MATH 2314
+
+  # ── 6. CS Core (51 credits) ───────────────────────────────────────────────
+  # COMP 1314 (3) + COMP 1411 (4) + COMP 1412 (4) + COMP 2313 (3) +
+  # COMP 2415 (4) + COMP 2316 (3) + COMP 2319 (3) + COMP 3317 (3) +
+  # COMP 3318 (3) + COMP 3320 (3) + COMP 3321 (3) + COMP 3322 (3) +
+  # COMP 3324 (3) + MATH 1312 (3) + MATH 2314 (3) + MATH 2317 (3)
+  # = 51 credits
+  - id: cs_core
+    name: CS Core
+    kind: all_of
+    courses:
+      - COMP 1314
+      - COMP 1411
+      - COMP 1412
+      - COMP 2313
+      - COMP 2415
+      - COMP 2316
+      - COMP 2319
+      - COMP 3317
+      - COMP 3318
+      - COMP 3320
+      - COMP 3321
+      - COMP 3322
+      - COMP 3324
+      - MATH 1312
+      - MATH 2314
+      - MATH 2317
+
+  # ── 7. Concentration (choose 1 of 5, 18 credits each) ────────────────────
+  - id: concentration
+    name: Concentration (choose one)
+    kind: choose_group
+    choose_groups: 1
+    subgroups:
+      - id: concentration_networking
+        name: Computer Networking Concentration
+        kind: all_of
+        courses:
+          - COMP 4331
+          - COMP 4351
+          - COMP 4352
+          - COMP 4353
+          - COMP 4358
+          - COMP 4393
+
+      - id: concentration_cybersecurity
+        name: Cybersecurity Concentration
+        kind: all_of
+        courses:
+          - COMP 4353
+          - COMP 4361
+          - COMP 4362
+          - COMP 4363
+          - COMP 4364
+          - COMP 4393
+
+      - id: concentration_data_analytics
+        name: Data Analytics Concentration
+        kind: all_of
+        courses:
+          - COMP 4371
+          - COMP 4372
+          - COMP 4373
+          - COMP 4374
+          - COMP 4375
+          - COMP 4393
+
+      - id: concentration_software_engineering
+        name: Software Engineering Concentration
+        kind: all_of
+        courses:
+          - COMP 4331
+          - COMP 4336
+          - COMP 4337
+          - COMP 4338
+          - COMP 4339
+          - COMP 4393
+
+      - id: concentration_web_mobile
+        name: Web and Mobile Application Development Concentration
+        kind: all_of
+        courses:
+          - COMP 4325
+          - COMP 4326
+          - COMP 4327
+          - COMP 4328
+          - COMP 4329
+          - COMP 4393
+
+  # ── 8. Unrestricted Electives (15 credits) ────────────────────────────────
+  - id: unrestricted_electives
+    name: Unrestricted Electives
+    kind: credits_from_filter
+    min_credits: 15
+    course_filter:
+      unrestricted: true

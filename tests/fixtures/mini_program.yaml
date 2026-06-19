@@ -1,0 +1,34 @@
+code: MINI-BS
+name: Mini Program
+catalog_year: 2026
+total_credits_required: 12
+default_min_grade: null
+courses:
+  COMP 1411:
+    code: COMP 1411
+    title: Intro to Programming I
+    credits: 4
+    offering: every
+  COMP 1412:
+    code: COMP 1412
+    title: Intro to Programming II
+    credits: 4
+    offering: every
+    prereq:
+      kind: course
+      course: COMP 1411
+  ARTS 1311:
+    code: ARTS 1311
+    title: Art Appreciation
+    credits: 3
+    offering: every
+groups:
+  - id: core
+    name: Core
+    kind: all_of
+    courses: [COMP 1411, COMP 1412]
+  - id: hum
+    name: Humanities
+    kind: choose
+    courses: [ARTS 1311]
+    min_count: 1

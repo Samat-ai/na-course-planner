@@ -767,6 +767,7 @@ groups:
     forced:
       - ENGL 1311
       - ENGL 1312
+      - COMM 1311  # Catalog requires COMM 1311 or COMM 1313; forced field requires specific code (v1 limitation)
     courses:
       - COMM 1311
       - COMM 1313
@@ -780,7 +781,7 @@ groups:
     kind: choose
     min_count: 2
     forced:
-      - HIST 1311
+      - HIST 1311  # v1 approximation: catalog accepts any HIST course (1311, 1312, 2311, 2314)
     courses:
       - ARTS 1311
       - ENGL 2315

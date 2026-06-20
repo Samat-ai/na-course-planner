@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>NA Course Planner</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 760px; margin: 2rem auto; }
+    textarea { width: 100%; height: 160px; }
+    pre { background: #f4f4f4; padding: 1rem; overflow: auto; }
+    button { margin: 0.25rem 0.25rem 0.25rem 0; }
+  </style>
+</head>
+<body>
+  <h1>NA Course Planner</h1>
+  <p>Paste your transcript text, then parse → audit → recommend. (Test UI — nothing is stored.)</p>
+  <textarea id="text" placeholder="Paste transcript text here"></textarea>
+  <div>
+    <button onclick="parseText()">1. Parse</button>
+    <button onclick="audit()">2. Audit</button>
+    <button onclick="recommend()">3. Recommend</button>
+  </div>
+  <pre id="out">(results appear here)</pre>
+  <script>
+    let student = null;
+    const PROGRAM = { program_code: "CS-BS", catalog_year: 2026 };
+    const show = (o) => document.getElementById("out").textContent =
+      JSON.stringify(o, null, 2);
+    async function post(path, body) {
+      const r = await fetch(path, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      return r.json();
+    }
+    async function parseText() {
+      student = await post("/parse/text",
+        { text: document.getElementById("text").value, ...PROGRAM });
+      show(student);
+    }
+    async function audit() {
+      if (!student) return show("Parse first.");
+      show(await post("/audit", { student, ...PROGRAM }));
+    }
+    async function recommend() {
+      if (!student) return show("Parse first.");
+      show(await post("/recommend", { student, ...PROGRAM,
+        preferences: { target_credits: 15, target_season: "fall", target_year: 2026 } }));
+    }
+  </script>
+</body>
+</html>

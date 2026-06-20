@@ -106,6 +106,29 @@ py -3 scripts/gen_architecture.py                        # refresh module map be
   - `is_passing(g: Grade) -> bool`
   - `meets_minimum(earned: Grade, minimum: Grade) -> bool`
 
+### `src/na_planner/ingestion/build.py`
+  - `to_student_record(parsed: ParsedTranscript, program_code: str, catalog_year: int) -> StudentRecord`
+
+### `src/na_planner/ingestion/grade_parse.py`
+  - `parse_grade(token: str) -> Grade`
+
+### `src/na_planner/ingestion/models.py`
+  - **class `ParsedCourse`**
+    - fields: `code`, `title`, `grade`, `credits`, `term_label`
+  - **class `ParsedTranscript`**
+    - fields: `major`, `concentration`, `courses`, `warnings`
+  - **class `NoTextLayerError`**
+    - Raised when a PDF has no usable text layer (image-only scan).
+  - **class `UnknownGradeError`**
+    - Raised when a transcript grade token is not recognized.
+
+### `src/na_planner/ingestion/pdf.py`
+  - `extract_pdf_text(data: bytes, min_chars: int=20) -> str`
+  - `parse_transcript_pdf(data: bytes) -> ParsedTranscript`
+
+### `src/na_planner/ingestion/transcript_text.py`
+  - `parse_transcript_text(text: str) -> ParsedTranscript`
+
 ### `src/na_planner/models/audit.py`
   - **class `CourseAllocation`**
     - fields: `code`, `credits`, `group_id`

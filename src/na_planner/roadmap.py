@@ -39,7 +39,7 @@ def recommend(
 
     season, year = prefs.target_season, prefs.target_year
     terms: list[TermPlan] = []
-    last_audit = audit(student, program)
+    last_audit = None
 
     for _ in range(MAX_TERMS):
         state = _state_record(program.code, program.catalog_year, passed, credits)
@@ -59,6 +59,9 @@ def recommend(
             credits[pc.code] = pc.credits
             credits_earned += pc.credits
         season, year = _advance(season, year)
+
+    if last_audit is None:
+        last_audit = audit(student, program)
 
     elective_remaining = sum(
         (g.credits_required - g.credits_applied)

@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, File, Form, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
 from na_planner.api.schemas import AuditRequest, ParseTextRequest, RecommendRequest
@@ -51,9 +51,9 @@ def create_app() -> FastAPI:
 
     @app.post("/parse/pdf", response_model=StudentRecord)
     def parse_pdf(
-        file: UploadFile = File(...),
-        program_code: str = Form(...),
-        catalog_year: int = Form(...),
+        file: UploadFile = File(...),  # noqa: B008
+        program_code: str = Form(...),  # noqa: B008
+        catalog_year: int = Form(...),  # noqa: B008
     ) -> StudentRecord:
         data = file.file.read()
         try:

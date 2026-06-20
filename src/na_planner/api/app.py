@@ -1,5 +1,9 @@
+from pathlib import Path
+
 from fastapi import FastAPI, File, Form, HTTPException, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 
 from na_planner.api.export import plan_to_json, plan_to_pdf
 from na_planner.api.schemas import AuditRequest, ParseTextRequest, RecommendRequest
@@ -76,6 +80,14 @@ def create_app() -> FastAPI:
             content=plan_to_pdf(rec), media_type="application/pdf",
             headers={"content-disposition": "attachment; filename=plan.pdf"},
         )
+
+    @app.get("/", response_class=HTMLResponse)
+    def index() -> str:
+        static_dir = Path(__file__).parent.parent / "static"
+        return (static_dir / "index.html").read_text(encoding="utf-8")
+
+    static_dir = Path(__file__).parent.parent / "static"
+    app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
     return app
 

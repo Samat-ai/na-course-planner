@@ -1,4 +1,3 @@
-import json
 import sys
 from pathlib import Path
 
@@ -21,6 +20,9 @@ def _print_audit(program_path: str, student_path: str) -> int:
     for g in result.groups:
         mark = {"satisfied": "[x]", "partial": "[~]", "unmet": "[ ]"}[g.status]
         print(f"{mark} {g.name}: {g.status}")
+        if g.remaining_choices:
+            preview = ", ".join(g.remaining_choices[:6])
+            print(f"      remaining: {preview}")
     print("-" * 60)
     print(f"Total credits earned: {result.total_credits_earned:.0f}"
           f" / {result.total_credits_required:.0f}")

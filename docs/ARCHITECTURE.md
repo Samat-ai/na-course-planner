@@ -80,5 +80,91 @@ py -3 scripts/gen_architecture.py                        # refresh module map be
 ## Module reference (auto-generated)
 
 <!-- AUTOGEN:START -->
-_No modules under `src/na_planner/` yet — this section populates as the code is built._
+### `src/na_planner/audit.py`
+  - `course_matches_filter(code: str, filt: CourseFilter, program: Program) -> bool`
+  - `evaluate_group(group: RequirementGroup, applied: list[EarnedCourse], program: Program) -> GroupStatus`
+  - `earned_courses(student: StudentRecord) -> list[EarnedCourse]`
+  - `allocate(earned: list[EarnedCourse], program: Program) -> dict[str, list[EarnedCourse]]`
+  - `audit(student: StudentRecord, program: Program) -> AuditResult`
+
+### `src/na_planner/catalog_linter.py`
+  - `lint_program(program: Program) -> list[str]`
+
+### `src/na_planner/catalog_loader.py`
+  - `load_program(path: str | Path) -> Program`
+
+### `src/na_planner/cli.py`
+  - `main(argv: list[str]) -> int`
+
+### `src/na_planner/eligibility.py`
+  - `remaining_required_courses(audit: AuditResult, program: Program, prefs: StudentPreferences) -> list[str]`
+  - `is_offered(course: Course, season: str) -> bool`
+  - `eligible_courses(audit: AuditResult, program: Program, prefs: StudentPreferences, passed: dict[str, Grade | None], credits_earned: float) -> list[str]`
+
+### `src/na_planner/grades.py`
+  - **class `Grade`**
+  - `is_passing(g: Grade) -> bool`
+  - `meets_minimum(earned: Grade, minimum: Grade) -> bool`
+
+### `src/na_planner/models/audit.py`
+  - **class `CourseAllocation`**
+    - fields: `code`, `credits`, `group_id`
+  - **class `GroupStatus`**
+    - fields: `group_id`, `name`, `status`, `credits_required`, `credits_applied`, `courses_required`, `courses_applied`, `satisfied_by`, `remaining_choices`, `choose_remaining`
+  - **class `AuditResult`**
+    - fields: `program_code`, `catalog_year`, `groups`, `allocations`, `total_credits_required`, `total_credits_earned`, `credits_remaining`, `is_complete`
+
+### `src/na_planner/models/catalog.py`
+  - **class `OfferingPattern`**
+  - **class `PrereqExpr`**
+    - fields: `kind`, `course`, `min_grade`, `children`, `credits`, `subject`, `level`
+  - **class `CourseFilter`**
+    - fields: `min_level`, `subjects`, `unrestricted`
+  - **class `Course`**
+    - fields: `code`, `title`, `credits`, `prereq`, `coreqs`, `offering`, `difficulty`
+  - **class `RequirementGroup`**
+    - fields: `id`, `name`, `kind`, `courses`, `forced`, `min_count`, `min_credits`, `subgroups`, `choose_groups`, `course_filter`, `min_grade`
+  - **class `Program`**
+    - fields: `code`, `name`, `catalog_year`, `total_credits_required`, `default_min_grade`, `courses`, `groups`
+
+### `src/na_planner/models/preferences.py`
+  - **class `StudentPreferences`**
+    - fields: `target_credits`, `max_hard_courses`, `target_season`, `target_year`, `declared_concentration`, `max_load`
+
+### `src/na_planner/models/recommend.py`
+  - **class `PlannedCourse`**
+    - fields: `code`, `credits`, `score`, `reasons`, `group_id`, `is_choice_slot`, `slot_options`, `provisional`
+  - **class `TermPlan`**
+    - fields: `season`, `year`, `label`, `courses`, `total_credits`, `warnings`
+  - **class `Recommendation`**
+    - fields: `next_term`, `roadmap`, `projected_graduation`, `elective_credits_remaining`, `is_tentative`
+
+### `src/na_planner/models/student.py`
+  - **class `CompletedCourse`**
+    - fields: `code`, `title`, `credits`, `grade`, `term`
+    - methods: in_progress
+  - **class `ExternalCredit`**
+    - fields: `source`, `equivalent_code`, `credits`
+  - **class `StudentRecord`**
+    - fields: `program_code`, `catalog_year`, `completed`, `external`
+  - **class `EarnedCourse`**
+    - fields: `code`, `credits`, `grade`
+
+### `src/na_planner/planner.py`
+  - `plan_term(eligible: list[str], program: Program, prefs: StudentPreferences, weights: dict[str, float]=DEFAULT_WEIGHTS) -> TermPlan`
+
+### `src/na_planner/prereqs.py`
+  - `course_subject(code: str) -> str`
+  - `course_number(code: str) -> int`
+  - `prereqs_satisfied(expr: PrereqExpr | None, passed: dict[str, Grade | None], credits_earned: float) -> bool`
+
+### `src/na_planner/roadmap.py`
+  - `recommend(student: StudentRecord, program: Program, prefs: StudentPreferences, weights: dict[str, float]=DEFAULT_WEIGHTS) -> Recommendation`
+
+### `src/na_planner/scoring.py`
+  - `direct_dependents(code: str, program: Program) -> list[str]`
+  - `unlocking_power(code: str, program: Program) -> int`
+  - `difficulty(code: str, program: Program) -> int`
+  - `graduation_urgency(code: str, program: Program) -> float`
+  - `score_course(code: str, program: Program, weights: dict[str, float]=DEFAULT_WEIGHTS) -> float`
 <!-- AUTOGEN:END -->

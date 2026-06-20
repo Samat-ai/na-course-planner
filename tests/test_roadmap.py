@@ -49,3 +49,25 @@ def test_recommend_stops_when_complete():
     rec = recommend(student, prog, StudentPreferences())
     assert rec.next_term.courses == []
     assert rec.roadmap == []
+
+
+def test_in_progress_course_not_rerecommended_and_unlocks_next():
+    # A -> B (both required); A is currently in progress (WIP).
+    courses = {
+        "A 1000": Course(code="A 1000", credits=3),
+        "B 1000": Course(code="B 1000", credits=3,
+                         prereq=PrereqExpr(kind="course", course="A 1000")),
+    }
+    groups = [RequirementGroup(id="core", name="Core", kind="all_of",
+                               courses=["A 1000", "B 1000"])]
+    prog = Program(code="X", name="X", catalog_year=2026, total_credits_required=6,
+                   courses=courses, groups=groups)
+    student = StudentRecord(
+        program_code="X", catalog_year=2026,
+        completed=[CompletedCourse(code="A 1000", credits=3, grade=Grade.WIP)],
+    )
+    prefs = StudentPreferences(target_credits=6, target_season="fall", target_year=2026)
+    rec = recommend(student, prog, prefs)
+    next_codes = [c.code for c in rec.next_term.courses]
+    assert "A 1000" not in next_codes      # currently in progress — don't re-recommend
+    assert "B 1000" in next_codes          # in-progress A unlocks B's prereq

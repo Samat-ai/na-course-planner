@@ -35,6 +35,10 @@ def recommend(
     for e in earned_courses(student):
         passed[e.code] = e.grade
         credits[e.code] = e.credits
+    for c in student.completed:                  # in-progress (WIP): assume complete next term
+        if c.in_progress and c.code not in passed:
+            passed[c.code] = Grade.A
+            credits[c.code] = c.credits
     credits_earned = sum(credits.values())
 
     season, year = prefs.target_season, prefs.target_year

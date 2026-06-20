@@ -1,6 +1,7 @@
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
+from na_planner.api.export import plan_to_json, plan_to_pdf
 from na_planner.api.schemas import AuditRequest, ParseTextRequest, RecommendRequest
 from na_planner.audit import audit
 from na_planner.ingestion.build import to_student_record
@@ -61,6 +62,20 @@ def create_app() -> FastAPI:
         except NoTextLayerError as e:
             raise HTTPException(status_code=422, detail=str(e)) from e
         return to_student_record(parsed, program_code, catalog_year)
+
+    @app.post("/export/json")
+    def export_json(rec: Recommendation) -> Response:
+        return Response(
+            content=plan_to_json(rec), media_type="application/json",
+            headers={"content-disposition": "attachment; filename=plan.json"},
+        )
+
+    @app.post("/export/pdf")
+    def export_pdf(rec: Recommendation) -> Response:
+        return Response(
+            content=plan_to_pdf(rec), media_type="application/pdf",
+            headers={"content-disposition": "attachment; filename=plan.pdf"},
+        )
 
     return app
 

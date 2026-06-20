@@ -1,13 +1,13 @@
 from fpdf import FPDF
 
-from na_planner.models.recommend import Recommendation
+from na_planner.models.recommend import Recommendation, TermPlan
 
 
 def plan_to_json(rec: Recommendation) -> bytes:
     return rec.model_dump_json(indent=2).encode("utf-8")
 
 
-def _term_lines(pdf: FPDF, title: str, term) -> None:
+def _term_lines(pdf: FPDF, title: str, term: TermPlan) -> None:
     pdf.set_font("Helvetica", style="B", size=12)
     pdf.cell(0, 8, f"{title}: {term.label} ({term.total_credits:.0f} cr)",
              new_x="LMARGIN", new_y="NEXT")

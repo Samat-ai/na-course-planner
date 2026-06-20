@@ -13,7 +13,7 @@ def _term_lines(pdf: FPDF, title: str, term) -> None:
              new_x="LMARGIN", new_y="NEXT")
     pdf.set_font("Helvetica", size=10)
     for c in term.courses:
-        reasons = f" — {', '.join(c.reasons)}" if c.reasons else ""
+        reasons = f" - {', '.join(c.reasons)}" if c.reasons else ""
         pdf.cell(0, 6, f"  - {c.code} ({c.credits:.0f} cr){reasons}",
                  new_x="LMARGIN", new_y="NEXT")
     for w in term.warnings:

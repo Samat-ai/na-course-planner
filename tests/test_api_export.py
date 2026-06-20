@@ -25,6 +25,18 @@ def test_plan_to_pdf_is_pdf_bytes():
     assert out[:4] == b"%PDF"
 
 
+def test_plan_to_pdf_with_reasons():
+    rec = Recommendation(
+        next_term=TermPlan(season="fall", year=2026, label="Fall 2026",
+                           courses=[PlannedCourse(code="COMP 2313", credits=3,
+                                                  reasons=["Required and not yet satisfied"])],
+                           total_credits=3),
+        roadmap=[], projected_graduation="Spring 2028", elective_credits_remaining=15,
+    )
+    out = plan_to_pdf(rec)
+    assert out[:4] == b"%PDF"
+
+
 def test_export_endpoints():
     rj = client.post("/export/json", json=REC.model_dump())
     assert rj.status_code == 200

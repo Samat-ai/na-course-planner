@@ -67,10 +67,11 @@ def recommend(
     if last_audit is None:
         last_audit = audit(student, program)
 
+    group_kinds = {grp.id: grp.kind for grp in program.groups}
     elective_remaining = sum(
         (g.credits_required - g.credits_applied)
         for g in last_audit.groups
-        if g.status != "satisfied" and g.courses_required is None
+        if g.status != "satisfied" and group_kinds.get(g.group_id) == "credits_from_filter"
     )
 
     if not terms:

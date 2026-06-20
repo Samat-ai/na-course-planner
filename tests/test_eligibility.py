@@ -63,3 +63,24 @@ def test_remaining_required_lists_unmet_only():
     rem = remaining_required_courses(a, prog, StudentPreferences())
     assert "COMP 1411" not in rem
     assert "COMP 1412" in rem
+
+
+def test_remaining_includes_forced_only_courses():
+    # A course in group.forced but NOT group.courses must still appear in remaining
+    courses = {
+        "OPT 1000": Course(code="OPT 1000", credits=3),
+        "FORCED 1000": Course(code="FORCED 1000", credits=3),
+    }
+    groups = [RequirementGroup(
+        id="choose_g", name="Choose Group", kind="choose",
+        courses=["OPT 1000"],      # optional pool
+        forced=["FORCED 1000"],    # mandatory — must be recommended even if not in courses
+        min_count=1,
+    )]
+    prog = Program(code="X", name="X", catalog_year=2026, total_credits_required=3,
+                   courses=courses, groups=groups)
+    student = StudentRecord(program_code="X", catalog_year=2026)
+    a = audit(student, prog)
+    prefs = StudentPreferences()
+    rem = remaining_required_courses(a, prog, prefs)
+    assert "FORCED 1000" in rem

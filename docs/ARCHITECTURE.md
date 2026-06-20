@@ -80,6 +80,17 @@ py -3 scripts/gen_architecture.py                        # refresh module map be
 ## Module reference (auto-generated)
 
 <!-- AUTOGEN:START -->
+### `src/na_planner/api/app.py`
+  - `create_app() -> FastAPI`
+
+### `src/na_planner/api/schemas.py`
+  - **class `AuditRequest`**
+    - fields: `student`, `program_code`, `catalog_year`
+  - **class `RecommendRequest`**
+    - fields: `student`, `program_code`, `catalog_year`, `preferences`
+  - **class `ParseTextRequest`**
+    - fields: `text`, `program_code`, `catalog_year`
+
 ### `src/na_planner/audit.py`
   - `course_matches_filter(code: str, filt: CourseFilter, program: Program) -> bool`
   - `evaluate_group(group: RequirementGroup, applied: list[EarnedCourse], program: Program) -> GroupStatus`
@@ -180,6 +191,10 @@ py -3 scripts/gen_architecture.py                        # refresh module map be
   - `course_subject(code: str) -> str`
   - `course_number(code: str) -> int`
   - `prereqs_satisfied(expr: PrereqExpr | None, passed: dict[str, Grade | None], credits_earned: float) -> bool`
+
+### `src/na_planner/programs.py`
+  - `list_programs(directory: Path=PROGRAMS_DIR) -> list[dict]`
+  - `load_program_by(code: str, catalog_year: int, directory: Path=PROGRAMS_DIR) -> Program`
 
 ### `src/na_planner/roadmap.py`
   - `recommend(student: StudentRecord, program: Program, prefs: StudentPreferences, weights: dict[str, float]=DEFAULT_WEIGHTS) -> Recommendation`

@@ -83,6 +83,10 @@ py -3 scripts/gen_architecture.py                        # refresh module map be
 ### `src/na_planner/api/app.py`
   - `create_app() -> FastAPI`
 
+### `src/na_planner/api/export.py`
+  - `plan_to_json(rec: Recommendation) -> bytes`
+  - `plan_to_pdf(rec: Recommendation) -> bytes`
+
 ### `src/na_planner/api/schemas.py`
   - **class `AuditRequest`**
     - fields: `student`, `program_code`, `catalog_year`

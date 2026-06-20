@@ -4,7 +4,7 @@ from na_planner.ingestion.models import ParsedCourse, ParsedTranscript
 
 _TERM_RE = re.compile(r"(\d{4})-(\d{4})\s+Academic Year\s*:\s*(\w+)")
 _ROW_RE = re.compile(
-    r"^([A-Z]{2,4}\s+\d{4})\s+(.*?)\s+UG\s+([A-Za-z][A-Za-z+\-]*)\s+"
+    r"^([A-Z]{2,5}\s+\d{4})\s+(.*?)\s+UG\s+([A-Za-z][A-Za-z+\-]*)\s+"
     r"([\d.]+)\s+[\d.]+\s+[\d.]+\s+[\d.]+\s*$"
 )
 _CONC_RE = re.compile(r"^(.*?)\s*-\s*Conc:\s*(.*)$")

@@ -1,51 +1,950 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>NA Course Planner</title>
-  <style>
-    body { font-family: system-ui, sans-serif; max-width: 760px; margin: 2rem auto; }
-    textarea { width: 100%; height: 160px; }
-    pre { background: #f4f4f4; padding: 1rem; overflow: auto; }
-    button { margin: 0.25rem 0.25rem 0.25rem 0; }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NA Course Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Spectral:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body { background: #F2EEE6; font-family: 'Hanken Grotesk', system-ui, sans-serif; color: #1A2733; -webkit-font-smoothing: antialiased; }
+::placeholder { color: #9AA3AC; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes shimmer { 0% { background-position: -500px 0; } 100% { background-position: 500px 0; } }
+.screen { display: none; }
+.screen.active { display: block; }
+.spinner { width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle; }
+.spinner-sm { width:11px;height:11px;border:2px solid #C5D2E2;border-top-color:#1E3A5F;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle; }
+.skel { border-radius:6px;background:linear-gradient(90deg,#EFEAE0,#F7F3EB,#EFEAE0);background-size:500px 100%;animation:shimmer 1.2s infinite; }
+.plan-grid { display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:26px;align-items:start; }
+.band-stats { display:flex;flex-direction:row;gap:40px;flex-wrap:wrap; }
+.stat-div { border-left:1px solid rgba(255,255,255,.15);padding-left:40px; }
+.prog-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:16px; }
+.band-inner { display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:30px;flex-wrap:wrap; }
+.band-ctrl { display:flex;flex-direction:column;align-items:flex-end;gap:12px; }
+.stat-num { font-family:'Spectral',serif;font-size:42px;font-weight:600;line-height:1; }
+.foot-row { display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:16px; }
+.export-bar { display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:16px; }
+.copy-bar { display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:12px;margin-top:18px;padding-top:14px;border-top:1px solid #EDE8DE; }
+.tab-desktop { display:block; }
+.tab-mobile { display:none; }
+.step-desktop { display:flex; }
+.step-mobile { display:none; }
+.sub-label { display:block; }
+.input-h1 { font-size:40px; }
+.input-sub { font-size:17px; }
+.conf-h1 { font-size:32px; }
+.tab-font { font-size:14.5px; }
+.tab-pad { padding:15px 12px; }
+@media (max-width:680px) {
+  .plan-grid { grid-template-columns:1fr; }
+  .band-stats { flex-direction:column;gap:20px; }
+  .stat-div { border-left:none;padding-left:0; }
+  .prog-grid { grid-template-columns:1fr; }
+  .band-inner { flex-direction:column;align-items:flex-start;gap:22px; }
+  .band-ctrl { align-items:flex-start; }
+  .stat-num { font-size:34px; }
+  .foot-row { flex-direction:column;align-items:stretch; }
+  .export-bar { flex-direction:column;align-items:stretch; }
+  .copy-bar { flex-direction:column;align-items:stretch; }
+  .tab-desktop { display:none; }
+  .tab-mobile { display:block; }
+  .step-desktop { display:none; }
+  .step-mobile { display:flex; }
+  .sub-label { display:none; }
+  .input-h1 { font-size:27px; }
+  .input-sub { font-size:15px; }
+  .conf-h1 { font-size:25px; }
+  .tab-font { font-size:12.5px; }
+  .tab-pad { padding:13px 6px; }
+}
+</style>
 </head>
-<body>
-  <h1>NA Course Planner</h1>
-  <p>Paste your transcript text, then parse → audit → recommend. (Test UI — nothing is stored.)</p>
-  <textarea id="text" placeholder="Paste transcript text here"></textarea>
-  <div>
-    <button onclick="parseText()">1. Parse</button>
-    <button onclick="audit()">2. Audit</button>
-    <button onclick="recommend()">3. Recommend</button>
+<body style="min-height:100vh;padding-bottom:80px;">
+
+<!-- Disclaimer banner -->
+<div style="background:#1A2733;color:#E7E1D6;font-size:13px;letter-spacing:.01em;padding:9px 24px;display:flex;align-items:center;justify-content:center;gap:10px;">
+  <span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;border:1.5px solid #8A95A0;color:#C9CFD6;font-size:10px;font-weight:700;font-style:italic;font-family:'Spectral',serif;">i</span>
+  <span>Planning aid — always verify with your advisor and the registrar before you register.</span>
+</div>
+
+<!-- App bar + stepper -->
+<div style="max-width:1200px;margin:0 auto;padding:22px 24px 0;">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;">
+    <div style="display:flex;align-items:center;gap:12px;cursor:pointer;" onclick="app.goInput()">
+      <div style="width:34px;height:34px;border-radius:9px;background:#1E3A5F;display:flex;align-items:center;justify-content:center;color:#F2EEE6;font-family:'Spectral',serif;font-weight:600;font-size:18px;">N</div>
+      <div style="font-family:'Spectral',serif;font-weight:600;font-size:19px;color:#1A2733;letter-spacing:-.01em;">Course Planner</div>
+      <div class="sub-label" style="font-size:12px;color:#8A95A0;border-left:1px solid #D8D1C5;padding-left:12px;">Northvale Academy</div>
+    </div>
+    <div id="stepper-desktop" class="step-desktop" style="align-items:center;gap:6px;"></div>
+    <div id="stepper-mobile" class="step-mobile" style="align-items:center;gap:8px;background:#fff;border:1px solid #E7E1D6;border-radius:20px;padding:5px 6px 5px 12px;">
+      <span id="step-mob-num" style="font-size:12px;color:#8A95A0;font-weight:600;white-space:nowrap;"></span>
+      <span id="step-mob-label" style="font-size:13px;font-weight:700;color:#1A2733;background:#EDF1F6;padding:3px 10px;border-radius:14px;"></span>
+    </div>
   </div>
-  <pre id="out">(results appear here)</pre>
-  <script>
-    let student = null;
-    const PROGRAM = { program_code: "CS-BS", catalog_year: 2026 };
-    const show = (o) => document.getElementById("out").textContent =
-      JSON.stringify(o, null, 2);
-    async function post(path, body) {
-      const r = await fetch(path, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+  <div style="height:1px;background:#E2DCCF;margin-top:18px;"></div>
+</div>
+
+<!-- ============ SCREEN: INPUT ============ -->
+<div id="screen-input" class="screen active" style="max-width:760px;margin:0 auto;padding:48px 24px 0;">
+  <div style="text-align:center;margin-bottom:34px;">
+    <h1 class="input-h1" style="font-family:'Spectral',serif;font-weight:600;line-height:1.1;letter-spacing:-.02em;margin:0 0 12px;color:#1A2733;">Let's map your path to graduation.</h1>
+    <p class="input-sub" style="color:#5C6B79;margin:0;line-height:1.5;">Bring your transcript and we'll show you exactly where you stand and what to take next.<br>Nothing is saved — your data stays in your browser.</p>
+  </div>
+  <div style="background:#fff;border:1px solid #E7E1D6;border-radius:16px;box-shadow:0 1px 3px rgba(26,39,51,.05);overflow:hidden;">
+    <div style="display:flex;border-bottom:1px solid #EDE8DE;">
+      <button id="tab-btn-paste" onclick="app.setTab('paste')" class="tab-font tab-pad" style="flex:1;background:#fff;border:none;border-bottom:2.5px solid #1E3A5F;font-family:'Hanken Grotesk';font-weight:700;color:#1A2733;cursor:pointer;transition:all .15s;">Paste text</button>
+      <button id="tab-btn-upload" onclick="app.setTab('upload')" class="tab-font tab-pad" style="flex:1;background:#FBFAF7;border:none;border-bottom:2.5px solid transparent;font-family:'Hanken Grotesk';font-weight:500;color:#8A95A0;cursor:pointer;transition:all .15s;">Upload PDF</button>
+      <button id="tab-btn-resume" onclick="app.setTab('resume')" class="tab-font tab-pad" style="flex:1;background:#FBFAF7;border:none;border-bottom:2.5px solid transparent;font-family:'Hanken Grotesk';font-weight:500;color:#8A95A0;cursor:pointer;transition:all .15s;">Resume from saved plan</button>
+    </div>
+    <div style="padding:26px;">
+      <div id="tab-paste">
+        <label style="display:block;font-size:13px;font-weight:600;color:#5C6B79;margin-bottom:8px;">Paste your unofficial transcript</label>
+        <textarea id="paste-input" placeholder="e.g.&#10;CS 110  Intro to Programming   4.0   A&#10;MATH 151  Calculus I           4.0   B+&#10;ENGL 101  Composition I        3.0   A&#10;..." style="width:100%;height:200px;resize:vertical;border:1px solid #E2DCCF;border-radius:10px;padding:14px;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:13px;line-height:1.6;color:#1A2733;background:#FBFAF7;outline:none;"></textarea>
+        <p style="font-size:12.5px;color:#8A95A0;margin:10px 0 0;">Copy straight from your student portal — we'll parse the courses, credits, and grades.</p>
+      </div>
+      <div id="tab-upload" style="display:none;">
+        <div id="upload-error-box" style="display:none;border:1px solid #ECDFBE;background:#F6EEDB;border-radius:12px;padding:20px;gap:14px;align-items:flex-start;">
+          <div style="flex:none;width:34px;height:34px;border-radius:50%;background:#EAD9A8;display:flex;align-items:center;justify-content:center;color:#8A6512;font-weight:700;font-family:'Spectral',serif;">!</div>
+          <div>
+            <div style="font-weight:600;font-size:15px;color:#6E5410;margin-bottom:4px;">This PDF can't be read — it looks like a scan</div>
+            <p style="font-size:13.5px;color:#7A6428;margin:0 0 12px;line-height:1.5;">Image-only PDFs have no selectable text. Paste your transcript text instead, or enter courses by hand on the next step.</p>
+            <button onclick="app.setTab('paste')" style="background:#1E3A5F;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:'Hanken Grotesk';">Paste text instead</button>
+          </div>
+        </div>
+        <div id="upload-idle-box" style="border:2px dashed #D8D1C5;border-radius:12px;padding:40px 24px;text-align:center;background:#FBFAF7;">
+          <div style="width:46px;height:46px;border-radius:11px;background:#EDE8DE;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5C6B79" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><path d="m6 10 6-6 6 6"/><path d="M4 20h16"/></svg>
+          </div>
+          <div style="font-size:15.5px;font-weight:600;color:#1A2733;margin-bottom:4px;">Drop your transcript PDF here</div>
+          <div style="font-size:13px;color:#8A95A0;margin-bottom:16px;">or choose a file — we read it locally and discard it after parsing</div>
+          <button onclick="app.triggerPdf()" style="background:#1E3A5F;color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Hanken Grotesk';">Select PDF</button>
+        </div>
+        <input type="file" id="pdf-input" accept=".pdf" style="display:none;" onchange="app.onPdfSelected(event)">
+      </div>
+      <div id="tab-resume" style="display:none;border:2px dashed #D8D1C5;border-radius:12px;padding:36px 24px;text-align:center;background:#FBFAF7;">
+        <div style="font-size:15.5px;font-weight:600;color:#1A2733;margin-bottom:4px;">Resume from a saved plan</div>
+        <div style="font-size:13px;color:#8A95A0;margin-bottom:16px;">Import the <span style="font-family:ui-monospace,monospace;font-size:12px;">plan.json</span> you downloaded earlier to pick up where you left off.</div>
+        <button onclick="app.triggerResume()" style="background:#fff;color:#1E3A5F;border:1.5px solid #1E3A5F;border-radius:8px;padding:9px 18px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Hanken Grotesk';">Choose plan file</button>
+        <input type="file" id="resume-input" accept=".json" style="display:none;" onchange="app.onResumeSelected(event)">
+      </div>
+    </div>
+    <div id="input-footer" style="border-top:1px solid #EDE8DE;padding:18px 26px;background:#FCFBF8;">
+      <div class="foot-row">
+        <div style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:#8A95A0;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9AA3AC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Processed in your browser. Never uploaded to a server.
+        </div>
+        <button id="parse-btn" onclick="app.parse()" style="background:#1E3A5F;color:#fff;border:none;border-radius:9px;padding:11px 22px;font-size:14.5px;font-weight:600;cursor:pointer;font-family:'Hanken Grotesk';display:flex;align-items:center;gap:8px;">
+          <span id="parse-spinner" class="spinner" style="display:none;"></span>
+          <span id="parse-label">Read my transcript</span>
+        </button>
+      </div>
+      <div id="input-error" style="display:none;margin-top:12px;font-size:13px;color:#B07A16;background:#F6EEDB;border:1px solid #ECDFBE;border-radius:8px;padding:10px 14px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SCREEN: CONFIRM ============ -->
+<div id="screen-confirm" class="screen" style="max-width:1000px;margin:0 auto;padding:36px 24px 0;">
+  <h1 class="conf-h1" style="font-family:'Spectral',serif;font-weight:600;letter-spacing:-.02em;margin:0 0 8px;">Confirm what we found</h1>
+  <p style="font-size:16px;color:#5C6B79;margin:0 0 28px;line-height:1.5;">Edit anything that looks off, add credits we couldn't see, then tell us your program. This becomes your record.</p>
+  <div style="background:#fff;border:1px solid #E7E1D6;border-radius:14px;padding:22px;margin-bottom:22px;box-shadow:0 1px 3px rgba(26,39,51,.04);">
+    <div style="font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#8A95A0;margin-bottom:16px;">Your program</div>
+    <div class="prog-grid">
+      <div>
+        <label style="display:block;font-size:12.5px;font-weight:600;color:#5C6B79;margin-bottom:6px;">Degree program</label>
+        <select id="program-sel" onchange="app.onProgramChange(this.value)" style="width:100%;border:1px solid #E2DCCF;border-radius:9px;padding:10px 12px;font-family:'Hanken Grotesk';font-size:14px;background:#FBFAF7;color:#1A2733;cursor:pointer;"></select>
+      </div>
+      <div>
+        <label style="display:block;font-size:12.5px;font-weight:600;color:#5C6B79;margin-bottom:6px;">Catalog year</label>
+        <select id="year-sel" onchange="app.onYearChange(this.value)" style="width:100%;border:1px solid #E2DCCF;border-radius:9px;padding:10px 12px;font-family:'Hanken Grotesk';font-size:14px;background:#FBFAF7;color:#1A2733;cursor:pointer;"></select>
+      </div>
+      <div>
+        <label style="display:block;font-size:12.5px;font-weight:600;color:#5C6B79;margin-bottom:6px;">Declared concentration</label>
+        <select id="conc-sel" onchange="app.onConcChange(this.value)" style="width:100%;border:1px solid #E2DCCF;border-radius:9px;padding:10px 12px;font-family:'Hanken Grotesk';font-size:14px;background:#FBFAF7;color:#1A2733;cursor:pointer;"></select>
+      </div>
+    </div>
+  </div>
+  <div style="background:#fff;border:1px solid #E7E1D6;border-radius:14px;overflow:hidden;margin-bottom:22px;box-shadow:0 1px 3px rgba(26,39,51,.04);">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px 14px;">
+      <div>
+        <div style="font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#8A95A0;">Completed courses</div>
+        <div id="course-count" style="font-size:12.5px;color:#9AA3AC;margin-top:3px;"></div>
+      </div>
+      <button onclick="app.addCourse()" style="background:#F2EEE6;color:#1E3A5F;border:1px solid #DDD6C9;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Hanken Grotesk';">+ Add course</button>
+    </div>
+    <div class="tab-desktop" style="display:grid;grid-template-columns:90px 1fr 70px 64px 90px 34px;gap:10px;padding:8px 22px;background:#FBFAF7;border-top:1px solid #EDE8DE;border-bottom:1px solid #EDE8DE;font-size:11.5px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:#9AA3AC;">
+      <div>Code</div><div>Title</div><div>Credits</div><div>Grade</div><div>Term</div><div></div>
+    </div>
+    <div style="max-height:360px;overflow-y:auto;">
+      <div id="courses-desktop" class="tab-desktop"></div>
+      <div id="courses-mobile" class="tab-mobile"></div>
+    </div>
+  </div>
+  <div style="background:#fff;border:1px solid #E7E1D6;border-radius:14px;padding:22px;margin-bottom:22px;box-shadow:0 1px 3px rgba(26,39,51,.04);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <div>
+        <div style="font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#8A95A0;">External &amp; transfer credit</div>
+        <div style="font-size:12.5px;color:#9AA3AC;margin-top:3px;">AP, CLEP, IB, and transfer credits we can't see on a transcript</div>
+      </div>
+      <button onclick="app.addExternal()" style="background:#F2EEE6;color:#1E3A5F;border:1px solid #DDD6C9;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Hanken Grotesk';">+ Add credit</button>
+    </div>
+    <div id="externals-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding-bottom:8px;">
+    <button onclick="app.goInput()" style="background:transparent;color:#5C6B79;border:none;font-size:14px;font-weight:600;cursor:pointer;font-family:'Hanken Grotesk';padding:10px 0;">&#8592; Back</button>
+    <button id="confirm-btn" onclick="app.confirm()" style="background:#1E3A5F;color:#fff;border:none;border-radius:10px;padding:13px 26px;font-size:15px;font-weight:600;cursor:pointer;font-family:'Hanken Grotesk';box-shadow:0 2px 8px rgba(30,58,95,.2);display:flex;align-items:center;gap:8px;">
+      <span id="confirm-spinner" class="spinner" style="display:none;"></span>
+      <span id="confirm-label">Looks right — see my plan &#8594;</span>
+    </button>
+  </div>
+  <div id="confirm-error" style="display:none;margin-top:12px;font-size:13px;color:#B07A16;background:#F6EEDB;border:1px solid #ECDFBE;border-radius:8px;padding:10px 14px;"></div>
+</div>
+
+<!-- ============ SCREEN: PLAN ============ -->
+<div id="screen-plan" class="screen" style="max-width:1200px;margin:0 auto;padding:34px 24px 0;">
+  <div style="background:linear-gradient(135deg,#1E3A5F,#16304F);border-radius:18px;padding:30px 34px;color:#fff;margin-bottom:26px;box-shadow:0 6px 20px rgba(30,58,95,.18);">
+    <div class="band-inner">
+      <div class="band-stats">
+        <div>
+          <div style="font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;color:#A8BBD0;margin-bottom:6px;">Credits earned</div>
+          <div class="stat-num"><span id="b-earned">0</span><span style="font-size:22px;color:#8FA6C2;font-weight:400;"> / <span id="b-req">120</span></span></div>
+          <div id="b-standing" style="font-size:13px;color:#A8BBD0;margin-top:6px;"></div>
+        </div>
+        <div class="stat-div">
+          <div style="font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;color:#A8BBD0;margin-bottom:6px;">Projected graduation</div>
+          <div class="stat-num" id="b-grad">TBD</div>
+          <div id="b-terms" style="font-size:13px;color:#A8BBD0;margin-top:6px;"></div>
+        </div>
+      </div>
+      <div class="band-ctrl">
+        <div id="status-pill" style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:30px;font-size:13.5px;font-weight:600;"></div>
+        <button id="toggle-btn" onclick="app.toggleComplete()" style="background:rgba(255,255,255,.08);color:#C9D6E4;border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:7px 13px;font-size:12.5px;font-weight:500;cursor:pointer;font-family:'Hanken Grotesk';"></button>
+      </div>
+    </div>
+  </div>
+  <div class="plan-grid">
+    <!-- LEFT -->
+    <div style="min-width:0;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+        <h2 style="font-family:'Spectral',serif;font-weight:600;font-size:21px;margin:0;letter-spacing:-.01em;">Where you stand</h2>
+        <span style="font-size:12px;color:#9AA3AC;background:#E8EAEC;padding:3px 9px;border-radius:20px;">From your degree audit</span>
+      </div>
+      <div style="background:#fff;border:1px solid #E7E1D6;border-radius:14px;padding:22px;display:flex;align-items:center;gap:22px;margin-bottom:14px;box-shadow:0 1px 3px rgba(26,39,51,.04);">
+        <div style="position:relative;width:110px;height:110px;flex:none;">
+          <svg width="110" height="110" viewBox="0 0 120 120" style="transform:rotate(-90deg);">
+            <circle cx="60" cy="60" r="52" fill="none" stroke="#EDE8DE" stroke-width="11"/>
+            <circle id="ring" cx="60" cy="60" r="52" fill="none" stroke="#2E7D52" stroke-width="11" stroke-linecap="round" style="transition:stroke-dashoffset .8s ease;"/>
+          </svg>
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+            <div id="ring-pct" style="font-family:'Spectral',serif;font-size:27px;font-weight:600;line-height:1;color:#1A2733;"></div>
+            <div style="font-size:11px;color:#9AA3AC;margin-top:2px;">complete</div>
+          </div>
+        </div>
+        <div>
+          <div id="ring-rem" style="font-size:15px;font-weight:600;color:#1A2733;margin-bottom:6px;"></div>
+          <p id="ring-note" style="font-size:13.5px;color:#5C6B79;margin:0;line-height:1.5;"></p>
+        </div>
+      </div>
+      <div id="groups-skeleton" style="display:none;">
+        <div style="background:#fff;border:1px solid #E7E1D6;border-radius:12px;padding:18px;margin-bottom:12px;"><div class="skel" style="height:14px;width:55%;margin-bottom:12px;"></div><div class="skel" style="height:8px;"></div></div>
+        <div style="background:#fff;border:1px solid #E7E1D6;border-radius:12px;padding:18px;margin-bottom:12px;"><div class="skel" style="height:14px;width:55%;margin-bottom:12px;"></div><div class="skel" style="height:8px;"></div></div>
+        <div style="background:#fff;border:1px solid #E7E1D6;border-radius:12px;padding:18px;margin-bottom:12px;"><div class="skel" style="height:14px;width:55%;margin-bottom:12px;"></div><div class="skel" style="height:8px;"></div></div>
+      </div>
+      <div id="groups-list" style="display:flex;flex-direction:column;gap:12px;"></div>
+    </div>
+    <!-- RIGHT -->
+    <div style="min-width:0;">
+      <div style="background:#fff;border:1px solid #E7E1D6;border-radius:14px;padding:18px 20px;margin-bottom:18px;box-shadow:0 1px 3px rgba(26,39,51,.04);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <div style="font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#8A95A0;">Tune your plan</div>
+          <span id="pref-loading" style="display:none;font-size:11.5px;color:#1E3A5F;align-items:center;gap:6px;"><span class="spinner-sm"></span> updating&#8230;</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+          <div>
+            <label style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;color:#5C6B79;margin-bottom:7px;">Target credits <span id="cred-val" style="color:#1E3A5F;"></span></label>
+            <input type="range" id="cred-range" min="9" max="19" step="1" oninput="app.setPref('targetCredits',parseInt(this.value,10))" style="width:100%;accent-color:#1E3A5F;cursor:pointer;">
+          </div>
+          <div>
+            <label style="display:block;font-size:12px;font-weight:600;color:#5C6B79;margin-bottom:7px;">Pace</label>
+            <div id="pace-toggle" style="display:flex;background:#F2EEE6;border-radius:8px;padding:3px;"></div>
+          </div>
+          <div>
+            <label style="display:block;font-size:12px;font-weight:600;color:#5C6B79;margin-bottom:7px;">Start term</label>
+            <select id="term-sel" onchange="app.setPref('term',this.value)" style="width:100%;border:1px solid #E2DCCF;border-radius:8px;padding:8px 10px;font-family:'Hanken Grotesk';font-size:13px;background:#FBFAF7;color:#1A2733;cursor:pointer;"></select>
+          </div>
+          <div>
+            <label style="display:block;font-size:12px;font-weight:600;color:#5C6B79;margin-bottom:7px;">Difficulty tolerance</label>
+            <select id="diff-sel" onchange="app.setPref('difficulty',this.value)" style="width:100%;border:1px solid #E2DCCF;border-radius:8px;padding:8px 10px;font-family:'Hanken Grotesk';font-size:13px;background:#FBFAF7;color:#1A2733;cursor:pointer;">
+              <option value="light">Lighter load</option>
+              <option value="balanced" selected>Balanced</option>
+              <option value="challenge">Challenge me</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div style="background:#fff;border:1px solid #E7E1D6;border-radius:16px;overflow:hidden;margin-bottom:18px;box-shadow:0 1px 3px rgba(26,39,51,.04);">
+        <div style="padding:18px 22px 14px;border-bottom:1px solid #EDE8DE;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+          <div>
+            <div style="display:flex;align-items:center;gap:9px;">
+              <h2 style="font-family:'Spectral',serif;font-weight:600;font-size:21px;margin:0;letter-spacing:-.01em;">Take this next term</h2>
+              <span style="font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;background:#E6F1EA;color:#2E7D52;border:1px solid #CDE6D7;padding:3px 8px;border-radius:5px;">Firm recommendation</span>
+            </div>
+            <div id="term-sub" style="font-size:13px;color:#8A95A0;margin-top:4px;"></div>
+          </div>
+        </div>
+        <div id="next-skel" style="display:none;padding:18px 22px;">
+          <div class="skel" style="height:62px;border-radius:11px;margin-bottom:10px;"></div>
+          <div class="skel" style="height:62px;border-radius:11px;margin-bottom:10px;"></div>
+          <div class="skel" style="height:62px;border-radius:11px;"></div>
+        </div>
+        <div id="next-body" style="padding:16px 22px;">
+          <div id="complete-msg" style="display:none;text-align:center;padding:24px 12px;">
+            <div style="width:54px;height:54px;border-radius:50%;background:#E6F1EA;border:1px solid #CDE6D7;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2E7D52" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            </div>
+            <div style="font-family:'Spectral',serif;font-size:23px;font-weight:600;margin-bottom:6px;">All requirements met</div>
+            <p style="font-size:14px;color:#5C6B79;margin:0 auto;max-width:340px;line-height:1.5;">You're cleared to graduate. Bring this to your advisor to file your graduation application.</p>
+          </div>
+          <div id="courses-view">
+            <div id="next-term-list" style="display:flex;flex-direction:column;gap:11px;"></div>
+            <div id="plan-warnings" style="margin-top:11px;display:flex;flex-direction:column;gap:8px;"></div>
+            <div class="copy-bar">
+              <div style="font-size:13px;color:#8A95A0;">Registration is manual in v1 — copy your list for the portal.</div>
+              <button id="copy-btn" onclick="app.copyList()" style="background:#F2EEE6;color:#1E3A5F;border:1px solid #DDD6C9;border-radius:8px;padding:9px 15px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Hanken Grotesk';display:flex;align-items:center;gap:7px;white-space:nowrap;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                <span id="copy-label">Copy course list</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="roadmap-sec" style="background:#fff;border:1px solid #E7E1D6;border-radius:16px;padding:20px 22px;margin-bottom:18px;box-shadow:0 1px 3px rgba(26,39,51,.04);">
+        <div style="display:flex;align-items:center;gap:9px;margin-bottom:6px;">
+          <h2 style="font-family:'Spectral',serif;font-weight:600;font-size:21px;margin:0;letter-spacing:-.01em;">Your roadmap</h2>
+          <span style="font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;background:#F4F1EA;color:#8A95A0;border:1px solid #EAE4D8;padding:3px 8px;border-radius:5px;">Tentative projection</span>
+        </div>
+        <p id="electives-note" style="font-size:12.5px;color:#9AA3AC;margin:0 0 18px;"></p>
+        <div id="roadmap-scroll" style="display:flex;gap:14px;overflow-x:auto;padding-bottom:6px;"></div>
+      </div>
+      <div class="export-bar" style="background:#FCFBF8;border:1px solid #E7E1D6;border-radius:14px;padding:16px 20px;">
+        <div>
+          <div style="font-size:14.5px;font-weight:600;color:#1A2733;">Save your plan</div>
+          <div style="font-size:12.5px;color:#8A95A0;margin-top:2px;">JSON is re-importable to resume later &#183; PDF is print-ready</div>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button onclick="app.exportJson()" style="background:#fff;color:#1E3A5F;border:1.5px solid #DDD6C9;border-radius:9px;padding:10px 16px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:'Hanken Grotesk';">Download JSON</button>
+          <button onclick="app.exportPdf()" style="background:#1E3A5F;color:#fff;border:none;border-radius:9px;padding:10px 16px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:'Hanken Grotesk';">Download PDF</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const CONCENTRATIONS = {
+  'CS-BS': [
+    {id:'',name:'Undeclared'},
+    {id:'concentration_networking',name:'Computer Networking'},
+    {id:'concentration_cybersecurity',name:'Cybersecurity'},
+    {id:'concentration_data_analytics',name:'Data Analytics'},
+    {id:'concentration_software_engineering',name:'Software Engineering'},
+    {id:'concentration_web_mobile',name:'Web & Mobile Development'},
+  ]
+};
+const TERMS = ['Fall 2026','Spring 2027','Fall 2027','Spring 2028','Fall 2028','Spring 2029'];
+const SC = {
+  satisfied:{color:'#2E7D52',bg:'#E6F1EA',border:'#CDE6D7',label:'Satisfied'},
+  partial:{color:'#B07A16',bg:'#F6EEDB',border:'#ECDFBE',label:'In progress'},
+  unmet:{color:'#7A8794',bg:'#EEF0F2',border:'#E2E5E8',label:'Not started'},
+};
+const ICON_STYLES = [
+  {bg:'#F0EBF4',color:'#4A3B66'},
+  {bg:'#E8EEF4',color:'#1E3A5F'},
+  {bg:'#EAF0EC',color:'#2E7D52'},
+  {bg:'#F4EBF0',color:'#663B4A'},
+];
+
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function el(id){return document.getElementById(id);}
+
+const app = {
+  st: {
+    screen:'input', tab:'paste', parsing:false, uploadError:false,
+    planLoading:false, completeView:false, copied:false,
+    programs:[], programCode:'CS-BS', catalogYear:2026, concentration:'',
+    prefs:{targetCredits:15, pace:'full', term:'Fall 2026', difficulty:'balanced'},
+    student:null, editedCourses:[], editedExternals:[],
+    auditResult:null, recommendation:null,
+  },
+  _ct:null, _rt:null,
+
+  set(u){Object.assign(this.st,typeof u==='function'?u(this.st):u);this.render();},
+
+  // ---- API ----
+  async req(path,opts){
+    const r=await fetch(path,opts);
+    if(!r.ok){const b=await r.json().catch(()=>({detail:r.statusText}));throw new Error(b.detail||r.statusText);}
+    return r;
+  },
+  async post(path,body){
+    const r=await this.req(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    return r.json();
+  },
+
+  buildRec(){
+    const s=this.st;
+    return {
+      program_code:s.programCode, catalog_year:s.catalogYear,
+      completed:s.editedCourses.filter(c=>c.code&&c.credits).map(c=>({
+        code:c.code.trim(),title:(c.title||'').trim(),
+        credits:parseFloat(c.credits)||0,grade:(c.grade||'F').trim(),
+        term:c.term?c.term.trim():null,
+      })),
+      external:s.editedExternals.filter(e=>e.credits).map(e=>({
+        source:(e.source||'Transfer').trim(),
+        equivalent_code:(e.equivalent_code||'').trim(),
+        credits:parseFloat(e.credits)||0,
+      })),
+    };
+  },
+
+  buildPrefs(){
+    const {prefs,concentration}=this.st;
+    const [season,year]=this.parseTerm(prefs.term);
+    const dm={light:1,balanced:2,challenge:3};
+    const part=prefs.pace==='part';
+    return {
+      target_credits:part?Math.min(prefs.targetCredits,13):prefs.targetCredits,
+      max_hard_courses:dm[prefs.difficulty]||2,
+      target_season:season, target_year:year,
+      declared_concentration:concentration||null,
+      max_load:part?13:19,
+    };
+  },
+
+  parseTerm(t){
+    const m=(t||'').match(/^(Fall|Spring)\s+(\d{4})$/i);
+    return m?[m[1].toLowerCase(),parseInt(m[2],10)]:['fall',2026];
+  },
+
+  // ---- Navigation ----
+  goInput(){this.set({screen:'input'});scrollTo(0,0);},
+
+  go(screen){
+    const ord=['input','confirm','plan'];
+    if(ord.indexOf(screen)<=ord.indexOf(this.st.screen)) this.set({screen});
+    scrollTo(0,0);
+  },
+
+  // ---- Input ----
+  setTab(t){this.set({tab:t,uploadError:false});},
+  triggerPdf(){el('pdf-input').click();},
+  triggerResume(){el('resume-input').click();},
+
+  async onPdfSelected(evt){
+    const file=evt.target.files[0];if(!file)return;
+    this.set({parsing:true,uploadError:false});
+    try{
+      const fd=new FormData();
+      fd.append('file',file);
+      fd.append('program_code',this.st.programCode);
+      fd.append('catalog_year',String(this.st.catalogYear));
+      const r=await this.req('/parse/pdf',{method:'POST',body:fd});
+      this.applyStudent(await r.json());
+      this.set({screen:'confirm',parsing:false});scrollTo(0,0);
+    }catch(err){
+      if(err.message&&(err.message.includes('text layer')||err.message.includes('scan'))){
+        this.set({parsing:false,uploadError:true});
+      }else{
+        this.set({parsing:false});
+        this.showErr('input-error',err.message||'Failed to parse PDF.');
+      }
+    }
+    evt.target.value='';
+  },
+
+  async onResumeSelected(evt){
+    const file=evt.target.files[0];if(!file)return;
+    try{
+      const bundle=JSON.parse(await file.text());
+      if(!bundle.student||!bundle.recommendation)throw new Error('Invalid plan file.');
+      this.applyStudent(bundle.student);
+      this.set({
+        programCode:bundle.programCode||this.st.programCode,
+        catalogYear:bundle.catalogYear||this.st.catalogYear,
+        concentration:bundle.concentration||'',
+        prefs:bundle.prefs||this.st.prefs,
+        auditResult:bundle.auditResult||null,
+        recommendation:bundle.recommendation,
+        screen:'plan',
+      });scrollTo(0,0);
+    }catch(err){this.showErr('input-error','Could not read plan file: '+(err.message||''));}
+    evt.target.value='';
+  },
+
+  async parse(){
+    if(this.st.parsing)return;
+    if(this.st.tab==='upload'){this.triggerPdf();return;}
+    if(this.st.tab==='resume'){this.triggerResume();return;}
+    const text=el('paste-input').value.trim();
+    if(!text){this.showErr('input-error','Paste your transcript text first.');return;}
+    this.set({parsing:true});
+    el('input-error').style.display='none';
+    try{
+      const student=await this.post('/parse/text',{text,program_code:this.st.programCode,catalog_year:this.st.catalogYear});
+      this.applyStudent(student);
+      this.set({screen:'confirm',parsing:false});scrollTo(0,0);
+    }catch(err){
+      this.set({parsing:false});
+      this.showErr('input-error',err.message||'Failed to parse transcript.');
+    }
+  },
+
+  applyStudent(student){
+    this.set({
+      student,
+      programCode:student.program_code||this.st.programCode,
+      catalogYear:student.catalog_year||this.st.catalogYear,
+      editedCourses:(student.completed||[]).map(c=>({
+        code:c.code||'',title:c.title||'',
+        credits:String(c.credits??''),grade:c.grade||'',term:c.term||'',
+      })),
+      editedExternals:(student.external||[]).map(e=>({
+        source:e.source||'Transfer',equivalent_code:e.equivalent_code||'',credits:String(e.credits??''),
+      })),
+    });
+  },
+
+  showErr(id,msg){const e=el(id);if(e){e.textContent=msg;e.style.display='';}},
+
+  // ---- Confirm ----
+  onProgramChange(v){this.set({programCode:v,concentration:''});},
+  onYearChange(v){this.set({catalogYear:parseInt(v,10)});},
+  onConcChange(v){this.set({concentration:v});},
+  addCourse(){this.set(s=>({editedCourses:[...s.editedCourses,{code:'',title:'',credits:'',grade:'',term:''}]}));},
+  removeCourse(i){this.set(s=>({editedCourses:s.editedCourses.filter((_,j)=>j!==i)}));},
+  editCourse(i,f,v){this.set(s=>{const c=s.editedCourses.slice();c[i]={...c[i],[f]:v};return{editedCourses:c};});},
+  addExternal(){this.set(s=>({editedExternals:[...s.editedExternals,{source:'Transfer',equivalent_code:'New credit',credits:'3'}]}));},
+  removeExternal(i){this.set(s=>({editedExternals:s.editedExternals.filter((_,j)=>j!==i)}));},
+
+  async confirm(){
+    el('confirm-btn').disabled=true;
+    el('confirm-spinner').style.display='';
+    el('confirm-label').textContent='Generating plan…';
+    el('confirm-error').style.display='none';
+    try{
+      const student=this.buildRec();
+      const [audit,rec]=await Promise.all([
+        this.post('/audit',{student,program_code:this.st.programCode,catalog_year:this.st.catalogYear}),
+        this.post('/recommend',{student,program_code:this.st.programCode,catalog_year:this.st.catalogYear,preferences:this.buildPrefs()}),
+      ]);
+      this.set({auditResult:audit,recommendation:rec,student,planLoading:false,screen:'plan'});scrollTo(0,0);
+    }catch(err){
+      el('confirm-btn').disabled=false;
+      el('confirm-spinner').style.display='none';
+      el('confirm-label').textContent='Looks right — see my plan →';
+      this.showErr('confirm-error',err.message||'Something went wrong. Please try again.');
+    }
+  },
+
+  // ---- Plan ----
+  setPref(k,v){
+    this.set(s=>({prefs:{...s.prefs,[k]:v}}));
+    clearTimeout(this._rt);
+    this._rt=setTimeout(()=>this.refetch(),450);
+  },
+
+  async refetch(){
+    if(!this.st.student)return;
+    this.set({planLoading:true});
+    try{
+      const rec=await this.post('/recommend',{
+        student:this.buildRec(),
+        program_code:this.st.programCode,catalog_year:this.st.catalogYear,
+        preferences:this.buildPrefs(),
       });
-      return r.json();
+      this.set({recommendation:rec,planLoading:false});
+    }catch{this.set({planLoading:false});}
+  },
+
+  toggleComplete(){this.set(s=>({completeView:!s.completeView}));},
+
+  copyList(){
+    const rec=this.st.recommendation;if(!rec)return;
+    const list=(rec.next_term.courses||[]).map(c=>c.code).join(', ');
+    try{navigator.clipboard&&navigator.clipboard.writeText(list);}catch{}
+    this.set({copied:true});clearTimeout(this._ct);
+    this._ct=setTimeout(()=>this.set({copied:false}),1600);
+  },
+
+  exportJson(){
+    const s=this.st;
+    const blob=new Blob([JSON.stringify({
+      student:this.buildRec(),programCode:s.programCode,catalogYear:s.catalogYear,
+      concentration:s.concentration,prefs:s.prefs,auditResult:s.auditResult,recommendation:s.recommendation,
+    },null,2)],{type:'application/json'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='plan.json';a.click();URL.revokeObjectURL(a.href);
+  },
+
+  async exportPdf(){
+    if(!this.st.recommendation)return;
+    try{
+      const r=await this.req('/export/pdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(this.st.recommendation)});
+      const blob=await r.blob();
+      const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='plan.pdf';a.click();URL.revokeObjectURL(a.href);
+    }catch(err){alert('PDF export failed: '+(err.message||''));}
+  },
+
+  // ---- Programs ----
+  async loadPrograms(){
+    try{
+      const r=await this.req('/programs');
+      this.set({programs:await r.json()});
+    }catch{
+      this.set({programs:[{code:'CS-BS',name:'B.S. Computer Science',catalog_year:2026}]});
     }
-    async function parseText() {
-      student = await post("/parse/text",
-        { text: document.getElementById("text").value, ...PROGRAM });
-      show(student);
+    this.renderProgramDropdowns();
+  },
+
+  renderProgramDropdowns(){
+    const {programs,programCode,catalogYear}=this.st;
+    const progSel=el('program-sel');if(!progSel)return;
+    const seen={};programs.forEach(p=>{if(!seen[p.code])seen[p.code]=p.name;});
+    progSel.innerHTML=Object.entries(seen).map(([c,n])=>`<option value="${esc(c)}"${c===programCode?' selected':''}>${esc(n)}</option>`).join('');
+    const yearSel=el('year-sel');
+    const years=programs.filter(p=>p.code===programCode).map(p=>p.catalog_year);
+    yearSel.innerHTML=years.map(y=>`<option value="${y}"${y===catalogYear?' selected':''}>${y}–${y+1}</option>`).join('');
+    this.renderConcs();
+  },
+
+  renderConcs(){
+    const {programCode,concentration}=this.st;
+    const concSel=el('conc-sel');if(!concSel)return;
+    const concs=CONCENTRATIONS[programCode]||[{id:'',name:'Not applicable'}];
+    concSel.innerHTML=concs.map(c=>`<option value="${esc(c.id)}"${c.id===concentration?' selected':''}>${esc(c.name)}</option>`).join('');
+  },
+
+  renderTermSel(){
+    const sel=el('term-sel');if(!sel)return;
+    sel.innerHTML=TERMS.map(t=>`<option value="${t}"${t===this.st.prefs.term?' selected':''}>${t}</option>`).join('');
+  },
+
+  renderPace(){
+    const pace=el('pace-toggle');if(!pace)return;
+    const cur=this.st.prefs.pace;
+    pace.innerHTML=[['full','Full-time'],['part','Part-time']].map(([k,l])=>{
+      const on=cur===k;
+      return `<button onclick="app.setPref('pace','${k}')" style="flex:1;border:none;background:${on?'#fff':'transparent'};color:${on?'#1E3A5F':'#8A95A0'};padding:6px 4px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Hanken Grotesk';box-shadow:${on?'0 1px 2px rgba(26,39,51,.12)':'none'};">${l}</button>`;
+    }).join('');
+  },
+
+  // ---- Render ----
+  render(){
+    const s=this.st;
+    ['input','confirm','plan'].forEach(sc=>{
+      const e=el('screen-'+sc);if(e)e.className='screen'+(s.screen===sc?' active':'');
+    });
+    this.renderStepper();
+    if(s.screen==='input') this.renderInput();
+    if(s.screen==='confirm') this.renderConfirm();
+    if(s.screen==='plan') this.renderPlan();
+  },
+
+  renderStepper(){
+    const s=this.st;
+    const ord=['input','confirm','plan'],labs=['Input','Confirm','Plan'];
+    const cur=ord.indexOf(s.screen);
+    const desk=el('stepper-desktop');
+    if(desk){
+      desk.innerHTML=ord.map((sc,i)=>{
+        const act=i===cur,done=i<cur;
+        const db=act?'#1E3A5F':(done?'#E6F1EA':'#fff');
+        const dc=act?'#fff':(done?'#2E7D52':'#9AA3AC');
+        const dbd=act?'#1E3A5F':(done?'#CDE6D7':'#D8D1C5');
+        const tc=act?'#1A2733':(done?'#5C6B79':'#9AA3AC');
+        const bar=i<2?`<span style="width:30px;height:1.5px;background:#D8D1C5;margin:0 4px;display:inline-block;"></span>`:'';
+        return `<div style="display:flex;align-items:center;gap:6px;cursor:pointer;" onclick="app.go('${sc}')">
+          <div style="width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;background:${db};color:${dc};border:1.5px solid ${dbd};transition:all .2s;">${i+1}</div>
+          <span style="font-size:13.5px;font-weight:${act?700:500};color:${tc};">${labs[i]}</span>${bar}</div>`;
+      }).join('');
     }
-    async function audit() {
-      if (!student) return show("Parse first.");
-      show(await post("/audit", { student, ...PROGRAM }));
+    const mn=el('step-mob-num'),ml=el('step-mob-label');
+    if(mn)mn.textContent=`Step ${cur+1}`;if(ml)ml.textContent=labs[cur];
+  },
+
+  renderInput(){
+    const s=this.st;
+    ['paste','upload','resume'].forEach(t=>{
+      const b=el('tab-btn-'+t);if(!b)return;
+      const on=s.tab===t;
+      b.style.background=on?'#fff':'#FBFAF7';
+      b.style.borderBottom=`2.5px solid ${on?'#1E3A5F':'transparent'}`;
+      b.style.color=on?'#1A2733':'#8A95A0';
+      b.style.fontWeight=on?700:500;
+    });
+    el('tab-paste').style.display=s.tab==='paste'?'':'none';
+    el('tab-upload').style.display=s.tab==='upload'?'':'none';
+    el('tab-resume').style.display=s.tab==='resume'?'':'none';
+    if(s.tab==='upload'){
+      const errBox=el('upload-error-box');
+      const idleBox=el('upload-idle-box');
+      errBox.style.display=s.uploadError?'flex':'none';
+      idleBox.style.display=s.uploadError?'none':'';
     }
-    async function recommend() {
-      if (!student) return show("Parse first.");
-      show(await post("/recommend", { student, ...PROGRAM,
-        preferences: { target_credits: 15, target_season: "fall", target_year: 2026 } }));
+    el('input-footer').style.display=s.tab==='upload'?'none':'';
+    el('parse-spinner').style.display=s.parsing?'':'none';
+    el('parse-label').textContent=s.parsing?'Reading…':'Read my transcript';
+    el('parse-btn').disabled=s.parsing;
+  },
+
+  renderConfirm(){
+    const s=this.st;
+    const courses=s.editedCourses;
+    const cr=courses.reduce((a,c)=>a+(parseFloat(c.credits)||0),0);
+    el('course-count').textContent=`${courses.length} course${courses.length!==1?'s':''} parsed · ${cr} credits`;
+
+    const deskRows=courses.map((c,i)=>`
+      <div style="display:grid;grid-template-columns:90px 1fr 70px 64px 90px 34px;gap:10px;padding:7px 22px;align-items:center;border-bottom:1px solid #F2EEE6;">
+        <input value="${esc(c.code)}" data-i="${i}" data-f="code" style="border:1px solid #E8E2D6;border-radius:7px;padding:7px 9px;font-family:ui-monospace,monospace;font-size:12.5px;background:#fff;color:#1A2733;width:100%;outline:none;">
+        <input value="${esc(c.title)}" data-i="${i}" data-f="title" style="border:1px solid #E8E2D6;border-radius:7px;padding:7px 9px;font-family:'Hanken Grotesk';font-size:13px;background:#fff;color:#1A2733;width:100%;outline:none;">
+        <input value="${esc(c.credits)}" data-i="${i}" data-f="credits" style="border:1px solid #E8E2D6;border-radius:7px;padding:7px 9px;font-family:'Hanken Grotesk';font-size:13px;background:#fff;color:#1A2733;width:100%;outline:none;text-align:center;">
+        <input value="${esc(c.grade)}" data-i="${i}" data-f="grade" style="border:1px solid #E8E2D6;border-radius:7px;padding:7px 9px;font-family:'Hanken Grotesk';font-size:13px;background:#fff;color:#1A2733;width:100%;outline:none;text-align:center;">
+        <input value="${esc(c.term)}" data-i="${i}" data-f="term" style="border:1px solid #E8E2D6;border-radius:7px;padding:7px 9px;font-family:'Hanken Grotesk';font-size:12.5px;background:#fff;color:#1A2733;width:100%;outline:none;">
+        <button data-rm="${i}" style="border:none;background:transparent;color:#C4B8A6;cursor:pointer;font-size:18px;line-height:1;padding:4px;border-radius:6px;">×</button>
+      </div>`).join('');
+    el('courses-desktop').innerHTML=deskRows;
+
+    const mobRows=courses.map((c,i)=>`
+      <div style="padding:12px 16px;border-bottom:1px solid #F2EEE6;">
+        <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;">
+          <input value="${esc(c.code)}" data-i="${i}" data-f="code" placeholder="Code" style="flex:none;width:88px;border:1px solid #E8E2D6;border-radius:7px;padding:9px;font-family:ui-monospace,monospace;font-size:12.5px;background:#fff;color:#1A2733;outline:none;">
+          <input value="${esc(c.title)}" data-i="${i}" data-f="title" placeholder="Course title" style="flex:1;min-width:0;border:1px solid #E8E2D6;border-radius:7px;padding:9px;font-family:'Hanken Grotesk';font-size:13px;background:#fff;color:#1A2733;outline:none;">
+          <button data-rm="${i}" style="flex:none;border:none;background:transparent;color:#C4B8A6;cursor:pointer;font-size:20px;line-height:1;padding:2px 4px;">×</button>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <input value="${esc(c.credits)}" data-i="${i}" data-f="credits" placeholder="Cr" style="flex:1;width:0;border:1px solid #E8E2D6;border-radius:7px;padding:9px;font-family:'Hanken Grotesk';font-size:13px;background:#fff;color:#1A2733;outline:none;text-align:center;">
+          <input value="${esc(c.grade)}" data-i="${i}" data-f="grade" placeholder="Grade" style="flex:1;width:0;border:1px solid #E8E2D6;border-radius:7px;padding:9px;font-family:'Hanken Grotesk';font-size:13px;background:#fff;color:#1A2733;outline:none;text-align:center;">
+          <input value="${esc(c.term)}" data-i="${i}" data-f="term" placeholder="Term" style="flex:1;width:0;border:1px solid #E8E2D6;border-radius:7px;padding:9px;font-family:'Hanken Grotesk';font-size:12.5px;background:#fff;color:#1A2733;outline:none;text-align:center;">
+        </div>
+      </div>`).join('');
+    el('courses-mobile').innerHTML=mobRows;
+
+    el('externals-list').innerHTML=s.editedExternals.map((e,i)=>`
+      <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:#FBFAF7;border:1px solid #EDE8DE;border-radius:9px;">
+        <span style="font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;background:#E8EEF4;color:#1E3A5F;padding:3px 8px;border-radius:5px;">${esc(e.source)}</span>
+        <span style="flex:1;font-size:13.5px;color:#1A2733;">${esc(e.equivalent_code)}</span>
+        <span style="font-size:13px;color:#5C6B79;font-weight:600;">${esc(e.credits)} cr</span>
+        <button data-ext-rm="${i}" style="border:none;background:transparent;color:#C4B8A6;cursor:pointer;font-size:17px;line-height:1;">×</button>
+      </div>`).join('');
+
+    this.renderProgramDropdowns();
+
+    el('confirm-btn').disabled=false;
+    el('confirm-spinner').style.display='none';
+    el('confirm-label').textContent='Looks right — see my plan →';
+    el('confirm-error').style.display='none';
+  },
+
+  renderPlan(){
+    const s=this.st;
+    const audit=s.auditResult,rec=s.recommendation,comp=s.completeView;
+    if(!audit||!rec)return;
+
+    const earned=comp?audit.total_credits_required:audit.total_credits_earned;
+    const req=audit.total_credits_required;
+    const rem=Math.max(0,req-earned);
+    const pct=Math.min(100,Math.round((earned/req)*100));
+
+    el('b-earned').textContent=earned;
+    el('b-req').textContent=req;
+    el('b-standing').textContent=comp?'Every requirement satisfied.':`You're about ${pct}% of the way there.`;
+    el('b-grad').textContent=comp?'Now':(rec.projected_graduation||'TBD');
+    const termsLeft=comp?0:(1+(rec.roadmap||[]).length);
+    el('b-terms').textContent=comp?"You're done!":`${termsLeft} term${termsLeft!==1?'s':''} to go · tentative`;
+
+    const pillColor='#9FE3BC';
+    const pill=el('status-pill');
+    pill.style.cssText=`display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:30px;font-size:13.5px;font-weight:600;background:${comp?'rgba(46,125,82,.15)':'rgba(255,255,255,.1)'};border:1px solid ${comp?'rgba(205,230,215,.4)':'rgba(255,255,255,.2)'};color:${pillColor};`;
+    pill.innerHTML=`<span style="width:8px;height:8px;border-radius:50%;background:${pillColor};display:inline-block;"></span> ${comp?'Ready to graduate':'On track'}`;
+    el('toggle-btn').textContent=comp?'View in-progress plan':'Preview graduation-ready';
+
+    const circ=2*Math.PI*52;
+    const ring=el('ring');
+    ring.setAttribute('stroke-dasharray',circ);
+    ring.setAttribute('stroke-dashoffset',circ*(1-earned/req));
+    el('ring-pct').textContent=pct+'%';
+    el('ring-rem').textContent=`${rem} credits to graduation`;
+    el('ring-note').textContent=comp?'All degree requirements are complete — nice work.':this.overallNote(audit);
+
+    this.renderGroups(audit,comp);
+
+    el('cred-range').value=s.prefs.targetCredits;
+    el('cred-val').textContent=s.prefs.targetCredits;
+    el('diff-sel').value=s.prefs.difficulty;
+    this.renderPace();this.renderTermSel();
+    el('pref-loading').style.display=s.planLoading?'flex':'none';
+
+    el('groups-skeleton').style.display=s.planLoading?'':'none';
+    el('groups-list').style.display=s.planLoading?'none':'';
+    el('next-skel').style.display=s.planLoading?'':'none';
+    el('next-body').style.display=s.planLoading?'none':'';
+
+    if(!s.planLoading){
+      el('complete-msg').style.display=comp?'':'none';
+      el('courses-view').style.display=comp?'none':'';
+      el('roadmap-sec').style.display=comp?'none':'';
+      if(!comp){
+        this.renderNextTerm(rec);
+        this.renderRoadmap(rec);
+      }
     }
-  </script>
+
+    el('term-sub').textContent=`${rec.next_term.label} · ${rec.next_term.total_credits} credits`;
+    el('electives-note').textContent=rec.elective_credits_remaining>0
+      ?`Not a guarantee — courses and offerings shift. ${rec.elective_credits_remaining} free-elective credits remain — any course counts.`
+      :'Not a guarantee — courses and offerings shift.';
+    el('copy-label').textContent=s.copied?'Copied!':'Copy course list';
+  },
+
+  overallNote(audit){
+    const sat=audit.groups.filter(g=>g.status==='satisfied');
+    const unsat=audit.groups.filter(g=>g.status!=='satisfied');
+    if(!unsat.length)return'All degree requirements are complete.';
+    if(!sat.length)return'Focus on building your core requirements this term.';
+    return`${sat[0].name} is done. Focus next on finishing the remaining requirements.`;
+  },
+
+  renderGroups(audit,comp){
+    const e=el('groups-list');if(!e)return;
+    const groups=comp
+      ?audit.groups.map(g=>({...g,status:'satisfied',credits_applied:g.credits_required,remaining_choices:[]}))
+      :audit.groups;
+    e.innerHTML=groups.map(g=>{
+      const c=SC[g.status]||SC.unmet;
+      const pct=Math.min(100,Math.round((g.credits_applied/g.credits_required)*100));
+      const sb=g.satisfied_by&&g.satisfied_by.length?g.satisfied_by.join(', '):'—';
+      const rem=g.remaining_choices&&g.remaining_choices.length?g.remaining_choices.join(', '):'';
+      return `<div style="background:#fff;border:1px solid #E7E1D6;border-radius:13px;padding:18px 20px;box-shadow:0 1px 2px rgba(26,39,51,.03);">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px;">
+          <div style="font-size:15px;font-weight:600;color:#1A2733;line-height:1.3;">${esc(g.name)}</div>
+          <div style="flex:none;display:flex;align-items:center;gap:6px;background:${c.bg};border:1px solid ${c.border};color:${c.color};padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;white-space:nowrap;">
+            <span style="width:6px;height:6px;border-radius:50%;background:${c.color};display:inline-block;"></span>${c.label}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+          <div style="flex:1;height:7px;border-radius:6px;background:#EDE8DE;overflow:hidden;">
+            <div style="height:100%;width:${pct}%;background:${c.color};border-radius:6px;transition:width .6s ease;"></div>
+          </div>
+          <div style="font-size:12.5px;color:#5C6B79;font-weight:600;white-space:nowrap;">${g.credits_applied} / ${g.credits_required} cr</div>
+        </div>
+        <div style="font-size:12.5px;color:#7A8794;line-height:1.5;"><span style="color:#9AA3AC;">Counted:</span> ${esc(sb)}</div>
+        ${rem?`<div style="font-size:12.5px;color:#7A8794;line-height:1.5;margin-top:4px;"><span style="color:#9AA3AC;">Still need:</span> ${esc(rem)}</div>`:''}
+      </div>`;
+    }).join('');
+  },
+
+  renderNextTerm(rec){
+    const e=el('next-term-list');if(!e)return;
+    const courses=rec.next_term.courses||[];
+    e.innerHTML=courses.map((c,i)=>{
+      const ic=ICON_STYLES[i%ICON_STYLES.length];
+      const reasons=(c.reasons||[]).map(r=>`<span style="font-size:11.5px;color:#5C6B79;background:#F4F1EA;border:1px solid #EAE4D8;padding:3px 9px;border-radius:20px;">${esc(r)}</span>`).join('');
+      return `<div style="border:1px solid #EAE4D8;border-radius:12px;padding:15px 16px;display:flex;gap:14px;align-items:flex-start;">
+        <div style="flex:none;width:46px;height:46px;border-radius:10px;background:${ic.bg};display:flex;flex-direction:column;align-items:center;justify-content:center;color:${ic.color};">
+          <span style="font-family:'Spectral',serif;font-size:17px;font-weight:600;line-height:1;">${c.credits}</span>
+          <span style="font-size:9px;letter-spacing:.04em;text-transform:uppercase;opacity:.8;">cr</span>
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;">
+            <span style="font-family:ui-monospace,monospace;font-size:13px;font-weight:600;color:#1E3A5F;">${esc(c.code)}</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">${reasons}</div>
+        </div>
+      </div>`;
+    }).join('');
+    const warns=rec.next_term.warnings||[];
+    el('plan-warnings').innerHTML=warns.map(w=>`
+      <div style="display:flex;gap:10px;align-items:flex-start;background:#F6EEDB;border:1px solid #ECDFBE;border-radius:10px;padding:12px 14px;">
+        <span style="flex:none;width:18px;height:18px;border-radius:50%;background:#EAD9A8;color:#8A6512;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;font-family:'Spectral',serif;">!</span>
+        <div style="font-size:13px;color:#7A6428;line-height:1.45;">${esc(w)}</div>
+      </div>`).join('');
+  },
+
+  renderRoadmap(rec){
+    const e=el('roadmap-scroll');if(!e)return;
+    const roadmap=rec.roadmap||[];
+    const grad=rec.projected_graduation||'TBD';
+    e.innerHTML=roadmap.map((t,ti)=>{
+      const first=ti===0;
+      const courses=(t.courses||[]).map(c=>`
+        <div style="display:flex;align-items:baseline;gap:7px;">
+          <span style="flex:none;width:5px;height:5px;border-radius:50%;background:#1E3A5F;margin-top:6px;"></span>
+          <span style="font-family:ui-monospace,monospace;font-size:11px;font-weight:600;color:#5C6B79;">${esc(c.code)}</span>
+        </div>`).join('');
+      return `<div style="flex:none;width:185px;border:1px solid ${first?'#1E3A5F':'#EAE4D8'};border-radius:12px;padding:14px;background:${first?'#F4F7FB':'#fff'};">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div style="font-size:13.5px;font-weight:700;color:#1A2733;">${esc(t.label)}</div>
+          <div style="font-size:11.5px;color:#9AA3AC;">${t.total_credits} cr</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:7px;">${courses}</div>
+      </div>`;
+    }).join('')+`
+    <div style="flex:none;width:130px;border-radius:12px;background:#1E3A5F;color:#fff;padding:16px 14px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#A8BBD0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:8px;"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+      <div style="font-size:12px;color:#A8BBD0;">Graduate</div>
+      <div style="font-family:'Spectral',serif;font-size:17px;font-weight:600;margin-top:2px;">${esc(grad)}</div>
+    </div>`;
+  },
+
+  // ---- Init ----
+  init(){
+    this.loadPrograms();
+    this.renderTermSel();
+    this.renderPace();
+    this.render();
+
+    // Event delegation — course table
+    ['courses-desktop','courses-mobile'].forEach(id=>{
+      const c=el(id);if(!c)return;
+      c.addEventListener('change',e=>{
+        const inp=e.target.closest('[data-i][data-f]');
+        if(inp)this.editCourse(parseInt(inp.dataset.i,10),inp.dataset.f,inp.value);
+      });
+      c.addEventListener('click',e=>{
+        const b=e.target.closest('[data-rm]');
+        if(b)this.removeCourse(parseInt(b.dataset.rm,10));
+      });
+    });
+
+    // Event delegation — externals
+    const ext=el('externals-list');
+    if(ext)ext.addEventListener('click',e=>{
+      const b=e.target.closest('[data-ext-rm]');
+      if(b)this.removeExternal(parseInt(b.dataset.extRm,10));
+    });
+
+    // PDF drag & drop
+    const drop=el('upload-idle-box');
+    if(drop){
+      drop.addEventListener('dragover',e=>{e.preventDefault();drop.style.borderColor='#1E3A5F';});
+      drop.addEventListener('dragleave',()=>{drop.style.borderColor='#D8D1C5';});
+      drop.addEventListener('drop',e=>{
+        e.preventDefault();drop.style.borderColor='#D8D1C5';
+        const f=e.dataTransfer.files[0];
+        if(f&&f.type==='application/pdf'){
+          try{const dt=new DataTransfer();dt.items.add(f);el('pdf-input').files=dt.files;this.onPdfSelected({target:el('pdf-input')});}
+          catch{this.triggerPdf();}
+        }
+      });
+    }
+  },
+};
+
+app.init();
+</script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-from na_planner.models.catalog import Course, OfferingPattern, PrereqExpr, Program
+from na_planner.models.catalog import Course, PrereqExpr, Program
 from na_planner.models.preferences import StudentPreferences
 from na_planner.models.recommend import PlannedCourse, Recommendation, TermPlan
 from na_planner.planner import plan_term

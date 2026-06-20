@@ -28,6 +28,12 @@ def remaining_required_courses(
             continue
         if group.kind in ("all_of", "choose"):
             out.extend(c for c in status.remaining_choices if c not in out)
+            if group.kind == "choose":
+                # forced courses aren't in remaining_choices (audit tracks group.courses only)
+                satisfied_forced = set(status.satisfied_by)
+                for fc in group.forced:
+                    if fc not in satisfied_forced and fc not in out:
+                        out.append(fc)
         elif group.kind == "choose_group":
             for c in _subgroup_remaining(group, prefs.declared_concentration,
                                          satisfied_codes):

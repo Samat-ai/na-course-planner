@@ -81,12 +81,12 @@ def create_app() -> FastAPI:
             headers={"content-disposition": "attachment; filename=plan.pdf"},
         )
 
+    static_dir = Path(__file__).parent.parent / "static"
+
     @app.get("/", response_class=HTMLResponse)
     def index() -> str:
-        static_dir = Path(__file__).parent.parent / "static"
         return (static_dir / "index.html").read_text(encoding="utf-8")
 
-    static_dir = Path(__file__).parent.parent / "static"
     app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
     return app

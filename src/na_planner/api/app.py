@@ -1,10 +1,15 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, File, Form, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
-from na_planner.api.schemas import AuditRequest, RecommendRequest
+from na_planner.api.schemas import AuditRequest, ParseTextRequest, RecommendRequest
 from na_planner.audit import audit
+from na_planner.ingestion.build import to_student_record
+from na_planner.ingestion.models import NoTextLayerError
+from na_planner.ingestion.pdf import parse_transcript_pdf
+from na_planner.ingestion.transcript_text import parse_transcript_text
 from na_planner.models.audit import AuditResult
 from na_planner.models.recommend import Recommendation
+from na_planner.models.student import StudentRecord
 from na_planner.programs import list_programs, load_program_by
 from na_planner.roadmap import recommend
 
@@ -38,6 +43,24 @@ def create_app() -> FastAPI:
         except KeyError as e:
             raise HTTPException(status_code=404, detail=str(e)) from e
         return recommend(req.student, program, req.preferences)
+
+    @app.post("/parse/text", response_model=StudentRecord)
+    def parse_text(req: ParseTextRequest) -> StudentRecord:
+        parsed = parse_transcript_text(req.text)
+        return to_student_record(parsed, req.program_code, req.catalog_year)
+
+    @app.post("/parse/pdf", response_model=StudentRecord)
+    def parse_pdf(
+        file: UploadFile = File(...),
+        program_code: str = Form(...),
+        catalog_year: int = Form(...),
+    ) -> StudentRecord:
+        data = file.file.read()
+        try:
+            parsed = parse_transcript_pdf(data)
+        except NoTextLayerError as e:
+            raise HTTPException(status_code=422, detail=str(e)) from e
+        return to_student_record(parsed, program_code, catalog_year)
 
     return app
 

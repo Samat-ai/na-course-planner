@@ -39,6 +39,21 @@ def test_recommend_projects_full_chain_across_terms():
     assert rec.projected_graduation is not None
 
 
+def test_roadmap_advances_calendar_years_correctly():
+    # A -> B -> C, one course per term, starting Fall 2026.
+    # Fall must be followed by the NEXT year's Spring: Fall 2026 -> Spring 2027 -> Fall 2027.
+    prog = _chain_prog()
+    student = StudentRecord(program_code="X", catalog_year=2026)
+    prefs = StudentPreferences(target_credits=3, target_season="fall", target_year=2026)
+    rec = recommend(student, prog, prefs)
+    terms = [rec.next_term, *rec.roadmap]
+    assert [(t.season, t.year) for t in terms] == [
+        ("fall", 2026),
+        ("spring", 2027),
+        ("fall", 2027),
+    ]
+
+
 def test_recommend_stops_when_complete():
     prog = _chain_prog()
     student = StudentRecord(

@@ -12,7 +12,7 @@ MAX_TERMS = 16
 
 
 def _advance(season: str, year: int) -> tuple[str, int]:
-    return ("spring", year) if season == "fall" else ("fall", year + 1)
+    return ("spring", year + 1) if season == "fall" else ("fall", year)
 
 
 def _state_record(program_code: str, year: int,

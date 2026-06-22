@@ -281,18 +281,20 @@ courses:
     title: Statistics
     credits: 3
     offering: every
-    prereq:
-      kind: course
-      course: MATH 1311
+    prereq:  # catalog: MATH 1311 or higher (placement beyond College Algebra qualifies)
+      kind: min_level
+      subject: MATH
+      level: 1311
 
   MATH 1313:
     code: MATH 1313
     title: Pre-Calculus
     credits: 3
     offering: every
-    prereq:
-      kind: course
-      course: MATH 1311
+    prereq:  # catalog: MATH 1311 or higher (placement beyond College Algebra qualifies)
+      kind: min_level
+      subject: MATH
+      level: 1311
 
   MATH 2314:
     code: MATH 2314
@@ -308,9 +310,10 @@ courses:
     title: Discrete Mathematics
     credits: 3
     offering: every
-    prereq:
-      kind: course
-      course: MATH 1311
+    prereq:  # catalog: MATH 1311 or higher (placement beyond College Algebra qualifies)
+      kind: min_level
+      subject: MATH
+      level: 1311
 
   # ── CS Core ───────────────────────────────────────────────────────────────
   COMP 1314:

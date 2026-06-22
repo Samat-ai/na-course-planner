@@ -1,5 +1,11 @@
 from na_planner.grades import Grade
-from na_planner.models.catalog import Course, PrereqExpr, Program, RequirementGroup
+from na_planner.models.catalog import (
+    Course,
+    CourseFilter,
+    PrereqExpr,
+    Program,
+    RequirementGroup,
+)
 from na_planner.models.preferences import StudentPreferences
 from na_planner.models.student import CompletedCourse, StudentRecord
 from na_planner.roadmap import recommend
@@ -52,6 +58,26 @@ def test_roadmap_advances_calendar_years_correctly():
         ("spring", 2027),
         ("fall", 2027),
     ]
+
+
+def test_projects_graduation_through_free_elective_bucket():
+    # One 3-credit structured course + a 6-credit unrestricted-elective bucket. The
+    # elective bucket is never auto-filled (by design), so completion must be projected:
+    # structured course in Fall 2026, then 6 elective credits at 3 cr/term = 2 more
+    # terms (Spring 2027, Fall 2027) -> graduate Fall 2027.
+    courses = {"A 1000": Course(code="A 1000", credits=3)}
+    groups = [
+        RequirementGroup(id="core", name="Core", kind="all_of", courses=["A 1000"]),
+        RequirementGroup(id="elec", name="Electives", kind="credits_from_filter",
+                         min_credits=6, course_filter=CourseFilter(unrestricted=True)),
+    ]
+    prog = Program(code="X", name="X", catalog_year=2026, total_credits_required=9,
+                   courses=courses, groups=groups)
+    student = StudentRecord(program_code="X", catalog_year=2026)
+    prefs = StudentPreferences(target_credits=3, target_season="fall", target_year=2026)
+    rec = recommend(student, prog, prefs)
+    assert rec.projected_graduation == "Fall 2027"
+    assert rec.elective_credits_remaining == 6
 
 
 def test_recommend_stops_when_complete():

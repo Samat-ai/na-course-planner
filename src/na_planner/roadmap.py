@@ -1,3 +1,5 @@
+import math
+
 from na_planner.audit import audit, earned_courses
 from na_planner.eligibility import eligible_courses
 from na_planner.grades import Grade
@@ -80,8 +82,40 @@ def recommend(
         return Recommendation(next_term=empty, roadmap=[], projected_graduation=None,
                               elective_credits_remaining=max(0.0, elective_remaining))
 
+    projected = _project_graduation(
+        last_audit, group_kinds, terms, season, year,
+        max(0.0, elective_remaining), prefs.target_credits,
+    )
     return Recommendation(
         next_term=terms[0], roadmap=terms[1:],
-        projected_graduation=terms[-1].label if last_audit.is_complete else None,
+        projected_graduation=projected,
         elective_credits_remaining=max(0.0, elective_remaining),
     )
+
+
+def _project_graduation(
+    last_audit, group_kinds: dict[str, str], terms: list[TermPlan],
+    season: str, year: int, elective_remaining: float, target_credits: float,
+) -> str | None:
+    """Project the graduation term. Graduation requires every *structured* group to be
+    satisfied; the free elective-credit bucket is fillable, so once the structure is done
+    we add the terms needed to absorb the remaining elective credits."""
+    if last_audit.is_complete:
+        return terms[-1].label
+    structured_complete = all(
+        s.status == "satisfied"
+        for s in last_audit.groups
+        if group_kinds.get(s.group_id) != "credits_from_filter"
+    )
+    if not structured_complete:
+        return None
+    if elective_remaining <= 0:
+        return terms[-1].label
+    # `season, year` already points one term past the last planned term — that's where
+    # the first free-elective term lands.
+    extra_terms = math.ceil(elective_remaining / target_credits)
+    label = terms[-1].label
+    for _ in range(extra_terms):
+        label = f"{season.capitalize()} {year}"
+        season, year = _advance(season, year)
+    return label

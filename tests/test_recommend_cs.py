@@ -27,3 +27,14 @@ def test_recommend_against_real_cs_program():
     # Every recommended course must be a real program course
     for c in rec.next_term.courses:
         assert c.code in prog.courses
+
+
+def test_recommend_projects_a_graduation_term():
+    # Finding #5: a full roadmap must project a graduation term, not None, once every
+    # structured requirement is met (the free-elective bucket is fillable).
+    prog = load_program(CS)
+    student = StudentRecord(program_code=prog.code, catalog_year=2026)
+    prefs = StudentPreferences(target_credits=15, target_season="fall", target_year=2026,
+                               declared_concentration="concentration_software_engineering")
+    rec = recommend(student, prog, prefs)
+    assert rec.projected_graduation is not None

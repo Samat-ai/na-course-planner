@@ -1,6 +1,7 @@
 from na_planner.catalog_linter import lint_program
 from na_planner.models.catalog import (
     Course,
+    ForcedChoice,
     PrereqExpr,
     Program,
     RequirementGroup,
@@ -44,6 +45,33 @@ def test_choose_without_threshold_flagged():
     groups = [RequirementGroup(id="h", name="H", kind="choose", courses=["COMP 1411"])]
     problems = lint_program(_program(groups, courses))
     assert any("min_count" in p or "min_credits" in p for p in problems)
+
+
+def test_forced_choice_unknown_course_flagged():
+    courses = {"HIST 1311": Course(code="HIST 1311", credits=3)}
+    groups = [RequirementGroup(
+        id="h", name="H", kind="choose", min_count=1, courses=["HIST 1311"],
+        forced_choices=[ForcedChoice(any_of=["HIST 1311", "HIST 9999"])],
+    )]
+    problems = lint_program(_program(groups, courses))
+    assert any("HIST 9999" in p for p in problems)
+
+
+def test_forced_choice_overlapping_sublists_flagged():
+    # A course appearing in two forced-choice sub-lists could fill both slots at once.
+    courses = {
+        "HIST 1311": Course(code="HIST 1311", credits=3),
+        "HIST 1312": Course(code="HIST 1312", credits=3),
+    }
+    groups = [RequirementGroup(
+        id="h", name="H", kind="choose", min_count=2, courses=["HIST 1311", "HIST 1312"],
+        forced_choices=[
+            ForcedChoice(any_of=["HIST 1311", "HIST 1312"]),
+            ForcedChoice(any_of=["HIST 1312"]),
+        ],
+    )]
+    problems = lint_program(_program(groups, courses))
+    assert any("HIST 1312" in p and "overlap" in p.lower() for p in problems)
 
 
 def test_credits_from_filter_requires_filter_and_credits():

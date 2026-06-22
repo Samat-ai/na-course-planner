@@ -56,9 +56,12 @@ def evaluate_group(
         )
 
     if group.kind == "choose":
-        pool = set(group.courses) | set(group.forced)
+        pool = set(group.courses) | set(group.forced) | _forced_choice_codes(group)
         pool_counting = [c for c in counting if c.code in pool]
-        forced_ok = all(code in applied_codes for code in group.forced)
+        forced_ok = all(code in applied_codes for code in group.forced) and all(
+            any(opt in applied_codes for opt in fc.any_of)
+            for fc in group.forced_choices
+        )
         count_ok = group.min_count is None or len(pool_counting) >= group.min_count
         credits_ok = (
             group.min_credits is None
@@ -129,8 +132,12 @@ def earned_courses(student: StudentRecord) -> list[EarnedCourse]:
     return out
 
 
+def _forced_choice_codes(group: RequirementGroup) -> set[str]:
+    return {code for fc in group.forced_choices for code in fc.any_of}
+
+
 def _group_member_codes(group: RequirementGroup) -> set[str]:
-    codes = set(group.courses) | set(group.forced)
+    codes = set(group.courses) | set(group.forced) | _forced_choice_codes(group)
     for sub in group.subgroups:
         codes |= _group_member_codes(sub)
     return codes

@@ -34,6 +34,13 @@ def remaining_required_courses(
                 for fc in group.forced:
                     if fc not in satisfied_forced and fc not in out:
                         out.append(fc)
+                # forced choices: surface every option of an unfilled slot for the
+                # student to pick (don't silently choose one).
+                for choice in group.forced_choices:
+                    if not any(opt in satisfied_forced for opt in choice.any_of):
+                        for opt in choice.any_of:
+                            if opt not in out:
+                                out.append(opt)
         elif group.kind == "choose_group":
             for c in _subgroup_remaining(group, prefs.declared_concentration,
                                          satisfied_codes):

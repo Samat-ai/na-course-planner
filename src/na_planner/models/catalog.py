@@ -39,12 +39,19 @@ class Course(BaseModel):
     difficulty: Literal["easy", "medium", "hard"] | None = None
 
 
+class ForcedChoice(BaseModel):
+    # A forced requirement satisfied by exactly one course from a named sub-list,
+    # e.g. "one HIST course" or "one natural science". The student picks which.
+    any_of: list[str] = []
+
+
 class RequirementGroup(BaseModel):
     id: str
     name: str
     kind: Literal["all_of", "choose", "choose_group", "credits_from_filter"]
     courses: list[str] = []               # pool for all_of / choose
     forced: list[str] = []                # forced members of a choose pool / standalone
+    forced_choices: list[ForcedChoice] = []   # each: one course from a named sub-list
     min_count: int | None = None          # choose: at least N courses
     min_credits: float | None = None      # choose / credits_from_filter: at least K credits
     subgroups: list["RequirementGroup"] = []   # for choose_group

@@ -1,0 +1,120 @@
+# NA Credit by Examination Transferability Chart
+# Source: NA catalog 2026-2027, "Credits by Examination" (pp. 40-44, lines ~1411-1522).
+# A maximum of 30 credit hours may be transferred by credit-by-examination (enforced by
+# the resolver, not this data). equivalents: [] means generic elective credit ("ELEC 1"
+# in the catalog). Course credit values are derived from the NA code convention by the
+# resolver, so out-of-catalog equivalencies (CHEM/PHYS) need no credit field here.
+#
+# Data notes: catalog typo "CNEM 1311" corrected to CHEM 1311; CLEP Spanish Language
+# ("ELEC 1 /SPAN 1311") mapped to the named course SPAN 1311.
+catalog_year: 2026
+entries:
+  # ── Advanced Placement (AP), scores 1-5 ──────────────────────────────────
+  - {exam_type: AP, exam_name: Art History, min_score: 3, equivalents: [ARTS 1311]}
+  - {exam_type: AP, exam_name: Music Theory, min_score: 3, equivalents: [MUSI 1306]}
+  - {exam_type: AP, exam_name: Studio Art 2-D Design, min_score: 3, equivalents: [ARTS 1311]}
+  - {exam_type: AP, exam_name: Studio Art 3-D Design, min_score: 3, equivalents: [ARTS 1311]}
+  - {exam_type: AP, exam_name: Studio Art Drawing, min_score: 3, equivalents: [ARTS 1311]}
+  - {exam_type: AP, exam_name: English Language and Composition, min_score: 3, equivalents: [ENGL 1311]}
+  - {exam_type: AP, exam_name: English Literature and Composition, min_score: 3, equivalents: [ENGL 1311]}
+  - {exam_type: AP, exam_name: Comparative Government and Politics, min_score: 3, equivalents: [GOVT 2311]}
+  - {exam_type: AP, exam_name: European History, min_score: 3, equivalents: [HIST 1311]}
+  - {exam_type: AP, exam_name: Human Geography, min_score: 3, equivalents: [GEOG 2311]}
+  - {exam_type: AP, exam_name: Macroeconomics, min_score: 3, equivalents: [ECON 2311]}
+  - {exam_type: AP, exam_name: Microeconomics, min_score: 3, equivalents: [ECON 2312]}
+  - {exam_type: AP, exam_name: Psychology, min_score: 3, equivalents: [PSYC 2311]}
+  - {exam_type: AP, exam_name: US Government and Politics, min_score: 3, equivalents: [GOVT 2311]}
+  - {exam_type: AP, exam_name: US History, min_score: 3, equivalents: [HIST 1311, HIST 1312]}
+  - {exam_type: AP, exam_name: World History, min_score: 3, equivalents: [HIST 1311]}
+  - {exam_type: AP, exam_name: Calculus AB, min_score: 3, equivalents: [MATH 2314]}
+  - {exam_type: AP, exam_name: Calculus BC, min_score: 3, equivalents: [MATH 2314, MATH 2315]}
+  - {exam_type: AP, exam_name: Computer Science A, min_score: 3, equivalents: [COMP 1314]}
+  - {exam_type: AP, exam_name: Computer Science AB, min_score: 3, equivalents: [COMP 1314, COMP 1411]}
+  - {exam_type: AP, exam_name: Statistics, min_score: 3, equivalents: [MATH 1312]}
+  - {exam_type: AP, exam_name: Biology, min_score: 3, equivalents: [BIOL 1311]}
+  - {exam_type: AP, exam_name: Chemistry, min_score: 3, equivalents: [CHEM 1311]}
+  - {exam_type: AP, exam_name: Environmental Science, min_score: 3, equivalents: [GEOL 1311]}
+  - {exam_type: AP, exam_name: Physics I, min_score: 3, equivalents: [PHYS 1311]}
+  - {exam_type: AP, exam_name: Physics II, min_score: 3, equivalents: [PHYS 2412]}
+  - {exam_type: AP, exam_name: "Physics C: Electricity and Magnetism", min_score: 3, equivalents: [PHYS 1311]}
+  - {exam_type: AP, exam_name: "Physics C: Mechanics", min_score: 3, equivalents: [PHYS 1311]}
+  - {exam_type: AP, exam_name: Chinese Language and Culture, min_score: 3, equivalents: []}
+  - {exam_type: AP, exam_name: French Language and Culture, min_score: 3, equivalents: []}
+  - {exam_type: AP, exam_name: German Language and Culture, min_score: 3, equivalents: []}
+  - {exam_type: AP, exam_name: Italian Language and Culture, min_score: 3, equivalents: []}
+  - {exam_type: AP, exam_name: Japanese Language and Culture, min_score: 3, equivalents: []}
+  - {exam_type: AP, exam_name: Latin, min_score: 3, equivalents: []}
+  - {exam_type: AP, exam_name: Spanish Language and Culture, min_score: 3, equivalents: []}
+  - {exam_type: AP, exam_name: Spanish Literature and Culture, min_score: 3, equivalents: []}
+
+  # ── College Level Examination Program (CLEP), scores 20-80 ───────────────
+  - {exam_type: CLEP, exam_name: American Literature, min_score: 50, equivalents: [ENGL 2316]}
+  - {exam_type: CLEP, exam_name: College Composition, min_score: 50, equivalents: [ENGL 1311]}
+  - {exam_type: CLEP, exam_name: College Composition Modular, min_score: 50, equivalents: [ENGL 1311]}
+  - {exam_type: CLEP, exam_name: English Literature, min_score: 50, equivalents: [ENGL 2315]}
+  - {exam_type: CLEP, exam_name: Humanities, min_score: 50, equivalents: [ARTS 1311]}
+  - {exam_type: CLEP, exam_name: French Language, min_score: 50, equivalents: []}
+  - {exam_type: CLEP, exam_name: German Language, min_score: 50, equivalents: []}
+  - {exam_type: CLEP, exam_name: Spanish Language, min_score: 50, equivalents: [SPAN 1311]}
+  - {exam_type: CLEP, exam_name: American Government, min_score: 50, equivalents: [GOVT 2311]}
+  - {exam_type: CLEP, exam_name: "History of the US: Early Colonization to 1877", min_score: 50, equivalents: [HIST 1311]}
+  - {exam_type: CLEP, exam_name: "History of the US II: 1865 to Present", min_score: 50, equivalents: [HIST 1312]}
+  - {exam_type: CLEP, exam_name: Human Growth and Development, min_score: 50, equivalents: [EDUC 2312]}
+  - {exam_type: CLEP, exam_name: Introduction to Educational Psychology, min_score: 50, equivalents: [EDUC 2311]}
+  - {exam_type: CLEP, exam_name: Principles of Macroeconomics, min_score: 50, equivalents: [ECON 2311]}
+  - {exam_type: CLEP, exam_name: Principles of Microeconomics, min_score: 50, equivalents: [ECON 2312]}
+  - {exam_type: CLEP, exam_name: Introductory Psychology, min_score: 50, equivalents: [PSYC 2311]}
+  - {exam_type: CLEP, exam_name: Introductory Sociology, min_score: 50, equivalents: [SOCI 2311]}
+  - {exam_type: CLEP, exam_name: "Western Civilization I: Ancient Near East to 1648", min_score: 50, equivalents: [HIST 2311]}
+  - {exam_type: CLEP, exam_name: "Western Civilization II: 1648 to Present", min_score: 50, equivalents: [HIST 2311]}
+  - {exam_type: CLEP, exam_name: Biology, min_score: 50, equivalents: [BIOL 1311]}
+  - {exam_type: CLEP, exam_name: Calculus, min_score: 50, equivalents: [MATH 2314]}
+  - {exam_type: CLEP, exam_name: Chemistry, min_score: 50, equivalents: [CHEM 1311]}
+  - {exam_type: CLEP, exam_name: College Algebra, min_score: 50, equivalents: [MATH 1311]}
+  - {exam_type: CLEP, exam_name: College Mathematics, min_score: 50, equivalents: [MATH 1311]}
+  - {exam_type: CLEP, exam_name: Natural Sciences, min_score: 50, equivalents: [GEOL 1311]}
+  - {exam_type: CLEP, exam_name: Pre-calculus, min_score: 50, equivalents: [MATH 1313]}
+  - {exam_type: CLEP, exam_name: Trigonometry, min_score: 50, equivalents: [MATH 1311]}
+  - {exam_type: CLEP, exam_name: Financial Accounting, min_score: 50, equivalents: [ACCT 2311]}
+  - {exam_type: CLEP, exam_name: Information Systems and Computer Applications, min_score: 50, equivalents: [COMP 1314]}
+  - {exam_type: CLEP, exam_name: Introductory Business Law, min_score: 50, equivalents: [BUSI 3315]}
+  - {exam_type: CLEP, exam_name: Principles of Management, min_score: 50, equivalents: [MNGT 2311]}
+  - {exam_type: CLEP, exam_name: Principles of Marketing, min_score: 50, equivalents: [MRKT 2311]}
+
+  # ── International Baccalaureate (IB), scores 1-7 ──────────────────────────
+  - {exam_type: IB, exam_name: Art/Design, min_score: 4, equivalents: [ARTS 1311]}
+  - {exam_type: IB, exam_name: Biology, min_score: 4, equivalents: [BIOL 1311]}
+  - {exam_type: IB, exam_name: Chemistry, min_score: 4, equivalents: [CHEM 1311]}
+  - {exam_type: IB, exam_name: Computer Science/Computing Studies, min_score: 4, equivalents: [COMP 1314]}
+  - {exam_type: IB, exam_name: Dance, min_score: 4, equivalents: [ARTS 1311]}
+  - {exam_type: IB, exam_name: Economics, min_score: 4, equivalents: [ECON 2311]}
+  - {exam_type: IB, exam_name: English A1, min_score: 4, equivalents: [ENGL 1311, ENGL 1312]}
+  - {exam_type: IB, exam_name: Film, min_score: 4, equivalents: [ARTS 1311]}
+  - {exam_type: IB, exam_name: Geography, min_score: 4, equivalents: [GEOG 2311]}
+  - {exam_type: IB, exam_name: History, min_score: 4, equivalents: [HIST 1311]}
+  - {exam_type: IB, exam_name: History of the Americas, min_score: 4, equivalents: [HIST 1311]}
+  - {exam_type: IB, exam_name: Management, min_score: 4, equivalents: [MNGT 2311]}
+  - {exam_type: IB, exam_name: Mathematics, min_score: 4, equivalents: [MATH 1311]}
+  - {exam_type: IB, exam_name: Mathematics Studies, min_score: 4, equivalents: [MATH 1311]}
+  - {exam_type: IB, exam_name: Music, min_score: 4, equivalents: [MUSI 1306]}
+  - {exam_type: IB, exam_name: Physics, min_score: 4, equivalents: [PHYS 1311]}
+  - {exam_type: IB, exam_name: Psychology, min_score: 4, equivalents: [PSYC 2311]}
+  - {exam_type: IB, exam_name: Theater Arts, min_score: 4, equivalents: [ARTS 1311]}
+  - {exam_type: IB, exam_name: Visual Arts, min_score: 4, equivalents: [ARTS 1311]}
+
+  # ── SAT Subject Tests, scores 200-800 ────────────────────────────────────
+  - {exam_type: SAT_SUBJECT, exam_name: Biology, min_score: 590, equivalents: [BIOL 1311]}
+  - {exam_type: SAT_SUBJECT, exam_name: Chemistry, min_score: 630, equivalents: [CHEM 1311]}
+  - {exam_type: SAT_SUBJECT, exam_name: Chinese with Listening, min_score: 640, equivalents: []}
+  - {exam_type: SAT_SUBJECT, exam_name: English, min_score: 750, equivalents: [ENGL 1311]}
+  - {exam_type: SAT_SUBJECT, exam_name: French with Listening, min_score: 640, equivalents: []}
+  - {exam_type: SAT_SUBJECT, exam_name: German with Listening, min_score: 640, equivalents: []}
+  - {exam_type: SAT_SUBJECT, exam_name: Japanese with Listening, min_score: 640, equivalents: []}
+  - {exam_type: SAT_SUBJECT, exam_name: Korean with Listening, min_score: 640, equivalents: []}
+  - {exam_type: SAT_SUBJECT, exam_name: Latin, min_score: 640, equivalents: []}
+  - {exam_type: SAT_SUBJECT, exam_name: Literature, min_score: 750, equivalents: [ENGL 2315]}
+  - {exam_type: SAT_SUBJECT, exam_name: Math Level 1, min_score: 650, equivalents: [MATH 1311]}
+  - {exam_type: SAT_SUBJECT, exam_name: Math Level 2, min_score: 700, equivalents: [MATH 1313]}
+  - {exam_type: SAT_SUBJECT, exam_name: Spanish with Listening, min_score: 640, equivalents: [SPAN 1311]}
+  - {exam_type: SAT_SUBJECT, exam_name: US History, min_score: 700, equivalents: [HIST 1311]}
+  - {exam_type: SAT_SUBJECT, exam_name: World History, min_score: 700, equivalents: [HIST 2311]}

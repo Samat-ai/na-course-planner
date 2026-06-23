@@ -191,7 +191,7 @@ py -3 scripts/gen_architecture.py                        # refresh module map be
     - fields: `code`, `credits`, `grade`
 
 ### `src/na_planner/planner.py`
-  - `plan_term(eligible: list[str], program: Program, prefs: StudentPreferences, weights: dict[str, float]=DEFAULT_WEIGHTS) -> TermPlan`
+  - `plan_term(eligible: list[str], program: Program, prefs: StudentPreferences, weights: dict[str, float]=DEFAULT_WEIGHTS, audit_result: AuditResult | None=None) -> TermPlan`
 
 ### `src/na_planner/prereqs.py`
   - `course_subject(code: str) -> str`

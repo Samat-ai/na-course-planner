@@ -15,7 +15,7 @@ from na_planner.ingestion.models import NoTextLayerError
 from na_planner.ingestion.pdf import parse_transcript_pdf
 from na_planner.ingestion.transcript_text import parse_transcript_text
 from na_planner.models.audit import AuditResult
-from na_planner.models.exam_credit import ExamCreditChart
+from na_planner.models.exam_credit import ExamCreditChart, ExamResolution
 from na_planner.models.recommend import Recommendation
 from na_planner.models.student import StudentRecord
 from na_planner.programs import list_programs, load_program_by
@@ -42,6 +42,17 @@ def create_app() -> FastAPI:
             return load_chart_for(catalog_year)
         except KeyError as e:
             raise HTTPException(status_code=404, detail=str(e)) from e
+
+    @app.post("/resolve-exams", response_model=ExamResolution)
+    def resolve_exams_endpoint(req: AuditRequest) -> ExamResolution:
+        # Authoritative resolution preview: applies the cross-exam cap/dedup rules the
+        # per-row client preview cannot, and returns diagnostics for the UI to show.
+        try:
+            chart = load_chart_for(req.catalog_year)
+        except KeyError as e:
+            raise HTTPException(status_code=404, detail=str(e)) from e
+        _, resolution = merge_exam_credit(req.student, chart)
+        return resolution
 
     def _with_exam_credit(student: StudentRecord, catalog_year: int) -> StudentRecord:
         # Resolve reported exams into external credit before the engine runs. Absence

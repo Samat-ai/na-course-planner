@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import BaseModel
 
 from na_planner.grades import Grade
@@ -21,11 +23,20 @@ class ExternalCredit(BaseModel):
     credits: float
 
 
+class ExamResult(BaseModel):
+    exam_type: Literal["AP", "CLEP", "IB", "SAT_SUBJECT"]
+    exam_name: str
+    score: float
+
+
 class StudentRecord(BaseModel):
     program_code: str
     catalog_year: int
     completed: list[CompletedCourse] = []
     external: list[ExternalCredit] = []
+    # AP/CLEP/IB/SAT Subject exams, resolved to external credit against the exam-credit
+    # chart at the API boundary (see na_planner.exam_credit).
+    exams: list[ExamResult] = []
 
 
 class EarnedCourse(BaseModel):

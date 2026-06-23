@@ -281,18 +281,20 @@ courses:
     title: Statistics
     credits: 3
     offering: every
-    prereq:
-      kind: course
-      course: MATH 1311
+    prereq:  # catalog: MATH 1311 or higher (placement beyond College Algebra qualifies)
+      kind: min_level
+      subject: MATH
+      level: 1311
 
   MATH 1313:
     code: MATH 1313
     title: Pre-Calculus
     credits: 3
     offering: every
-    prereq:
-      kind: course
-      course: MATH 1311
+    prereq:  # catalog: MATH 1311 or higher (placement beyond College Algebra qualifies)
+      kind: min_level
+      subject: MATH
+      level: 1311
 
   MATH 2314:
     code: MATH 2314
@@ -308,9 +310,10 @@ courses:
     title: Discrete Mathematics
     credits: 3
     offering: every
-    prereq:
-      kind: course
-      course: MATH 1311
+    prereq:  # catalog: MATH 1311 or higher (placement beyond College Algebra qualifies)
+      kind: min_level
+      subject: MATH
+      level: 1311
 
   # ── CS Core ───────────────────────────────────────────────────────────────
   COMP 1314:
@@ -780,8 +783,12 @@ groups:
     name: "Gen-Ed: Humanities and Fine Arts"
     kind: choose
     min_count: 2
-    forced:
-      - HIST 1311  # v1 approximation: catalog accepts any HIST course (1311, 1312, 2311, 2314)
+    forced_choices:  # catalog: all undergraduates take one HIST course from this category
+      - any_of:
+          - HIST 1311
+          - HIST 1312
+          - HIST 2311
+          - HIST 2314
     courses:
       - ARTS 1311
       - ENGL 2315
@@ -813,26 +820,27 @@ groups:
       - PSYC 2311
       - SOCI 2311
 
-  # ── 5. Gen-Ed: Natural Sciences and Mathematics (≥4 courses, CS-specific) ─
-  # CS students are required to take MATH 1311, MATH 1313, plus one natural science.
-  # MATH 2314 is also in this category and part of the CS core.
-  # Forced: MATH 1311, MATH 1313; plus one natural science from the list.
+  # ── 5. Gen-Ed: Natural Sciences and Mathematics (CS-specific: 3 courses) ──
+  # Catalog: CS students take BOTH MATH 1311 and MATH 1313, plus one natural science
+  # (BIOL 1311, BIOL 1312, GEOG 2311, GEOG 2312, or GEOL 1311). MATH 2314 (Calculus I)
+  # is in this catalog category but is owned by the CS Core group, so it is not listed
+  # here (no double-counting). A student who placed beyond MATH 1311 clears it via a
+  # placement/transfer entry, not by dropping the requirement.
   - id: gen_ed_natural_science_math
     name: "Gen-Ed: Natural Sciences and Mathematics"
     kind: choose
-    min_count: 4
+    min_count: 3
     forced:
       - MATH 1311
       - MATH 1313
-    courses:
-      - BIOL 1311
-      - BIOL 1312
-      - GEOG 2311
-      - GEOG 2312
-      - GEOL 1311
-      - MATH 1311
-      - MATH 1313
-      - MATH 2314
+    forced_choices:
+      - any_of:
+          - BIOL 1311
+          - BIOL 1312
+          - GEOG 2311
+          - GEOG 2312
+          - GEOL 1311
+    courses: []
 
   # ── 6. CS Core (51 credits) ───────────────────────────────────────────────
   # COMP 1314 (3) + COMP 1411 (4) + COMP 1412 (4) + COMP 2313 (3) +

@@ -1,6 +1,12 @@
 from na_planner.audit import course_matches_filter, evaluate_group
 from na_planner.grades import Grade
-from na_planner.models.catalog import Course, CourseFilter, Program, RequirementGroup
+from na_planner.models.catalog import (
+    Course,
+    CourseFilter,
+    ForcedChoice,
+    Program,
+    RequirementGroup,
+)
 from na_planner.models.student import EarnedCourse
 
 
@@ -53,6 +59,31 @@ def test_choose_min_count_with_forced():
     applied2 = [EarnedCourse(code="ENGL 1311", credits=3, grade=Grade.A),
                 EarnedCourse(code="ARTS 1311", credits=3, grade=Grade.A)]
     assert evaluate_group(group, applied2, prog).status == "satisfied"
+
+
+def test_choose_forced_choice_any_of_one_from_sublist():
+    # "One HIST course from {HIST 1311, HIST 1312}" expressed as a forced any_of choice,
+    # plus min_count 2 over the broader pool.
+    prog = _program({
+        "ARTS 1311": Course(code="ARTS 1311", credits=3),
+        "MUSI 1306": Course(code="MUSI 1306", credits=3),
+        "HIST 1311": Course(code="HIST 1311", credits=3),
+        "HIST 1312": Course(code="HIST 1312", credits=3),
+    })
+    group = RequirementGroup(
+        id="h", name="Hum", kind="choose",
+        courses=["ARTS 1311", "MUSI 1306", "HIST 1311", "HIST 1312"],
+        forced_choices=[ForcedChoice(any_of=["HIST 1311", "HIST 1312"])],
+        min_count=2,
+    )
+    # Two courses but neither is a HIST course -> forced choice unmet -> not satisfied
+    no_hist = [EarnedCourse(code="ARTS 1311", credits=3, grade=Grade.A),
+               EarnedCourse(code="MUSI 1306", credits=3, grade=Grade.A)]
+    assert evaluate_group(group, no_hist, prog).status != "satisfied"
+    # ARTS + HIST 1312 (a member of the any_of) -> forced choice met -> satisfied
+    with_hist = [EarnedCourse(code="ARTS 1311", credits=3, grade=Grade.A),
+                 EarnedCourse(code="HIST 1312", credits=3, grade=Grade.A)]
+    assert evaluate_group(group, with_hist, prog).status == "satisfied"
 
 
 def test_min_grade_blocks_satisfaction():

@@ -3,6 +3,7 @@ from na_planner.eligibility import eligible_courses, is_offered, remaining_requi
 from na_planner.grades import Grade
 from na_planner.models.catalog import (
     Course,
+    ForcedChoice,
     OfferingPattern,
     PrereqExpr,
     Program,
@@ -84,3 +85,30 @@ def test_remaining_includes_forced_only_courses():
     prefs = StudentPreferences()
     rem = remaining_required_courses(a, prog, prefs)
     assert "FORCED 1000" in rem
+
+
+def test_remaining_surfaces_forced_choice_options_when_unmet():
+    # A pure choice slot: the any_of options live only in forced_choices, not in courses.
+    courses = {
+        "HIST 1311": Course(code="HIST 1311", credits=3),
+        "HIST 1312": Course(code="HIST 1312", credits=3),
+    }
+    groups = [RequirementGroup(
+        id="hum", name="Humanities", kind="choose", min_count=1, courses=[],
+        forced_choices=[ForcedChoice(any_of=["HIST 1311", "HIST 1312"])],
+    )]
+    prog = Program(code="X", name="X", catalog_year=2026, total_credits_required=3,
+                   courses=courses, groups=groups)
+    prefs = StudentPreferences()
+
+    # Unmet (no HIST taken): both options surfaced for the student to pick.
+    a = audit(StudentRecord(program_code="X", catalog_year=2026), prog)
+    rem = remaining_required_courses(a, prog, prefs)
+    assert "HIST 1311" in rem and "HIST 1312" in rem
+
+    # Met (HIST 1312 taken): the choice slot is satisfied; neither option re-surfaced.
+    done = StudentRecord(program_code="X", catalog_year=2026,
+                         completed=[CompletedCourse(code="HIST 1312", credits=3,
+                                                    grade=Grade.A)])
+    rem2 = remaining_required_courses(audit(done, prog), prog, prefs)
+    assert "HIST 1311" not in rem2 and "HIST 1312" not in rem2

@@ -6,6 +6,7 @@ from na_planner.catalog_loader import load_program
 from na_planner.cli import main
 from na_planner.grades import Grade
 from na_planner.models.student import CompletedCourse, StudentRecord
+from na_planner.prereqs import prereqs_satisfied
 
 CS = Path(__file__).parents[1] / "data" / "programs" / "cs-bs-2026.yaml"
 
@@ -36,6 +37,18 @@ def test_core_partial_when_one_core_course_done():
     core = next(g for g in result.groups if "core" in g.group_id.lower())
     assert core.status in {"partial", "unmet"}
     assert "COMP 1411" in core.satisfied_by
+
+
+def test_math_placement_beyond_college_algebra_satisfies_downstream_prereqs():
+    # A student who placed beyond College Algebra (passed Pre-Calc MATH 1313 but never
+    # took MATH 1311) should satisfy the prereqs of MATH 1312 / 1313 / 2317, which the
+    # catalog means as "MATH 1311 or higher", not the exact course MATH 1311.
+    prog = load_program(CS)
+    passed = {"MATH 1313": Grade.A}
+    for code in ("MATH 1312", "MATH 2317"):
+        assert prereqs_satisfied(prog.courses[code].prereq, passed, 0.0), (
+            f"{code} prereq should be met by placing beyond MATH 1311"
+        )
 
 
 def test_cli_runs_against_real_program(capsys):

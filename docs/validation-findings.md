@@ -1,10 +1,35 @@
 # Validation Findings — Real-Transcript Run (2026-06-20)
 
-Status: **documented, not yet fixed.** Found by running a real NA CS transcript (60 credits
-earned, Software Engineering concentration, 2 in-progress `WIP` courses) through
-`audit` + `recommend` against `data/programs/cs-bs-2026.yaml`. Synthetic tests pass (79/79);
-these are correctness gaps that only real data exposes. Fix on a `fix-validation-findings`
-branch → PR → green CI → merge.
+Status: **four of five fixed; #2 reinterpreted (2026-06-22)** on branch
+`fix-validation-findings`. Each fix has a regression test; the suite is green (90 tests) and
+`cs-bs-2026.yaml` lints clean. Found by running a real NA CS transcript (60 credits earned,
+Software Engineering concentration, 2 in-progress `WIP` courses) through `audit` + `recommend`
+against `data/programs/cs-bs-2026.yaml`.
+
+Resolution summary (commit per finding):
+- **#1** roadmap year advance — fixed (`roadmap._advance`).
+- **#2** College-Algebra recommendation — **partially fixed / reinterpreted, pending a product
+  decision.** The *prereq-driven* cause is fixed (#2b: MATH 1312/1313/2317 now use `min_level`
+  "MATH 1311 or higher"; verified no remaining course needs MATH 1311 as a prereq). But the
+  authoritative catalog (`docs/reference/na-catalog-2026-2027.txt`, p.42) states CS students are
+  **required to take both MATH 1311 and MATH 1313**, so MATH 1311 remains a legitimate gen-ed
+  requirement and a senior who placed beyond it will **still** eventually be told to take it.
+  Two ways to close the *visible symptom*: **(a)** keep catalog-faithful — MATH 1311 stays
+  required, cleared by a future placement/transfer entry (option (c) below); or **(b)** drop the
+  forced MATH 1311 now (one YAML line) to silence the symptom, at the cost of model correctness.
+  Currently implemented: **(a)**.
+- **#3, #4** gen-ed accuracy — fixed via model enhancement **#6** (forced-choice "one from a
+  named sub-list") plus a planner cap (one course per choice slot).
+- **#5** graduation projection — fixed (projects once structured requirements are met).
+- **#6** model enhancement — implemented (`ForcedChoice`).
+
+Discovered follow-up (not one of the original five) — **fixed (2026-06-22):** `plan_term`
+over-picked `min_count` choose pools (e.g. ~10 Humanities courses for `min_count` 2;
+ECON+ECON+GOVT+GOVT for Social), because the planner had no group-count awareness. It now caps
+optional pool picks per choose group at the group's remaining need, reserving room for unmet
+forced / forced-choice obligations so mandatory members aren't crowded out. The empty-student CS
+roadmap went from 10 terms / ~135 cr to **8 terms / 102 cr**, each gen-ed choose group lands
+exactly on `min_count`, and the #5 projected graduation is no longer pessimistic.
 
 ## ✅ Confirmed correct (no action)
 - Earned 60/120 credits — matches the transcript exactly.

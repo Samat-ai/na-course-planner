@@ -1,0 +1,668 @@
+code: CRJS-BS
+name: Bachelor of Science in Criminal Justice
+catalog_year: 2026
+total_credits_required: 120
+default_min_grade: null
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Source: NA catalog 2026-2027 §7.3.7 (degree requirements, pp. 129-131) and the
+# course-description section. Structure: 36 gen-ed + 42 criminal justice core +
+# 18 Forensic Science concentration + 24 unrestricted electives = 120 credits.
+#
+# Criminal Justice offers a single concentration (Forensic Science); it is still
+# expressed as a choose_group/all_of subgroup for consistency with the other
+# programs. Gen-ed encodes the catalog's standard category minimums (one HIST,
+# one GOVT, one MATH, one natural science); see the CS/Business programs for the
+# shared gen-ed credit-accounting note.
+# ─────────────────────────────────────────────────────────────────────────────
+courses:
+  # ── Freshman Seminar ──────────────────────────────────────────────────────
+  FRSH 1311:
+    code: FRSH 1311
+    title: Freshman Seminar
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  # ── Composition, Communications, and Foreign Languages ───────────────────
+  COMM 1311:
+    code: COMM 1311
+    title: Fundamentals of Communication
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  COMM 1313:
+    code: COMM 1313
+    title: Public Speaking
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  ENGL 1311:
+    code: ENGL 1311
+    title: Composition and Rhetoric I
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  ENGL 1312:
+    code: ENGL 1312
+    title: Composition and Rhetoric II
+    credits: 3
+    offering: every
+    prereq:
+      kind: course
+      course: ENGL 1311
+
+  SPAN 1311:
+    code: SPAN 1311
+    title: Elementary Spanish
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  # ── Humanities and Fine Arts ──────────────────────────────────────────────
+  ARTS 1311:
+    code: ARTS 1311
+    title: Art Appreciation
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  ENGL 2315:
+    code: ENGL 2315
+    title: Survey of British Literature I
+    credits: 3
+    offering: every
+    prereq:
+      kind: course
+      course: ENGL 1312
+
+  ENGL 2316:
+    code: ENGL 2316
+    title: Survey of American Literature I
+    credits: 3
+    offering: every
+    prereq:
+      kind: course
+      course: ENGL 1312
+
+  ENGL 2317:
+    code: ENGL 2317
+    title: Survey of British Literature II
+    credits: 3
+    offering: every
+    prereq:
+      kind: course
+      course: ENGL 1312
+
+  ENGL 2318:
+    code: ENGL 2318
+    title: Survey of American Literature II
+    credits: 3
+    offering: every
+    prereq:
+      kind: course
+      course: ENGL 1312
+
+  ENGL 2319:
+    code: ENGL 2319
+    title: Survey of World Literature
+    credits: 3
+    offering: every
+    prereq:
+      kind: course
+      course: ENGL 1312
+
+  HIST 1311:
+    code: HIST 1311
+    title: "U.S. History I"
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  HIST 1312:
+    code: HIST 1312
+    title: "U.S. History II"
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  HIST 2311:
+    code: HIST 2311
+    title: World History
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  HIST 2314:
+    code: HIST 2314
+    title: History of Texas
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  MUSI 1306:
+    code: MUSI 1306
+    title: Music Appreciation
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  PHIL 1311:
+    code: PHIL 1311
+    title: Introduction to Logic and Critical Thinking
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  PHIL 1312:
+    code: PHIL 1312
+    title: Professional Ethics
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  PHIL 1313:
+    code: PHIL 1313
+    title: Introduction to Philosophy
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  # ── Social and Behavioral Sciences ───────────────────────────────────────
+  ECON 2311:
+    code: ECON 2311
+    title: Principles of Macroeconomics
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  ECON 2312:
+    code: ECON 2312
+    title: Principles of Microeconomics
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  GOVT 2311:
+    code: GOVT 2311
+    title: "U.S. Government I"
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  GOVT 2312:
+    code: GOVT 2312
+    title: "U.S. Government II"
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  PSYC 2311:
+    code: PSYC 2311
+    title: General Psychology
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  SOCI 2311:
+    code: SOCI 2311
+    title: Introduction to Sociology
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  # ── Natural Sciences and Mathematics ─────────────────────────────────────
+  BIOL 1311:
+    code: BIOL 1311
+    title: Introductory Biology
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  BIOL 1312:
+    code: BIOL 1312
+    title: Nutrition
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  GEOG 2311:
+    code: GEOG 2311
+    title: Human Geography
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  GEOG 2312:
+    code: GEOG 2312
+    title: Regional Geography in the World
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  GEOL 1311:
+    code: GEOL 1311
+    title: Earth Science
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  MATH 1311:
+    code: MATH 1311
+    title: College Algebra
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  MATH 1313:
+    code: MATH 1313
+    title: Pre-Calculus
+    credits: 3
+    offering: every
+    prereq:  # catalog: MATH 1311 or higher
+      kind: min_level
+      subject: MATH
+      level: 1311
+
+  MATH 2314:
+    code: MATH 2314
+    title: Calculus I
+    credits: 3
+    offering: every
+    prereq:
+      kind: course
+      course: MATH 1313
+
+  # ── Criminal Justice Core (42 credits) ────────────────────────────────────
+  CRJS 1301:
+    code: CRJS 1301
+    title: Introduction to Criminal Justice
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  CRJS 2302:
+    code: CRJS 2302
+    title: Police Systems and Practices in America
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  CRJS 2303:
+    code: CRJS 2303
+    title: Criminal Law
+    credits: 3
+    offering: every
+    prereq:
+      kind: course
+      course: CRJS 1301
+
+  CRJS 2304:
+    code: CRJS 2304
+    title: Constitutional Law
+    credits: 3
+    offering: every
+    prereq:
+      kind: course
+      course: CRJS 1301
+
+  CRJS 2305:
+    code: CRJS 2305
+    title: Criminal Trial and the Court
+    credits: 3
+    offering: every
+    prereq:
+      kind: course
+      course: CRJS 1301
+
+  CRJS 3306:
+    code: CRJS 3306
+    title: Correctional System and Practices in America
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: CRJS 1301
+        - kind: min_credits
+          credits: 30
+
+  CRJS 3307:
+    code: CRJS 3307
+    title: Criminology
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: CRJS 1301
+        - kind: min_credits
+          credits: 30
+
+  CRJS 3308:
+    code: CRJS 3308
+    title: Criminal Procedure and Evidence
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: CRJS 1301
+        - kind: course
+          course: CRJS 2303
+        - kind: min_credits
+          credits: 30
+
+  CRJS 3309:
+    code: CRJS 3309
+    title: Technical Writing
+    credits: 3
+    offering: every
+    prereq:  # catalog: ENGL 1311 and ENGL 1312 (as prereq or coreq) + 30 credit hours
+      kind: all_of
+      children:
+        - kind: course
+          course: ENGL 1311
+        - kind: course
+          course: ENGL 1312
+        - kind: min_credits
+          credits: 30
+
+  CRJS 3310:
+    code: CRJS 3310
+    title: Criminal Investigations
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: CRJS 1301
+        - kind: min_credits
+          credits: 30
+
+  CRJS 3311:
+    code: CRJS 3311
+    title: Criminal Justice Research
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: CRJS 1301
+        - kind: min_credits
+          credits: 30
+
+  CRJS 3312:
+    code: CRJS 3312
+    title: Criminal Psychology
+    credits: 3
+    offering: every
+    prereq:  # catalog: CRJS 1301 and FORS 2329 (a concentration course) + 30 credit hours
+      kind: all_of
+      children:
+        - kind: course
+          course: CRJS 1301
+        - kind: course
+          course: FORS 2329
+        - kind: min_credits
+          credits: 30
+
+  CRJS 3313:
+    code: CRJS 3313
+    title: Diversity and Multiculturalism
+    credits: 3
+    offering: every
+    prereq:
+      kind: min_credits
+      credits: 30
+
+  CRJS 4322:
+    code: CRJS 4322
+    title: Ethics in Criminal Justice
+    credits: 3
+    offering: every
+    prereq:
+      kind: min_credits
+      credits: 60
+
+  # ── Concentration: Forensic Science (18 credits) ──────────────────────────
+  FORS 2329:
+    code: FORS 2329
+    title: Forensic Science and Criminal Justice
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  FORS 3330:
+    code: FORS 3330
+    title: Forensic Investigations
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: CRJS 1301
+        - kind: min_credits
+          credits: 30
+
+  FORS 3331:
+    code: FORS 3331
+    title: Forensic Psychology
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: CRJS 1301
+        - kind: course
+          course: PSYC 2311
+        - kind: min_credits
+          credits: 30
+
+  FORS 3332:
+    code: FORS 3332
+    title: Forensic Biology
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: BIOL 1311
+        - kind: min_credits
+          credits: 30
+
+  FORS 4333:
+    code: FORS 4333
+    title: Digital Forensic
+    credits: 3
+    offering: every
+    prereq:
+      kind: min_credits
+      credits: 60
+
+  FORS 4334:
+    code: FORS 4334
+    title: Forensic Studies Experience
+    credits: 3
+    offering: every
+    prereq:
+      kind: min_credits
+      credits: 60
+
+# ─────────────────────────────────────────────────────────────────────────────
+# REQUIREMENT GROUPS
+# ─────────────────────────────────────────────────────────────────────────────
+groups:
+  # ── 1. Freshman Seminar ───────────────────────────────────────────────────
+  - id: freshman_seminar
+    name: Freshman Seminar
+    kind: all_of
+    courses:
+      - FRSH 1311
+
+  # ── 2. Gen-Ed: Composition, Communications, and Foreign Languages ─────────
+  - id: gen_ed_composition_comm
+    name: "Gen-Ed: Composition, Communications, and Foreign Languages"
+    kind: choose
+    min_count: 3
+    forced:
+      - ENGL 1311
+      - ENGL 1312
+    forced_choices:  # catalog: COMM 1311 or COMM 1313
+      - any_of:
+          - COMM 1311
+          - COMM 1313
+    courses:
+      - COMM 1311
+      - COMM 1313
+      - ENGL 1311
+      - ENGL 1312
+      - SPAN 1311
+
+  # ── 3. Gen-Ed: Humanities and Fine Arts ──────────────────────────────────
+  - id: gen_ed_humanities
+    name: "Gen-Ed: Humanities and Fine Arts"
+    kind: choose
+    min_count: 2
+    forced_choices:  # catalog: all undergraduates take one HIST course from this category
+      - any_of:
+          - HIST 1311
+          - HIST 1312
+          - HIST 2311
+          - HIST 2314
+    courses:
+      - ARTS 1311
+      - ENGL 2315
+      - ENGL 2316
+      - ENGL 2317
+      - ENGL 2318
+      - ENGL 2319
+      - HIST 1311
+      - HIST 1312
+      - HIST 2311
+      - HIST 2314
+      - MUSI 1306
+      - PHIL 1311
+      - PHIL 1312
+      - PHIL 1313
+
+  # ── 4. Gen-Ed: Social and Behavioral Sciences ────────────────────────────
+  - id: gen_ed_social
+    name: "Gen-Ed: Social and Behavioral Sciences"
+    kind: choose
+    min_count: 2
+    forced_choices:  # catalog: all undergraduates take one GOVT course from this category
+      - any_of:
+          - GOVT 2311
+          - GOVT 2312
+    courses:
+      - ECON 2311
+      - ECON 2312
+      - GOVT 2311
+      - GOVT 2312
+      - PSYC 2311
+      - SOCI 2311
+
+  # ── 5. Gen-Ed: Natural Sciences and Mathematics ──────────────────────────
+  # Catalog: all undergraduates take one MATH course and one natural science.
+  - id: gen_ed_natural_science_math
+    name: "Gen-Ed: Natural Sciences and Mathematics"
+    kind: choose
+    min_count: 2
+    forced_choices:
+      - any_of:
+          - MATH 1311
+          - MATH 1313
+          - MATH 2314
+      - any_of:
+          - BIOL 1311
+          - BIOL 1312
+          - GEOG 2311
+          - GEOG 2312
+          - GEOL 1311
+    courses: []
+
+  # ── 6. Criminal Justice Core (42 credits) ─────────────────────────────────
+  - id: criminal_justice_core
+    name: Criminal Justice Core
+    kind: all_of
+    courses:
+      - CRJS 1301
+      - CRJS 2302
+      - CRJS 2303
+      - CRJS 2304
+      - CRJS 2305
+      - CRJS 3306
+      - CRJS 3307
+      - CRJS 3308
+      - CRJS 3309
+      - CRJS 3310
+      - CRJS 3311
+      - CRJS 3312
+      - CRJS 3313
+      - CRJS 4322
+
+  # ── 7. Concentration (Forensic Science, 18 credits) ──────────────────────
+  - id: concentration
+    name: Concentration (choose one)
+    kind: choose_group
+    choose_groups: 1
+    subgroups:
+      - id: concentration_forensic_science
+        name: Forensic Science Concentration
+        kind: all_of
+        courses:
+          - FORS 2329
+          - FORS 3330
+          - FORS 3331
+          - FORS 3332
+          - FORS 4333
+          - FORS 4334
+
+  # ── 8. Unrestricted Electives (24 credits) ────────────────────────────────
+  - id: unrestricted_electives
+    name: Unrestricted Electives
+    kind: credits_from_filter
+    min_credits: 24
+    course_filter:
+      unrestricted: true

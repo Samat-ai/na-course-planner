@@ -1,0 +1,845 @@
+code: BUSA-BS
+name: Bachelor of Science in Business Administration
+catalog_year: 2026
+total_credits_required: 120
+default_min_grade: null
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Source: NA catalog 2026-2027 §7.3.1 (degree requirements, pp. 117-118) and the
+# course-description section. Structure: 36 gen-ed + 42 business core + 18
+# concentration (choose one of Finance / International Business / Management) +
+# 24 unrestricted electives = 120 credits.
+#
+# Like CS, the gen-ed groups encode the catalog's category minimums + program
+# "specified" requirements (ECON 2311 forced; one GOVT; one MATH; one natural
+# science). The catalog's full 36 gen-ed credits are reached by free choice
+# within the categories; the forced minimums total less, with the remainder
+# absorbed by the total-credit requirement + unrestricted electives (same
+# modeling the shipped CS program uses).
+# ─────────────────────────────────────────────────────────────────────────────
+courses:
+  # ── Freshman Seminar ──────────────────────────────────────────────────────
+  FRSH 1311:
+    code: FRSH 1311
+    title: Freshman Seminar
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  # ── Composition, Communications, and Foreign Languages ───────────────────
+  COMM 1311:
+    code: COMM 1311
+    title: Fundamentals of Communication
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  COMM 1313:
+    code: COMM 1313
+    title: Public Speaking
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  ENGL 1311:
+    code: ENGL 1311
+    title: Composition and Rhetoric I
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  ENGL 1312:
+    code: ENGL 1312
+    title: Composition and Rhetoric II
+    credits: 3
+    offering: every
+    prereq:
+      kind: course
+      course: ENGL 1311
+
+  SPAN 1311:
+    code: SPAN 1311
+    title: Elementary Spanish
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  # ── Humanities and Fine Arts ──────────────────────────────────────────────
+  ARTS 1311:
+    code: ARTS 1311
+    title: Art Appreciation
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  ENGL 2315:
+    code: ENGL 2315
+    title: Survey of British Literature I
+    credits: 3
+    offering: every
+    prereq:
+      kind: course
+      course: ENGL 1312
+
+  ENGL 2316:
+    code: ENGL 2316
+    title: Survey of American Literature I
+    credits: 3
+    offering: every
+    prereq:
+      kind: course
+      course: ENGL 1312
+
+  ENGL 2317:
+    code: ENGL 2317
+    title: Survey of British Literature II
+    credits: 3
+    offering: every
+    prereq:
+      kind: course
+      course: ENGL 1312
+
+  ENGL 2318:
+    code: ENGL 2318
+    title: Survey of American Literature II
+    credits: 3
+    offering: every
+    prereq:
+      kind: course
+      course: ENGL 1312
+
+  ENGL 2319:
+    code: ENGL 2319
+    title: Survey of World Literature
+    credits: 3
+    offering: every
+    prereq:
+      kind: course
+      course: ENGL 1312
+
+  HIST 1311:
+    code: HIST 1311
+    title: "U.S. History I"
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  HIST 1312:
+    code: HIST 1312
+    title: "U.S. History II"
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  HIST 2311:
+    code: HIST 2311
+    title: World History
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  HIST 2314:
+    code: HIST 2314
+    title: History of Texas
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  MUSI 1306:
+    code: MUSI 1306
+    title: Music Appreciation
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  PHIL 1311:
+    code: PHIL 1311
+    title: Introduction to Logic and Critical Thinking
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  PHIL 1312:
+    code: PHIL 1312
+    title: Professional Ethics
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  PHIL 1313:
+    code: PHIL 1313
+    title: Introduction to Philosophy
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  # ── Social and Behavioral Sciences ───────────────────────────────────────
+  ECON 2311:
+    code: ECON 2311
+    title: Principles of Macroeconomics
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  ECON 2312:
+    code: ECON 2312
+    title: Principles of Microeconomics
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  GOVT 2311:
+    code: GOVT 2311
+    title: "U.S. Government I"
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  GOVT 2312:
+    code: GOVT 2312
+    title: "U.S. Government II"
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  PSYC 2311:
+    code: PSYC 2311
+    title: General Psychology
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  SOCI 2311:
+    code: SOCI 2311
+    title: Introduction to Sociology
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  # ── Natural Sciences and Mathematics ─────────────────────────────────────
+  BIOL 1311:
+    code: BIOL 1311
+    title: Introductory Biology
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  BIOL 1312:
+    code: BIOL 1312
+    title: Nutrition
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  GEOG 2311:
+    code: GEOG 2311
+    title: Human Geography
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  GEOG 2312:
+    code: GEOG 2312
+    title: Regional Geography in the World
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  GEOL 1311:
+    code: GEOL 1311
+    title: Earth Science
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  MATH 1311:
+    code: MATH 1311
+    title: College Algebra
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  MATH 1313:
+    code: MATH 1313
+    title: Pre-Calculus
+    credits: 3
+    offering: every
+    prereq:  # catalog: MATH 1311 or higher (placement beyond College Algebra qualifies)
+      kind: min_level
+      subject: MATH
+      level: 1311
+
+  MATH 2314:
+    code: MATH 2314
+    title: Calculus I
+    credits: 3
+    offering: every
+    prereq:
+      kind: course
+      course: MATH 1313
+
+  # ── Specified gen-ed / elective ──────────────────────────────────────────
+  COMP 1314:
+    code: COMP 1314
+    title: Computer Literacy and Applications
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  # ── Business Core (42 credits) ────────────────────────────────────────────
+  ACCT 2311:
+    code: ACCT 2311
+    title: Fundamentals of Financial Accounting
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  ACCT 2312:
+    code: ACCT 2312
+    title: Fundamentals of Managerial Accounting
+    credits: 3
+    offering: every
+    prereq:
+      kind: course
+      course: ACCT 2311
+
+  BUSI 2311:
+    code: BUSI 2311
+    title: Business Statistics
+    credits: 3
+    offering: every
+    prereq:  # catalog: MATH 1311 or higher
+      kind: min_level
+      subject: MATH
+      level: 1311
+
+  BUSI 2312:
+    code: BUSI 2312
+    title: Mathematical Applications in Business
+    credits: 3
+    offering: every
+    prereq:  # catalog: MATH 1311 or higher
+      kind: min_level
+      subject: MATH
+      level: 1311
+
+  BUSI 3313:
+    code: BUSI 3313
+    title: Business Information Management
+    credits: 3
+    offering: every
+    prereq:
+      kind: min_credits
+      credits: 30
+
+  BUSI 3314:
+    code: BUSI 3314
+    title: Business Ethics
+    credits: 3
+    offering: every
+    prereq:
+      kind: min_credits
+      credits: 30
+
+  BUSI 3315:
+    code: BUSI 3315
+    title: Business Law
+    credits: 3
+    offering: every
+    prereq:
+      kind: min_credits
+      credits: 30
+
+  BUSI 4317:
+    code: BUSI 4317
+    title: Business Policy and Strategy
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: MNGT 2311
+        - kind: course
+          course: MRKT 2311
+        - kind: min_credits
+          credits: 60
+
+  COMM 2312:
+    code: COMM 2312
+    title: Business Communication
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  FINA 1311:
+    code: FINA 1311
+    title: Personal Finance
+    credits: 3
+    offering: every
+    prereq:  # alternative gateway for FINA upper-division courses (FINA 1311 or 1312)
+      kind: none
+
+  FINA 1312:
+    code: FINA 1312
+    title: Principles of Finance
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  FINA 3312:
+    code: FINA 3312
+    title: Business Finance
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: any_of
+          children:
+            - kind: course
+              course: FINA 1311
+            - kind: course
+              course: FINA 1312
+        - kind: min_credits
+          credits: 30
+
+  MNGT 2311:
+    code: MNGT 2311
+    title: Management and Organizational Behavior
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  MRKT 2311:
+    code: MRKT 2311
+    title: Principles of Marketing
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  # ── Concentration: Finance ────────────────────────────────────────────────
+  FINA 3313:
+    code: FINA 3313
+    title: Financial Markets and Institutions
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: any_of
+          children:
+            - kind: course
+              course: FINA 1311
+            - kind: course
+              course: FINA 1312
+        - kind: min_credits
+          credits: 30
+
+  FINA 3314:
+    code: FINA 3314
+    title: Personal Financial Planning
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: any_of
+          children:
+            - kind: course
+              course: FINA 1311
+            - kind: course
+              course: FINA 1312
+        - kind: min_credits
+          credits: 30
+
+  FINA 4314:
+    code: FINA 4314
+    title: Investments
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: any_of
+          children:
+            - kind: course
+              course: FINA 1311
+            - kind: course
+              course: FINA 1312
+        - kind: min_credits
+          credits: 60
+
+  FINA 4315:
+    code: FINA 4315
+    title: Financial Analysis and Valuation
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: any_of
+          children:
+            - kind: course
+              course: FINA 1311
+            - kind: course
+              course: FINA 1312
+        - kind: min_credits
+          credits: 60
+
+  FINA 4316:
+    code: FINA 4316
+    title: International Finance
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: any_of
+          children:
+            - kind: course
+              course: FINA 1311
+            - kind: course
+              course: FINA 1312
+        - kind: min_credits
+          credits: 60
+
+  FINA 4319:
+    code: FINA 4319
+    title: Financial Management
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: any_of
+          children:
+            - kind: course
+              course: FINA 1311
+            - kind: course
+              course: FINA 1312
+        - kind: min_credits
+          credits: 60
+
+  # ── Concentration: International Business ──────────────────────────────────
+  BUSI 4316:
+    code: BUSI 4316
+    title: International Business
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: MNGT 2311
+        - kind: course
+          course: MRKT 2311
+        - kind: min_credits
+          credits: 60
+
+  ECON 3313:
+    code: ECON 3313
+    title: Global Economics
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: any_of
+          children:
+            - kind: course
+              course: ECON 2311
+            - kind: course
+              course: ECON 2312
+        - kind: min_credits
+          credits: 30
+
+  # ── Concentration: Management ─────────────────────────────────────────────
+  MNGT 4314:
+    code: MNGT 4314
+    title: Small Business Management
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: MNGT 2311
+        - kind: min_credits
+          credits: 60
+
+  MNGT 4315:
+    code: MNGT 4315
+    title: Leadership in Organizations
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: MNGT 2311
+        - kind: min_credits
+          credits: 60
+
+  MNGT 4316:
+    code: MNGT 4316
+    title: Human Resource Management
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: MNGT 2311
+        - kind: min_credits
+          credits: 60
+
+  MNGT 4318:
+    code: MNGT 4318
+    title: Project Management
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: MNGT 2311
+        - kind: min_credits
+          credits: 60
+
+  MNGT 4319:
+    code: MNGT 4319
+    title: Managerial Decision Models and Simulation
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: MNGT 2311
+        - kind: course
+          course: BUSI 2311
+        - kind: min_credits
+          credits: 60
+
+  MNGT 4320:
+    code: MNGT 4320
+    title: Global Supply Chain Management
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: MNGT 2311
+        - kind: min_credits
+          credits: 60
+
+  MRKT 4312:
+    code: MRKT 4312
+    title: International Marketing
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: MRKT 2311
+        - kind: min_credits
+          credits: 60
+
+# ─────────────────────────────────────────────────────────────────────────────
+# REQUIREMENT GROUPS
+# ─────────────────────────────────────────────────────────────────────────────
+groups:
+  # ── 1. Freshman Seminar ───────────────────────────────────────────────────
+  - id: freshman_seminar
+    name: Freshman Seminar
+    kind: all_of
+    courses:
+      - FRSH 1311
+
+  # ── 2. Gen-Ed: Composition, Communications, and Foreign Languages ─────────
+  - id: gen_ed_composition_comm
+    name: "Gen-Ed: Composition, Communications, and Foreign Languages"
+    kind: choose
+    min_count: 3
+    forced:
+      - ENGL 1311
+      - ENGL 1312
+    forced_choices:  # catalog: COMM 1311 or COMM 1313
+      - any_of:
+          - COMM 1311
+          - COMM 1313
+    courses:
+      - COMM 1311
+      - COMM 1313
+      - ENGL 1311
+      - ENGL 1312
+      - SPAN 1311
+
+  # ── 3. Gen-Ed: Humanities and Fine Arts ──────────────────────────────────
+  - id: gen_ed_humanities
+    name: "Gen-Ed: Humanities and Fine Arts"
+    kind: choose
+    min_count: 2
+    forced_choices:  # catalog: all undergraduates take one HIST course from this category
+      - any_of:
+          - HIST 1311
+          - HIST 1312
+          - HIST 2311
+          - HIST 2314
+    courses:
+      - ARTS 1311
+      - ENGL 2315
+      - ENGL 2316
+      - ENGL 2317
+      - ENGL 2318
+      - ENGL 2319
+      - HIST 1311
+      - HIST 1312
+      - HIST 2311
+      - HIST 2314
+      - MUSI 1306
+      - PHIL 1311
+      - PHIL 1312
+      - PHIL 1313
+
+  # ── 4. Gen-Ed: Social and Behavioral Sciences ────────────────────────────
+  # Catalog: Business undergraduates must take ECON 2311 here; all undergraduates
+  # take one GOVT course. ECON 2312 is a category option but is owned by the
+  # business core (no double-counting), so it is not listed in this pool.
+  - id: gen_ed_social
+    name: "Gen-Ed: Social and Behavioral Sciences"
+    kind: choose
+    min_count: 2
+    forced:
+      - ECON 2311
+    forced_choices:
+      - any_of:
+          - GOVT 2311
+          - GOVT 2312
+    courses:
+      - GOVT 2311
+      - GOVT 2312
+      - PSYC 2311
+      - SOCI 2311
+
+  # ── 5. Gen-Ed: Natural Sciences and Mathematics ──────────────────────────
+  # Catalog: all undergraduates take one MATH course and one natural science.
+  - id: gen_ed_natural_science_math
+    name: "Gen-Ed: Natural Sciences and Mathematics"
+    kind: choose
+    min_count: 2
+    forced_choices:
+      - any_of:
+          - MATH 1311
+          - MATH 1313
+          - MATH 2314
+      - any_of:
+          - BIOL 1311
+          - BIOL 1312
+          - GEOG 2311
+          - GEOG 2312
+          - GEOL 1311
+    courses: []
+
+  # ── 6. Business Core (42 credits) ─────────────────────────────────────────
+  - id: business_core
+    name: Business Core
+    kind: all_of
+    courses:
+      - ACCT 2311
+      - ACCT 2312
+      - BUSI 2311
+      - BUSI 2312
+      - BUSI 3313
+      - BUSI 3314
+      - BUSI 3315
+      - BUSI 4317
+      - COMM 2312
+      - ECON 2312
+      - FINA 1312
+      - FINA 3312
+      - MNGT 2311
+      - MRKT 2311
+
+  # ── 7. Concentration (choose 1 of 3, 18 credits each) ────────────────────
+  - id: concentration
+    name: Concentration (choose one)
+    kind: choose_group
+    choose_groups: 1
+    subgroups:
+      - id: concentration_finance
+        name: Finance Concentration
+        kind: all_of
+        courses:
+          - FINA 3313
+          - FINA 3314
+          - FINA 4314
+          - FINA 4315
+          - FINA 4316
+          - FINA 4319
+
+      - id: concentration_international_business
+        name: International Business Concentration
+        kind: all_of
+        courses:
+          - BUSI 4316
+          - ECON 3313
+          - FINA 4316
+          - MNGT 4318
+          - MNGT 4320
+          - MRKT 4312
+
+      - id: concentration_management
+        name: Management Concentration
+        kind: all_of
+        courses:
+          - MNGT 4314
+          - MNGT 4315
+          - MNGT 4316
+          - MNGT 4318
+          - MNGT 4319
+          - MNGT 4320
+
+  # ── 8. Unrestricted Electives (24 credits) ────────────────────────────────
+  # Catalog: specified elective COMP 1314 (Computer Literacy) plus free electives.
+  - id: unrestricted_electives
+    name: Unrestricted Electives
+    kind: credits_from_filter
+    min_credits: 24
+    course_filter:
+      unrestricted: true

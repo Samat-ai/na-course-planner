@@ -186,12 +186,19 @@ body { background: #F2EEE6; font-family: 'Hanken Grotesk', system-ui, sans-serif
     </div>
   </div>
   <div style="background:#fff;border:1px solid #E7E1D6;border-radius:14px;padding:22px;margin-bottom:22px;box-shadow:0 1px 3px rgba(26,39,51,.04);">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-      <div>
-        <div style="font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#8A95A0;">External &amp; transfer credit</div>
-        <div style="font-size:12.5px;color:#9AA3AC;margin-top:3px;">AP, CLEP, IB, and transfer credits we can't see on a transcript</div>
-      </div>
-      <button onclick="app.addExternal()" style="background:#F2EEE6;color:#1E3A5F;border:1px solid #DDD6C9;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Hanken Grotesk';">+ Add credit</button>
+    <div style="margin-bottom:16px;">
+      <div style="font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#8A95A0;">External &amp; transfer credit</div>
+      <div style="font-size:12.5px;color:#9AA3AC;margin-top:3px;">Exam scores and transfer credits we can't see on a transcript</div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+      <div style="font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#A8AEB6;">Exam credit · AP / CLEP / IB / SAT</div>
+      <button onclick="app.addExam()" style="background:#F2EEE6;color:#1E3A5F;border:1px solid #DDD6C9;border-radius:8px;padding:7px 13px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:'Hanken Grotesk';">+ Add exam</button>
+    </div>
+    <div id="exams-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+    <div id="exam-resolution" style="margin:10px 0 18px;"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+      <div style="font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#A8AEB6;">Transfer credit</div>
+      <button onclick="app.addExternal()" style="background:#F2EEE6;color:#1E3A5F;border:1px solid #DDD6C9;border-radius:8px;padding:7px 13px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:'Hanken Grotesk';">+ Add transfer</button>
     </div>
     <div id="externals-list" style="display:flex;flex-direction:column;gap:8px;"></div>
   </div>
@@ -378,8 +385,8 @@ const app = {
     planLoading:false, completeView:false, copied:false,
     programs:[], programCode:'CS-BS', catalogYear:2026, concentration:'',
     prefs:{targetCredits:15, pace:'full', term:'Fall 2026', difficulty:'balanced'},
-    student:null, editedCourses:[], editedExternals:[],
-    auditResult:null, recommendation:null,
+    student:null, editedCourses:[], editedExternals:[], editedExams:[], examChart:null,
+    examResolution:null, auditResult:null, recommendation:null,
   },
   _ct:null, _rt:null,
 
@@ -409,6 +416,9 @@ const app = {
         source:(e.source||'Transfer').trim(),
         equivalent_code:(e.equivalent_code||'').trim(),
         credits:parseFloat(e.credits)||0,
+      })),
+      exams:s.editedExams.filter(e=>e.exam_name&&e.score!=='').map(e=>({
+        exam_type:e.exam_type,exam_name:e.exam_name,score:parseFloat(e.score)||0,
       })),
     };
   },
@@ -517,6 +527,9 @@ const app = {
       editedExternals:(student.external||[]).map(e=>({
         source:e.source||'Transfer',equivalent_code:e.equivalent_code||'',credits:String(e.credits??''),
       })),
+      editedExams:(student.exams||[]).map(e=>({
+        exam_type:e.exam_type||'AP',exam_name:e.exam_name||'',score:String(e.score??''),
+      })),
     });
   },
 
@@ -531,6 +544,23 @@ const app = {
   editCourse(i,f,v){this.set(s=>{const c=s.editedCourses.slice();c[i]={...c[i],[f]:v};return{editedCourses:c};});},
   addExternal(){this.set(s=>({editedExternals:[...s.editedExternals,{source:'Transfer',equivalent_code:'New credit',credits:'3'}]}));},
   removeExternal(i){this.set(s=>({editedExternals:s.editedExternals.filter((_,j)=>j!==i)}));},
+  addExam(){this.set(s=>{const names=this.examNames('AP');return{editedExams:[...s.editedExams,{exam_type:'AP',exam_name:names[0]||'',score:''}]};});},
+  removeExam(i){this.set(s=>({editedExams:s.editedExams.filter((_,j)=>j!==i)}));this.refreshExamResolution();},
+  editExam(i,f,v){this.set(s=>{const x=s.editedExams.slice();x[i]={...x[i],[f]:v};
+    if(f==='exam_type'){const names=this.examNames(v);x[i].exam_name=names[0]||'';}
+    return{editedExams:x};});this.refreshExamResolution();},
+
+  // Authoritative resolution preview from the server (applies the cross-exam cap/dedup
+  // rules the per-row hint cannot). Last-write-wins is fine for a preview.
+  async refreshExamResolution(){
+    const exams=this.st.editedExams.filter(e=>e.exam_name&&e.score!=='');
+    if(!exams.length){if(this.st.examResolution)this.set({examResolution:null});return;}
+    try{
+      const data=await this.post('/resolve-exams',
+        {student:this.buildRec(),program_code:this.st.programCode,catalog_year:this.st.catalogYear});
+      this.set({examResolution:data});
+    }catch{ /* keep last preview */ }
+  },
 
   async confirm(){
     el('confirm-btn').disabled=true;
@@ -601,6 +631,33 @@ const app = {
   },
 
   // ---- Programs ----
+  async loadExamChart(){
+    try{
+      const r=await this.req('/exam-chart');
+      this.set({examChart:await r.json()});
+    }catch{ /* chart unavailable — exam entry falls back to no live preview */ }
+  },
+
+  examEntry(type,name){
+    const c=this.st.examChart;
+    if(!c)return null;
+    return c.entries.find(e=>e.exam_type===type&&e.exam_name===name)||null;
+  },
+  examNames(type){
+    const c=this.st.examChart;
+    return c?c.entries.filter(e=>e.exam_type===type).map(e=>e.exam_name):[];
+  },
+  // Client-side preview of what the server will resolve (informational only).
+  examPreview(ex){
+    const entry=this.examEntry(ex.exam_type,ex.exam_name);
+    if(!entry)return{text:'Select an exam',tone:'muted'};
+    const score=parseFloat(ex.score);
+    if(ex.score==='' || isNaN(score))return{text:`needs score ≥ ${entry.min_score}`,tone:'muted'};
+    if(score<entry.min_score)return{text:`below required ${entry.min_score}`,tone:'warn'};
+    if(!entry.equivalents.length)return{text:'Elective credit (3 cr)',tone:'ok'};
+    return{text:entry.equivalents.join(' + '),tone:'ok'};
+  },
+
   async loadPrograms(){
     try{
       const r=await this.req('/programs');
@@ -733,6 +790,50 @@ const app = {
         </div>
       </div>`).join('');
     el('courses-mobile').innerHTML=mobRows;
+
+    const examTypes=[['AP','AP'],['CLEP','CLEP'],['IB','IB'],['SAT_SUBJECT','SAT']];
+    const selStyle="border:1px solid #E8E2D6;border-radius:7px;padding:9px;font-family:'Hanken Grotesk';font-size:13px;background:#fff;color:#1A2733;outline:none;";
+    const toneColor={ok:'#1E7A52',warn:'#B4541E',muted:'#9AA3AC'};
+    el('exams-list').innerHTML=s.editedExams.map((e,i)=>{
+      const names=this.examNames(e.exam_type);
+      const prev=this.examPreview(e);
+      const typeOpts=examTypes.map(([v,l])=>`<option value="${v}"${v===e.exam_type?' selected':''}>${l}</option>`).join('');
+      const nameOpts=names.length
+        ?names.map(n=>`<option value="${esc(n)}"${n===e.exam_name?' selected':''}>${esc(n)}</option>`).join('')
+        :`<option value="${esc(e.exam_name)}">${esc(e.exam_name||'—')}</option>`;
+      return `
+      <div style="display:flex;align-items:center;gap:8px;padding:9px 12px;background:#FBFAF7;border:1px solid #EDE8DE;border-radius:9px;">
+        <select data-exam-i="${i}" data-exam-f="exam_type" style="${selStyle}width:78px;flex:none;">${typeOpts}</select>
+        <select data-exam-i="${i}" data-exam-f="exam_name" style="${selStyle}flex:1;width:0;">${nameOpts}</select>
+        <input value="${esc(e.score)}" data-exam-i="${i}" data-exam-f="score" placeholder="Score" style="${selStyle}width:64px;flex:none;text-align:center;">
+        <span style="flex:none;min-width:120px;font-size:12.5px;font-weight:600;color:${toneColor[prev.tone]};">${esc(prev.text)}</span>
+        <button data-exam-rm="${i}" style="border:none;background:transparent;color:#C4B8A6;cursor:pointer;font-size:17px;line-height:1;">×</button>
+      </div>`;
+    }).join('')
+      ||`<div style="font-size:12.5px;color:#B3A597;padding:4px 2px;">No exam credit added.</div>`;
+
+    const rz=s.examResolution;
+    if(rz){
+      const granted=rz.credits.reduce((a,c)=>a+c.credits,0);
+      const line={
+        granted:d=>[`${d.exam_name} → ${d.equivalent_code} (${d.credits} cr)`,'ok'],
+        granted_elective:d=>[`${d.exam_name} → elective credit (${d.credits} cr)`,'ok'],
+        deduped_to_elective:d=>[`${d.exam_name} → elective (${d.credits} cr) — duplicate of a course you already have`,'warn'],
+        below_threshold:d=>[`${d.exam_name} — ${d.detail}`,'warn'],
+        unknown_exam:d=>[`${d.exam_name} — not recognized`,'muted'],
+        capped:d=>[`${d.exam_name}${d.equivalent_code?` → ${d.equivalent_code}`:''} — dropped (over 30-credit exam cap)`,'warn'],
+      };
+      const tc={ok:'#1E7A52',warn:'#B4541E',muted:'#9AA3AC'};
+      const items=rz.diagnostics.map(d=>{const[t,tone]=(line[d.status]||(x=>[x.exam_name,'muted']))(d);
+        return `<div style="font-size:12.5px;color:${tc[tone]};padding:1px 0;">• ${esc(t)}</div>`;}).join('');
+      el('exam-resolution').innerHTML=`
+        <div style="background:#F4F7FB;border:1px solid #DCE6F0;border-radius:9px;padding:10px 12px;">
+          <div style="font-size:12px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:#1E3A5F;margin-bottom:5px;">Resolved exam credit · ${granted} cr</div>
+          ${items}
+        </div>`;
+    }else{
+      el('exam-resolution').innerHTML='';
+    }
 
     el('externals-list').innerHTML=s.editedExternals.map((e,i)=>`
       <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:#FBFAF7;border:1px solid #EDE8DE;border-radius:9px;">
@@ -903,6 +1004,7 @@ const app = {
   // ---- Init ----
   init(){
     this.loadPrograms();
+    this.loadExamChart();
     this.renderTermSel();
     this.renderPace();
     this.render();
@@ -926,6 +1028,19 @@ const app = {
       const b=e.target.closest('[data-ext-rm]');
       if(b)this.removeExternal(parseInt(b.dataset.extRm,10));
     });
+
+    // Event delegation — exams
+    const exl=el('exams-list');
+    if(exl){
+      exl.addEventListener('change',e=>{
+        const inp=e.target.closest('[data-exam-i][data-exam-f]');
+        if(inp)this.editExam(parseInt(inp.dataset.examI,10),inp.dataset.examF,inp.value);
+      });
+      exl.addEventListener('click',e=>{
+        const b=e.target.closest('[data-exam-rm]');
+        if(b)this.removeExam(parseInt(b.dataset.examRm,10));
+      });
+    }
 
     // PDF drag & drop
     const drop=el('upload-idle-box');

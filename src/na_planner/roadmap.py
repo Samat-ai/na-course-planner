@@ -56,7 +56,7 @@ def recommend(
         elig = eligible_courses(last_audit, program, term_prefs, passed, credits_earned)
         if not elig:
             break
-        term = plan_term(elig, program, term_prefs, weights)
+        term = plan_term(elig, program, term_prefs, weights, audit_result=last_audit)
         if not term.courses:
             break
         terms.append(term)

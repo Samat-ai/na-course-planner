@@ -160,8 +160,10 @@ py -3 scripts/gen_architecture.py                        # refresh module map be
     - fields: `min_level`, `subjects`, `unrestricted`
   - **class `Course`**
     - fields: `code`, `title`, `credits`, `prereq`, `coreqs`, `offering`, `difficulty`
+  - **class `ForcedChoice`**
+    - fields: `any_of`
   - **class `RequirementGroup`**
-    - fields: `id`, `name`, `kind`, `courses`, `forced`, `min_count`, `min_credits`, `subgroups`, `choose_groups`, `course_filter`, `min_grade`
+    - fields: `id`, `name`, `kind`, `courses`, `forced`, `forced_choices`, `min_count`, `min_credits`, `subgroups`, `choose_groups`, `course_filter`, `min_grade`
   - **class `Program`**
     - fields: `code`, `name`, `catalog_year`, `total_credits_required`, `default_min_grade`, `courses`, `groups`
 
@@ -189,7 +191,7 @@ py -3 scripts/gen_architecture.py                        # refresh module map be
     - fields: `code`, `credits`, `grade`
 
 ### `src/na_planner/planner.py`
-  - `plan_term(eligible: list[str], program: Program, prefs: StudentPreferences, weights: dict[str, float]=DEFAULT_WEIGHTS) -> TermPlan`
+  - `plan_term(eligible: list[str], program: Program, prefs: StudentPreferences, weights: dict[str, float]=DEFAULT_WEIGHTS, audit_result: AuditResult | None=None) -> TermPlan`
 
 ### `src/na_planner/prereqs.py`
   - `course_subject(code: str) -> str`

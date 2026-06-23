@@ -14,6 +14,8 @@ def _prereq_course_codes(expr: PrereqExpr | None) -> list[str]:
 
 def _group_course_codes(group: RequirementGroup) -> list[str]:
     codes = list(group.courses) + list(group.forced)
+    for fc in group.forced_choices:
+        codes.extend(fc.any_of)
     for sub in group.subgroups:
         codes.extend(_group_course_codes(sub))
     return codes
@@ -31,6 +33,16 @@ def _lint_group(group: RequirementGroup, known: set[str]) -> list[str]:
             problems.append(f"credits_from_filter group '{group.id}' needs a course_filter")
         if group.min_credits is None:
             problems.append(f"credits_from_filter group '{group.id}' needs min_credits")
+    # forced-choice sub-lists (and forced codes) must be disjoint, so one course can
+    # never fill two required slots at once.
+    seen: set[str] = set(group.forced)
+    for fc in group.forced_choices:
+        for code in fc.any_of:
+            if code in seen:
+                problems.append(
+                    f"group '{group.id}' forced choices overlap on {code}"
+                )
+            seen.add(code)
     if group.kind == "choose_group":
         if not group.subgroups:
             problems.append(f"choose_group '{group.id}' needs subgroups")

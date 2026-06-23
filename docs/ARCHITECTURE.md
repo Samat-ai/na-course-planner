@@ -116,6 +116,16 @@ py -3 scripts/gen_architecture.py                        # refresh module map be
   - `is_offered(course: Course, season: str) -> bool`
   - `eligible_courses(audit: AuditResult, program: Program, prefs: StudentPreferences, passed: dict[str, Grade | None], credits_earned: float) -> list[str]`
 
+### `src/na_planner/exam_credit.py`
+_Resolve a student's reported exams (AP/CLEP/IB/SAT Subject) into NA course credit_
+  - `credits_for_code(code: str) -> float`
+  - `resolve_exams(exams: list[ExamResult], chart: ExamCreditChart, already_earned: Iterable[str]=(), cap: float=EXAM_CREDIT_CAP) -> ExamResolution`
+  - `merge_exam_credit(student: StudentRecord, chart: ExamCreditChart) -> tuple[StudentRecord, ExamResolution]`
+
+### `src/na_planner/exam_credit_loader.py`
+  - `load_chart(path: str | Path) -> ExamCreditChart`
+  - `load_chart_for(catalog_year: int, directory: Path=CHART_DIR) -> ExamCreditChart`
+
 ### `src/na_planner/grades.py`
   - **class `Grade`**
   - `is_passing(g: Grade) -> bool`
@@ -167,6 +177,16 @@ py -3 scripts/gen_architecture.py                        # refresh module map be
   - **class `Program`**
     - fields: `code`, `name`, `catalog_year`, `total_credits_required`, `default_min_grade`, `courses`, `groups`
 
+### `src/na_planner/models/exam_credit.py`
+  - **class `ExamCreditEntry`**
+    - fields: `exam_type`, `exam_name`, `min_score`, `equivalents`
+  - **class `ExamCreditChart`**
+    - fields: `catalog_year`, `entries`
+  - **class `ExamDiagnostic`**
+    - fields: `exam_type`, `exam_name`, `status`, `equivalent_code`, `credits`, `detail`
+  - **class `ExamResolution`**
+    - fields: `credits`, `diagnostics`
+
 ### `src/na_planner/models/preferences.py`
   - **class `StudentPreferences`**
     - fields: `target_credits`, `max_hard_courses`, `target_season`, `target_year`, `declared_concentration`, `max_load`
@@ -185,8 +205,10 @@ py -3 scripts/gen_architecture.py                        # refresh module map be
     - methods: in_progress
   - **class `ExternalCredit`**
     - fields: `source`, `equivalent_code`, `credits`
+  - **class `ExamResult`**
+    - fields: `exam_type`, `exam_name`, `score`
   - **class `StudentRecord`**
-    - fields: `program_code`, `catalog_year`, `completed`, `external`
+    - fields: `program_code`, `catalog_year`, `completed`, `external`, `exams`
   - **class `EarnedCourse`**
     - fields: `code`, `credits`, `grade`
 

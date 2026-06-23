@@ -23,13 +23,13 @@ Resolution summary (commit per finding):
 - **#5** graduation projection — fixed (projects once structured requirements are met).
 - **#6** model enhancement — implemented (`ForcedChoice`).
 
-Discovered follow-up (not one of the original five, not yet fixed): **`plan_term` over-picks
-`min_count` choose pools** — e.g. it schedules ~10 Humanities courses across the roadmap when
-`min_count` is 2, because the planner has no group-count/slot prioritization. This inflates the
-roadmap (~135 cr planned vs ~105 structured) and makes the #5 projected graduation **conservative
-(late)** though no longer `None`. Fix is a separate planner feature: stop filling a choose pool
-once its remaining `min_count` is met, and prioritize forced / forced-choice slots so groups
-satisfy efficiently.
+Discovered follow-up (not one of the original five) — **fixed (2026-06-22):** `plan_term`
+over-picked `min_count` choose pools (e.g. ~10 Humanities courses for `min_count` 2;
+ECON+ECON+GOVT+GOVT for Social), because the planner had no group-count awareness. It now caps
+optional pool picks per choose group at the group's remaining need, reserving room for unmet
+forced / forced-choice obligations so mandatory members aren't crowded out. The empty-student CS
+roadmap went from 10 terms / ~135 cr to **8 terms / 102 cr**, each gen-ed choose group lands
+exactly on `min_count`, and the #5 projected graduation is no longer pessimistic.
 
 ## ✅ Confirmed correct (no action)
 - Earned 60/120 credits — matches the transcript exactly.

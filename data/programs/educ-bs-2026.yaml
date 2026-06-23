@@ -1,0 +1,858 @@
+code: EDUC-BS
+name: Bachelor of Science in Interdisciplinary Studies in Education
+catalog_year: 2026
+total_credits_required: 120
+default_min_grade: null
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Source: NA catalog 2026-2027 §7.3.3 (degree requirements, pp. 121-124) and the
+# course-description section. Structure: 36 gen-ed + 36 education core + 24
+# concentration (choose one of English Language Arts / Mathematics / Physical
+# Education / Elementary Education) + 24 unrestricted electives = 120 credits.
+#
+# ── KNOWN MODELING CAVEATS (Elementary Education track) ──────────────────────
+# The catalog's Elementary Education concentration deviates from the rest of the
+# program in ways the current program schema cannot express (it has no notion of
+# concentration-dependent core or concentration-specific gen-ed). These are NOT
+# encoded here; an Elementary Education student must apply them manually:
+#   * Core substitutions: take PHED 4320 in place of EDUC 4324, and ARTS 3312 in
+#     place of EDUC 4321.
+#   * Gen-ed: a fixed "must take" list (incl. HIST 1311, HIST 1312, HIST 2311,
+#     GOVT 2311, GOVT 2312, MATH 1311, ECON 2311 or 2312, ARTS 1311 or MUSI 1306).
+#   * Electives: no free electives — the 24 elective credits are a fixed required
+#     set (EDUC 3201, EDUC 4434, EDUC 4699, BIOL 1311, HIST 2314, GEOG 2312,
+#     PSYC 2311).
+#
+# Two further best-effort choices keep the audit's single-allocation rule honest
+# (a completed course satisfies at most one group):
+#   * The gen-ed Humanities pool omits the ENGL literature surveys (ENGL 2315-2319);
+#     they are owned by the English Language Arts concentration (catalog footnote 1).
+#   * The gen-ed Natural-Sciences-and-Mathematics MATH requirement is MATH 1311
+#     only, so the Mathematics concentration's courses are not pulled into gen-ed.
+# ─────────────────────────────────────────────────────────────────────────────
+courses:
+  # ── Freshman Seminar ──────────────────────────────────────────────────────
+  FRSH 1311:
+    code: FRSH 1311
+    title: Freshman Seminar
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  # ── Composition, Communications, and Foreign Languages ───────────────────
+  COMM 1311:
+    code: COMM 1311
+    title: Fundamentals of Communication
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  COMM 1313:
+    code: COMM 1313
+    title: Public Speaking
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  ENGL 1311:
+    code: ENGL 1311
+    title: Composition and Rhetoric I
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  ENGL 1312:
+    code: ENGL 1312
+    title: Composition and Rhetoric II
+    credits: 3
+    offering: every
+    prereq:
+      kind: course
+      course: ENGL 1311
+
+  SPAN 1311:
+    code: SPAN 1311
+    title: Elementary Spanish
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  # ── Humanities and Fine Arts (ENGL surveys are owned by the ELA concentration) ─
+  ARTS 1311:
+    code: ARTS 1311
+    title: Art Appreciation
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  HIST 1311:
+    code: HIST 1311
+    title: "U.S. History I"
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  HIST 1312:
+    code: HIST 1312
+    title: "U.S. History II"
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  HIST 2311:
+    code: HIST 2311
+    title: World History
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  HIST 2314:
+    code: HIST 2314
+    title: History of Texas
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  MUSI 1306:
+    code: MUSI 1306
+    title: Music Appreciation
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  PHIL 1311:
+    code: PHIL 1311
+    title: Introduction to Logic and Critical Thinking
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  PHIL 1312:
+    code: PHIL 1312
+    title: Professional Ethics
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  PHIL 1313:
+    code: PHIL 1313
+    title: Introduction to Philosophy
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  # ── Social and Behavioral Sciences ───────────────────────────────────────
+  ECON 2311:
+    code: ECON 2311
+    title: Principles of Macroeconomics
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  ECON 2312:
+    code: ECON 2312
+    title: Principles of Microeconomics
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  GOVT 2311:
+    code: GOVT 2311
+    title: "U.S. Government I"
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  GOVT 2312:
+    code: GOVT 2312
+    title: "U.S. Government II"
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  PSYC 2311:
+    code: PSYC 2311
+    title: General Psychology
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  SOCI 2311:
+    code: SOCI 2311
+    title: Introduction to Sociology
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  # ── Natural Sciences and Mathematics ─────────────────────────────────────
+  BIOL 1311:
+    code: BIOL 1311
+    title: Introductory Biology
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  BIOL 1312:
+    code: BIOL 1312
+    title: Nutrition
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  GEOG 2311:
+    code: GEOG 2311
+    title: Human Geography
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  GEOG 2312:
+    code: GEOG 2312
+    title: Regional Geography in the World
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  GEOL 1311:
+    code: GEOL 1311
+    title: Earth Science
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  MATH 1311:
+    code: MATH 1311
+    title: College Algebra
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  # ── Education Core (36 credits) ───────────────────────────────────────────
+  EDUC 2311:
+    code: EDUC 2311
+    title: Introduction to Teaching Profession
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  EDUC 2312:
+    code: EDUC 2312
+    title: Learning Theories and Development
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  EDUC 3314:
+    code: EDUC 3314
+    title: Classroom Management
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  EDUC 3315:
+    code: EDUC 3315
+    title: Instruction and Assessment
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  EDUC 3316:
+    code: EDUC 3316
+    title: Integrating Technology into Curriculum
+    credits: 3
+    offering: every
+    prereq:
+      kind: min_credits
+      credits: 60
+
+  EDUC 3317:
+    code: EDUC 3317
+    title: Instruction Education in Culturally Diverse Schools
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  EDUC 4318:
+    code: EDUC 4318
+    title: Education of Exceptional Children
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  EDUC 4320:
+    code: EDUC 4320
+    title: Law and Ethics in Education
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  EDUC 4321:  # Elementary Education students take ARTS 3312 in place of this course
+    code: EDUC 4321
+    title: Measurement and Assessment in Education
+    credits: 3
+    offering: every
+    prereq:
+      kind: min_credits
+      credits: 60
+
+  EDUC 4324:  # Elementary Education students take PHED 4320 in place of this course
+    code: EDUC 4324
+    title: Reading in Content Areas
+    credits: 3
+    offering: every
+    prereq:
+      kind: min_credits
+      credits: 60
+
+  COMP 1314:
+    code: COMP 1314
+    title: Computer Literacy and Applications
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  ENGL 3330:
+    code: ENGL 3330
+    title: Literacy Assessment and Intervention
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: ENGL 1312
+        - kind: min_credits
+          credits: 30
+
+  # ── Concentration: English Language Arts (24 credits) ─────────────────────
+  ENGL 2315:
+    code: ENGL 2315
+    title: Survey of British Literature I
+    credits: 3
+    offering: every
+    prereq:
+      kind: course
+      course: ENGL 1312
+
+  ENGL 2316:
+    code: ENGL 2316
+    title: Survey of American Literature I
+    credits: 3
+    offering: every
+    prereq:
+      kind: course
+      course: ENGL 1312
+
+  ENGL 2317:
+    code: ENGL 2317
+    title: Survey of British Literature II
+    credits: 3
+    offering: every
+    prereq:
+      kind: course
+      course: ENGL 1312
+
+  ENGL 2318:
+    code: ENGL 2318
+    title: Survey of American Literature II
+    credits: 3
+    offering: every
+    prereq:
+      kind: course
+      course: ENGL 1312
+
+  ENGL 2319:
+    code: ENGL 2319
+    title: Survey of World Literature
+    credits: 3
+    offering: every
+    prereq:
+      kind: course
+      course: ENGL 1312
+
+  ENGL 3320:
+    code: ENGL 3320
+    title: Composition Theory and Pedagogy
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: ENGL 1312
+        - kind: min_credits
+          credits: 30
+
+  ENGL 3322:
+    code: ENGL 3322
+    title: Studies in Linguistics and History of English Language
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: ENGL 1312
+        - kind: min_credits
+          credits: 30
+
+  ENGL 3325:
+    code: ENGL 3325
+    title: Young Adult Literature
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: ENGL 1312
+        - kind: min_credits
+          credits: 30
+
+  # ── Concentration: Mathematics (24 credits) ───────────────────────────────
+  MATH 1313:
+    code: MATH 1313
+    title: Pre-Calculus
+    credits: 3
+    offering: every
+    prereq:  # catalog: MATH 1311 or higher
+      kind: min_level
+      subject: MATH
+      level: 1311
+
+  MATH 2314:
+    code: MATH 2314
+    title: Calculus I
+    credits: 3
+    offering: every
+    prereq:
+      kind: course
+      course: MATH 1313
+
+  MATH 2315:
+    code: MATH 2315
+    title: Calculus II
+    credits: 3
+    offering: every
+    prereq:
+      kind: course
+      course: MATH 2314
+
+  MATH 2316:
+    code: MATH 2316
+    title: Linear Algebra
+    credits: 3
+    offering: every
+    prereq:
+      kind: course
+      course: MATH 1311
+
+  MATH 2317:
+    code: MATH 2317
+    title: Discrete Mathematics
+    credits: 3
+    offering: every
+    prereq:
+      kind: course
+      course: MATH 1311
+
+  MATH 3318:
+    code: MATH 3318
+    title: Geometry and Trigonometry
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: MATH 1311
+        - kind: min_credits
+          credits: 30
+
+  MATH 3319:
+    code: MATH 3319
+    title: Statistics and Probability
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: MATH 2314
+        - kind: min_credits
+          credits: 30
+
+  MATH 3320:
+    code: MATH 3320
+    title: Differential Equation
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: MATH 2315
+        - kind: min_credits
+          credits: 30
+
+  # ── Concentration: Physical Education (24 credits) ────────────────────────
+  PHED 2311:
+    code: PHED 2311
+    title: Foundation of Kinesiology
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  PHED 2312:
+    code: PHED 2312
+    title: "Concepts of Health, Fitness and Wellness"
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  PHED 2313:
+    code: PHED 2313
+    title: Physiology of Exercise
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  PHED 2314:
+    code: PHED 2314
+    title: Motor Learning and Development
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  PHED 2315:
+    code: PHED 2315
+    title: "Physical Activity Skills: Conditioning, Individual and Team Sports"
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  PHED 3316:
+    code: PHED 3316
+    title: Care and Prevention of Athletic Injuries
+    credits: 3
+    offering: every
+    prereq:
+      kind: min_credits
+      credits: 30
+
+  PHED 3317:
+    code: PHED 3317
+    title: "Health, Emergency Care and First Aid"
+    credits: 3
+    offering: every
+    prereq:
+      kind: min_credits
+      credits: 30
+
+  PHED 3318:
+    code: PHED 3318
+    title: Scientific Principles of Physical Activity
+    credits: 3
+    offering: every
+    prereq:
+      kind: min_credits
+      credits: 30
+
+  # ── Concentration: Elementary Education (24 credits) ──────────────────────
+  ENGL 3328:
+    code: ENGL 3328
+    title: Teaching Elementary Literacy 1
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  ENGL 3329:
+    code: ENGL 3329
+    title: Teaching Elementary Literacy 2
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  MATH 3328:
+    code: MATH 3328
+    title: Teaching Elementary Mathematics 1
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  MATH 3329:
+    code: MATH 3329
+    title: Teaching Elementary Mathematics 2
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  EDUC 3331:
+    code: EDUC 3331
+    title: Intro to Early Childhood Education
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  EDUC 4332:
+    code: EDUC 4332
+    title: Teaching Elementary Science
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  EDUC 4335:
+    code: EDUC 4335
+    title: Teaching Elementary Social Studies
+    credits: 3
+    offering: every
+    prereq:
+      kind: none
+
+  EDUC 3102:
+    code: EDUC 3102
+    title: Seminar for PPR Exam
+    credits: 1
+    offering: every
+    prereq:
+      kind: none
+
+  EDUC 4101:
+    code: EDUC 4101
+    title: Seminar for ESL Exam
+    credits: 1
+    offering: every
+    prereq:
+      kind: none
+
+  EDUC 4133:
+    code: EDUC 4133
+    title: Capstone Project Presentation
+    credits: 1
+    offering: every
+    prereq:
+      kind: none
+
+# ─────────────────────────────────────────────────────────────────────────────
+# REQUIREMENT GROUPS
+# ─────────────────────────────────────────────────────────────────────────────
+groups:
+  # ── 1. Freshman Seminar ───────────────────────────────────────────────────
+  - id: freshman_seminar
+    name: Freshman Seminar
+    kind: all_of
+    courses:
+      - FRSH 1311
+
+  # ── 2. Gen-Ed: Composition, Communications, and Foreign Languages ─────────
+  - id: gen_ed_composition_comm
+    name: "Gen-Ed: Composition, Communications, and Foreign Languages"
+    kind: choose
+    min_count: 3
+    forced:
+      - ENGL 1311
+      - ENGL 1312
+    forced_choices:  # catalog: COMM 1311 or COMM 1313
+      - any_of:
+          - COMM 1311
+          - COMM 1313
+    courses:
+      - COMM 1311
+      - COMM 1313
+      - ENGL 1311
+      - ENGL 1312
+      - SPAN 1311
+
+  # ── 3. Gen-Ed: Humanities and Fine Arts ──────────────────────────────────
+  # ENGL literature surveys are intentionally excluded here; they are owned by
+  # the English Language Arts concentration (no double-counting).
+  - id: gen_ed_humanities
+    name: "Gen-Ed: Humanities and Fine Arts"
+    kind: choose
+    min_count: 2
+    forced_choices:  # catalog: all undergraduates take one HIST course from this category
+      - any_of:
+          - HIST 1311
+          - HIST 1312
+          - HIST 2311
+          - HIST 2314
+    courses:
+      - ARTS 1311
+      - HIST 1311
+      - HIST 1312
+      - HIST 2311
+      - HIST 2314
+      - MUSI 1306
+      - PHIL 1311
+      - PHIL 1312
+      - PHIL 1313
+
+  # ── 4. Gen-Ed: Social and Behavioral Sciences ────────────────────────────
+  - id: gen_ed_social
+    name: "Gen-Ed: Social and Behavioral Sciences"
+    kind: choose
+    min_count: 2
+    forced_choices:  # catalog: all undergraduates take one GOVT course from this category
+      - any_of:
+          - GOVT 2311
+          - GOVT 2312
+    courses:
+      - ECON 2311
+      - ECON 2312
+      - GOVT 2311
+      - GOVT 2312
+      - PSYC 2311
+      - SOCI 2311
+
+  # ── 5. Gen-Ed: Natural Sciences and Mathematics ──────────────────────────
+  # MATH requirement is MATH 1311 only so the Mathematics concentration's courses
+  # are not absorbed into gen-ed (no double-counting).
+  - id: gen_ed_natural_science_math
+    name: "Gen-Ed: Natural Sciences and Mathematics"
+    kind: choose
+    min_count: 2
+    forced:
+      - MATH 1311
+    forced_choices:
+      - any_of:
+          - BIOL 1311
+          - BIOL 1312
+          - GEOG 2311
+          - GEOG 2312
+          - GEOL 1311
+    courses: []
+
+  # ── 6. Education Core (36 credits) ────────────────────────────────────────
+  # Elementary Education students substitute PHED 4320 for EDUC 4324 and
+  # ARTS 3312 for EDUC 4321 (see caveats at the top of this file).
+  - id: education_core
+    name: Education Core
+    kind: all_of
+    courses:
+      - EDUC 2311
+      - EDUC 2312
+      - EDUC 3314
+      - EDUC 3315
+      - EDUC 3316
+      - EDUC 3317
+      - EDUC 4318
+      - EDUC 4320
+      - EDUC 4321
+      - EDUC 4324
+      - COMP 1314
+      - ENGL 3330
+
+  # ── 7. Concentration (choose 1 of 4, 24 credits each) ────────────────────
+  - id: concentration
+    name: Concentration (choose one)
+    kind: choose_group
+    choose_groups: 1
+    subgroups:
+      - id: concentration_english_language_arts
+        name: English Language Arts Concentration
+        kind: all_of
+        courses:
+          - ENGL 2315
+          - ENGL 2316
+          - ENGL 2317
+          - ENGL 2318
+          - ENGL 2319
+          - ENGL 3320
+          - ENGL 3322
+          - ENGL 3325
+
+      - id: concentration_mathematics
+        name: Mathematics Concentration
+        kind: all_of
+        courses:
+          - MATH 1313
+          - MATH 2314
+          - MATH 2315
+          - MATH 2316
+          - MATH 2317
+          - MATH 3318
+          - MATH 3319
+          - MATH 3320
+
+      - id: concentration_physical_education
+        name: Physical Education Concentration
+        kind: all_of
+        courses:
+          - PHED 2311
+          - PHED 2312
+          - PHED 2313
+          - PHED 2314
+          - PHED 2315
+          - PHED 3316
+          - PHED 3317
+          - PHED 3318
+
+      - id: concentration_elementary_education
+        name: Elementary Education Concentration
+        kind: all_of
+        courses:
+          - ENGL 3328
+          - ENGL 3329
+          - MATH 3328
+          - MATH 3329
+          - EDUC 3331
+          - EDUC 4332
+          - EDUC 4335
+          - EDUC 3102
+          - EDUC 4101
+          - EDUC 4133
+
+  # ── 8. Unrestricted Electives (24 credits) ────────────────────────────────
+  # Elementary Education has no free electives; its 24 elective credits are a
+  # fixed required set (see caveats at the top of this file).
+  - id: unrestricted_electives
+    name: Unrestricted Electives
+    kind: credits_from_filter
+    min_credits: 24
+    course_filter:
+      unrestricted: true

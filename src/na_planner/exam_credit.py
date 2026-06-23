@@ -14,7 +14,7 @@ from na_planner.models.exam_credit import (
     ExamDiagnostic,
     ExamResolution,
 )
-from na_planner.models.student import ExamResult, ExternalCredit
+from na_planner.models.student import ExamResult, ExternalCredit, StudentRecord
 
 EXAM_CREDIT_CAP = 30.0
 ELECTIVE_CREDITS = 3.0  # the catalog's "ELEC 1" = one elective course
@@ -107,3 +107,19 @@ def resolve_exams(
         total += ELECTIVE_CREDITS
 
     return ExamResolution(credits=credits, diagnostics=diagnostics)
+
+
+def merge_exam_credit(
+    student: StudentRecord, chart: ExamCreditChart
+) -> tuple[StudentRecord, ExamResolution]:
+    """Resolve the student's exams and return a copy with the resulting credit merged
+    into ``external`` (raw ``exams`` retained for provenance), plus the resolution.
+    Exam credit never duplicates a completed course or an existing manual transfer."""
+    already_earned = {c.code for c in student.completed} | {
+        e.equivalent_code for e in student.external
+    }
+    resolution = resolve_exams(student.exams, chart, already_earned=already_earned)
+    merged = student.model_copy(
+        update={"external": [*student.external, *resolution.credits]}
+    )
+    return merged, resolution

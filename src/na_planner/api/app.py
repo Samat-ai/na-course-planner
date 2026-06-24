@@ -36,6 +36,18 @@ def create_app() -> FastAPI:
     def programs() -> list[dict]:
         return list_programs()
 
+    @app.get("/programs/{code}/courses")
+    def program_courses(code: str, catalog_year: int = 2026) -> list[dict]:
+        # Catalog course codes + titles for the structured transfer-credit dropdown.
+        try:
+            program = load_program_by(code, catalog_year)
+        except KeyError as e:
+            raise HTTPException(status_code=404, detail=str(e)) from e
+        return [
+            {"code": c.code, "title": c.title}
+            for c in sorted(program.courses.values(), key=lambda c: c.code)
+        ]
+
     @app.get("/exam-chart", response_model=ExamCreditChart)
     def exam_chart(catalog_year: int = 2026) -> ExamCreditChart:
         try:

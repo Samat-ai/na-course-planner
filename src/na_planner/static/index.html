@@ -835,11 +835,19 @@ const app = {
       };
       const tc={ok:'#1E7A52',warn:'#B4541E',muted:'#9AA3AC'};
       const items=rz.diagnostics.map(d=>{const[t,tone]=(line[d.status]||(x=>[x.exam_name,'muted']))(d);
-        return `<div style="font-size:12.5px;color:${tc[tone]};padding:1px 0;">• ${esc(t)}</div>`;}).join('');
+        // Neutral text for granted rows; color only the rows that need attention.
+        const txt=tone==='ok'?'#3D4A56':tc[tone];
+        return `<div style="display:flex;align-items:flex-start;gap:8px;padding:3px 0;">
+          <span style="flex:none;width:6px;height:6px;border-radius:50%;background:${tc[tone]};margin-top:6px;"></span>
+          <span style="font-size:12.5px;line-height:1.45;color:${txt};">${esc(t)}</span>
+        </div>`;}).join('');
       el('exam-resolution').innerHTML=`
-        <div style="background:#F4F7FB;border:1px solid #DCE6F0;border-radius:9px;padding:10px 12px;">
-          <div style="font-size:12px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:#1E3A5F;margin-bottom:5px;">Resolved exam credit · ${granted} cr</div>
-          ${items}
+        <div style="background:#F7FAFC;border:1px solid #E1E9F1;border-radius:12px;padding:13px 15px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <div style="font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#6B7886;">Resolved exam credit</div>
+            <span style="font-size:11.5px;font-weight:700;color:#1E7A52;background:#E4F2EA;border:1px solid #C3E2D1;padding:3px 9px;border-radius:20px;">+${granted} cr</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:1px;">${items}</div>
         </div>`;
     }else{
       el('exam-resolution').innerHTML='';

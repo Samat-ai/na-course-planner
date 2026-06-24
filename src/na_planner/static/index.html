@@ -386,7 +386,7 @@ const app = {
     programs:[], programCode:'CS-BS', catalogYear:2026, concentration:'',
     prefs:{targetCredits:15, pace:'full', term:'Fall 2026', difficulty:'balanced'},
     student:null, editedCourses:[], editedExternals:[], editedExams:[], examChart:null,
-    examResolution:null, auditResult:null, recommendation:null,
+    examResolution:null, auditResult:null, recommendation:null, programCourses:[],
   },
   _ct:null, _rt:null,
 
@@ -531,19 +531,21 @@ const app = {
         exam_type:e.exam_type||'AP',exam_name:e.exam_name||'',score:String(e.score??''),
       })),
     });
+    this.loadProgramCourses();
   },
 
   showErr(id,msg){const e=el(id);if(e){e.textContent=msg;e.style.display='';}},
 
   // ---- Confirm ----
-  onProgramChange(v){this.set({programCode:v,concentration:''});},
-  onYearChange(v){this.set({catalogYear:parseInt(v,10)});},
+  onProgramChange(v){this.set({programCode:v,concentration:''});this.loadProgramCourses();},
+  onYearChange(v){this.set({catalogYear:parseInt(v,10)});this.loadProgramCourses();},
   onConcChange(v){this.set({concentration:v});},
   addCourse(){this.set(s=>({editedCourses:[...s.editedCourses,{code:'',title:'',credits:'',grade:'',term:''}]}));},
   removeCourse(i){this.set(s=>({editedCourses:s.editedCourses.filter((_,j)=>j!==i)}));},
   editCourse(i,f,v){this.set(s=>{const c=s.editedCourses.slice();c[i]={...c[i],[f]:v};return{editedCourses:c};});},
-  addExternal(){this.set(s=>({editedExternals:[...s.editedExternals,{source:'Transfer',equivalent_code:'New credit',credits:'3'}]}));},
+  addExternal(){this.set(s=>({editedExternals:[...s.editedExternals,{source:'Transfer',equivalent_code:'General elective',credits:'3'}]}));},
   removeExternal(i){this.set(s=>({editedExternals:s.editedExternals.filter((_,j)=>j!==i)}));},
+  editExternal(i,f,v){this.set(s=>{const x=s.editedExternals.slice();x[i]={...x[i],[f]:v};return{editedExternals:x};});},
   addExam(){this.set(s=>{const names=this.examNames('AP');return{editedExams:[...s.editedExams,{exam_type:'AP',exam_name:names[0]||'',score:''}]};});},
   removeExam(i){this.set(s=>({editedExams:s.editedExams.filter((_,j)=>j!==i)}));this.refreshExamResolution();},
   editExam(i,f,v){this.set(s=>{const x=s.editedExams.slice();x[i]={...x[i],[f]:v};
@@ -636,6 +638,14 @@ const app = {
       const r=await this.req('/exam-chart');
       this.set({examChart:await r.json()});
     }catch{ /* chart unavailable — exam entry falls back to no live preview */ }
+  },
+
+  // Catalog course codes for the transfer-credit dropdown (validated equivalencies).
+  async loadProgramCourses(){
+    try{
+      const r=await this.req(`/programs/${encodeURIComponent(this.st.programCode)}/courses?catalog_year=${this.st.catalogYear}`);
+      this.set({programCourses:await r.json()});
+    }catch{ this.set({programCourses:[]}); /* fall back to General elective only */ }
   },
 
   examEntry(type,name){
@@ -835,13 +845,24 @@ const app = {
       el('exam-resolution').innerHTML='';
     }
 
-    el('externals-list').innerHTML=s.editedExternals.map((e,i)=>`
-      <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:#FBFAF7;border:1px solid #EDE8DE;border-radius:9px;">
-        <span style="font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;background:#E8EEF4;color:#1E3A5F;padding:3px 8px;border-radius:5px;">${esc(e.source)}</span>
-        <span style="flex:1;font-size:13.5px;color:#1A2733;">${esc(e.equivalent_code)}</span>
-        <span style="font-size:13px;color:#5C6B79;font-weight:600;">${esc(e.credits)} cr</span>
+    const extSelStyle="border:1px solid #E8E2D6;border-radius:7px;padding:9px;font-family:'Hanken Grotesk';font-size:13px;background:#fff;color:#1A2733;outline:none;";
+    const catalog=s.programCourses||[];
+    el('externals-list').innerHTML=s.editedExternals.map((e,i)=>{
+      // Known catalog code, "General elective", or a legacy free-text value not in the catalog.
+      const known=e.equivalent_code==='General elective'||catalog.some(c=>c.code===e.equivalent_code);
+      const codeOpts=[`<option value="General elective"${e.equivalent_code==='General elective'?' selected':''}>General elective</option>`]
+        .concat(catalog.map(c=>`<option value="${esc(c.code)}"${c.code===e.equivalent_code?' selected':''}>${esc(c.code)}${c.title?' — '+esc(c.title):''}</option>`))
+        .concat(known?[]:[`<option value="${esc(e.equivalent_code)}" selected>${esc(e.equivalent_code)} (unmatched)</option>`])
+        .join('');
+      return `
+      <div style="display:flex;align-items:center;gap:8px;padding:9px 12px;background:#FBFAF7;border:1px solid #EDE8DE;border-radius:9px;">
+        <input value="${esc(e.source)}" data-ext-i="${i}" data-ext-f="source" placeholder="Source" style="${extSelStyle}width:92px;flex:none;">
+        <select data-ext-i="${i}" data-ext-f="equivalent_code" style="${extSelStyle}flex:1;width:0;">${codeOpts}</select>
+        <input value="${esc(e.credits)}" data-ext-i="${i}" data-ext-f="credits" placeholder="cr" style="${extSelStyle}width:56px;flex:none;text-align:center;">
         <button data-ext-rm="${i}" style="border:none;background:transparent;color:#C4B8A6;cursor:pointer;font-size:17px;line-height:1;">×</button>
-      </div>`).join('');
+      </div>`;
+    }).join('')
+      ||`<div style="font-size:12.5px;color:#B3A597;padding:4px 2px;">No transfer credit added.</div>`;
 
     this.renderProgramDropdowns();
 
@@ -1027,10 +1048,16 @@ const app = {
 
     // Event delegation — externals
     const ext=el('externals-list');
-    if(ext)ext.addEventListener('click',e=>{
-      const b=e.target.closest('[data-ext-rm]');
-      if(b)this.removeExternal(parseInt(b.dataset.extRm,10));
-    });
+    if(ext){
+      ext.addEventListener('change',e=>{
+        const inp=e.target.closest('[data-ext-i][data-ext-f]');
+        if(inp)this.editExternal(parseInt(inp.dataset.extI,10),inp.dataset.extF,inp.value);
+      });
+      ext.addEventListener('click',e=>{
+        const b=e.target.closest('[data-ext-rm]');
+        if(b)this.removeExternal(parseInt(b.dataset.extRm,10));
+      });
+    }
 
     // Event delegation — exams
     const exl=el('exams-list');

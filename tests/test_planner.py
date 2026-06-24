@@ -105,6 +105,29 @@ def test_plan_term_caps_choose_pool_at_min_count():
     assert "HIST 1" in scheduled               # mandatory forced-choice still reserved
 
 
+def test_plan_term_pinned_course_fills_its_choice_slot_and_blocks_sibling():
+    # A "one natural science" slot offers BIOL 1311 / BIOL 1312. The student is already
+    # registered for BIOL 1311 (pinned). The planner must keep BIOL 1311 and NOT add its
+    # sibling BIOL 1312 for the same slot, even though 1312 is eligible.
+    courses = {
+        "BIOL 1311": Course(code="BIOL 1311", credits=3),
+        "BIOL 1312": Course(code="BIOL 1312", credits=3),
+    }
+    group = RequirementGroup(
+        id="nsm", name="Nat Sci", kind="choose", min_count=1, courses=[],
+        forced_choices=[ForcedChoice(any_of=["BIOL 1311", "BIOL 1312"])],
+    )
+    prog = Program(code="X", name="X", catalog_year=2026, total_credits_required=3,
+                   courses=courses, groups=[group])
+    prefs = StudentPreferences(target_credits=15, target_season="fall", target_year=2026)
+    term = plan_term(["BIOL 1312"], prog, prefs,
+                     pinned=[PlannedCourse(code="BIOL 1311", credits=3)])
+    nat = [c.code for c in term.courses if c.code in {"BIOL 1311", "BIOL 1312"}]
+    assert nat == ["BIOL 1311"]                # only the pinned course, sibling blocked
+    pinned = next(c for c in term.courses if c.code == "BIOL 1311")
+    assert pinned.registered is True
+
+
 def test_plan_term_reasons_mention_unlocking():
     prog = _prog()
     prefs = StudentPreferences(target_credits=15)

@@ -138,6 +138,70 @@ def test_early_registered_course_in_choose_pool_does_not_overfill():
     assert a.registered is True
 
 
+def test_pinned_course_does_not_satisfy_same_term_prereq_but_unlocks_next_term():
+    # A -> B, both required. A is early-registered for the target term (pinned). The
+    # same-term prereq rule means A does NOT unlock B this term, but A finishing unlocks
+    # B the following term.
+    courses = {
+        "A 1000": Course(code="A 1000", credits=3),
+        "B 1000": Course(code="B 1000", credits=3,
+                         prereq=PrereqExpr(kind="course", course="A 1000")),
+    }
+    groups = [RequirementGroup(id="core", name="Core", kind="all_of",
+                               courses=["A 1000", "B 1000"])]
+    prog = Program(code="X", name="X", catalog_year=2026, total_credits_required=6,
+                   courses=courses, groups=groups)
+    student = StudentRecord(
+        program_code="X", catalog_year=2026,
+        completed=[CompletedCourse(code="A 1000", credits=3, grade=Grade.WIP,
+                                   term="Fall 2026")],
+    )
+    prefs = StudentPreferences(target_credits=6, target_season="fall", target_year=2026)
+    rec = recommend(student, prog, prefs)
+    next_codes = [c.code for c in rec.next_term.courses]
+    assert "A 1000" in next_codes          # pinned (registered) this term
+    assert "B 1000" not in next_codes      # same-term prereq A doesn't unlock B yet
+    assert rec.roadmap, "B should be scheduled the following term"
+    assert "B 1000" in [c.code for c in rec.roadmap[0].courses]
+
+
+def test_registered_elective_outside_catalog_is_pinned_with_its_own_credits():
+    # A WIP course early-registered for the target term that isn't in the program catalog
+    # (a free elective) is still pinned, using its own credits.
+    courses = {"A 1000": Course(code="A 1000", credits=3)}
+    groups = [RequirementGroup(id="core", name="Core", kind="all_of", courses=["A 1000"])]
+    prog = Program(code="X", name="X", catalog_year=2026, total_credits_required=3,
+                   courses=courses, groups=groups)
+    student = StudentRecord(
+        program_code="X", catalog_year=2026,
+        completed=[CompletedCourse(code="FREE 9999", credits=4, grade=Grade.WIP,
+                                   term="Fall 2026")],
+    )
+    prefs = StudentPreferences(target_credits=15, target_season="fall", target_year=2026)
+    rec = recommend(student, prog, prefs)
+    free = next((c for c in rec.next_term.courses if c.code == "FREE 9999"), None)
+    assert free is not None
+    assert free.registered is True
+    assert free.credits == 4
+
+
+def test_duplicate_wip_target_term_codes_are_pinned_once():
+    courses = {"A 1000": Course(code="A 1000", credits=3)}
+    groups = [RequirementGroup(id="core", name="Core", kind="all_of", courses=["A 1000"])]
+    prog = Program(code="X", name="X", catalog_year=2026, total_credits_required=3,
+                   courses=courses, groups=groups)
+    student = StudentRecord(
+        program_code="X", catalog_year=2026,
+        completed=[
+            CompletedCourse(code="A 1000", credits=3, grade=Grade.WIP, term="Fall 2026"),
+            CompletedCourse(code="A 1000", credits=3, grade=Grade.WIP, term="Fall 2026"),
+        ],
+    )
+    prefs = StudentPreferences(target_credits=15, target_season="fall", target_year=2026)
+    rec = recommend(student, prog, prefs)
+    assert [c.code for c in rec.next_term.courses].count("A 1000") == 1
+
+
 def test_wip_course_in_non_target_term_keeps_assumed_complete_behavior():
     # A WIP course whose term is NOT the target term (e.g. a current summer course before
     # the Fall target) keeps the old behavior: assumed-complete, excluded, unlocks next.

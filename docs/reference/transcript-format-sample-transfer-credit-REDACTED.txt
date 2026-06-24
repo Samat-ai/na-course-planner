@@ -1,0 +1,90 @@
+
+===== PAGE 1 =====
+NORTH AMERICAN UNIVERSITY
+ID : 00000000
+Student Name
+Undergraduate Division
+Advisors : Advisor Name
+Course Number Title CR Type Grade Rpt Hrs Att Hrs Ern Hrs Gpa Qual Pts GPA
+Transfer : Transfer
+Organization : Exams
+CLEP COLL.AL College Algebra TR T 3.00 3.00 0.00 0.00
+CLEP PRE- Pre-calculus TR T 3.00 3.00 0.00 0.00
+Term Totals : 6.00 6.00 0.00 0.00 0.0000
+Cumulative Totals : 6.00 6.00 0.00 0.00 0.0000
+2024-2025 Academic Year : Fall
+Subterm : Fall Full Term
+COMP 1314 Computer Literacy and Application UG A 3.00 3.00 3.00 12.00
+COMP 1411 Introduction to CS I UG A 4.00 4.00 4.00 16.00
+ENGL R300 Basic Writing RM P 3.00 3.00 0.00 0.00
+FRSH 1311 Freshman Seminar UG A 3.00 3.00 3.00 12.00
+MATH 2314 Calculus I UG A 3.00 3.00 3.00 12.00
+Subterm Totals : 16.00 16.00 13.00 52.00 4.0000
+Term Totals : 16.00 16.00 13.00 52.00 4.0000
+Probation : Good Standing Cumulative Totals : 22.00 22.00 13.00 52.00 4.0000
+2024-2025 Academic Year : Spring
+Subterm : Spring Full Term
+ARTS 1311 Art Appreciation UG A 3.00 3.00 3.00 12.00
+COMM 1311 Fundamentals of Communication UG A 3.00 3.00 3.00 12.00
+COMP 1412 Introduction to CS II UG A 4.00 4.00 4.00 16.00
+HIST 1312 U.S. History II UG A- 3.00 3.00 3.00 11.01
+MATH 2317 Discrete Mathematics UG A 3.00 3.00 3.00 12.00
+Subterm Totals : 16.00 16.00 16.00 63.01 3.9400
+Term Totals : 16.00 16.00 16.00 63.01 3.9400
+Probation : Good Standing Cumulative Totals : 38.00 38.00 29.00 115.01 3.9700
+2025-2026 Academic Year : Fall
+Subterm : Fall Full Term
+BIOL 1312 Nutrition UG A 3.00 3.00 3.00 12.00
+COMP 2313 Data Structures UG A 3.00 3.00 3.00 12.00
+COMP 2316 Computer Organization UG A 3.00 3.00 3.00 12.00
+COMP 3322 Software Engineering UG A 3.00 3.00 3.00 12.00
+COMP 3324 Computer Networks UG A 3.00 3.00 3.00 12.00
+Subterm Totals : 15.00 15.00 15.00 60.00 4.0000
+Term Totals : 15.00 15.00 15.00 60.00 4.0000
+Probation : Good Standing Cumulative Totals : 53.00 53.00 44.00 175.01 3.9800
+Page : 1 of 2
+===== PAGE 2 =====
+NORTH AMERICAN UNIVERSITY
+ID : 00000000
+Student Name
+Undergraduate Division
+Advisors : Advisor Name
+Course Number Title CR Type Grade Rpt Hrs Att Hrs Ern Hrs Gpa Qual Pts GPA
+2025-2026 Academic Year : Spring
+Subterm : Spring Full Term
+COMP 2319 Introduction to Artificial Intelligence UG A 3.00 3.00 3.00 12.00
+COMP 2415 Systems Programming UG A 4.00 4.00 4.00 16.00
+COMP 3320 Programming Languages UG A 3.00 3.00 3.00 12.00
+COMP 3321 Database Systems UG A 3.00 3.00 3.00 12.00
+MATH 1312 Statistics UG A 3.00 3.00 3.00 12.00
+Subterm Totals : 16.00 16.00 16.00 64.00 4.0000
+Term Totals : 16.00 16.00 16.00 64.00 4.0000
+Probation : Good Standing Cumulative Totals : 69.00 69.00 60.00 239.01 3.9800
+2025-2026 Academic Year : Summer
+Subterm : Summer Subterm1
+ENGL 1311 Composition and Rhetoric I UG WIP 3.00 0.00 0.00 0.00
+Subterm Totals : 0.00 0.00 0.00 0.00 0.0000
+Subterm : Summer Subterm2
+COMP 3317 Algorithms UG WIP 3.00 0.00 0.00 0.00
+COMP 4353 Data Mining UG WIP 3.00 0.00 0.00 0.00
+COMP 4356 Software Project Management UG WIP 3.00 0.00 0.00 0.00
+ENGL 1312 Composition and Rhetoric II UG WIP 3.00 0.00 0.00 0.00
+Subterm Totals : 0.00 0.00 0.00 0.00 0.0000
+Term Totals : 0.00 0.00 0.00 0.00 0.0000
+Cumulative Totals : 69.00 69.00 60.00 239.01 3.9800
+2026-2027 Academic Year : Fall
+Subterm : Fall Full Term
+COMP 4326 Front-End Web Development UG WIP 3.00 0.00 0.00 0.00
+COMP 4337 Software Requirements and Analysis UG WIP 3.00 0.00 0.00 0.00
+COMP 4371 Big Data Analytics UG WIP 3.00 0.00 0.00 0.00
+COMP 4372 Data Visualization UG WIP 3.00 0.00 0.00 0.00
+COMP 4374 Python for Data Analytics UG WIP 3.00 0.00 0.00 0.00
+Subterm Totals : 0.00 0.00 0.00 0.00 0.0000
+Term Totals : 0.00 0.00 0.00 0.00 0.0000
+Cumulative Totals : 69.00 69.00 60.00 239.01 3.9800
+Division Cumulative Totals : 69.00 69.00 60.00 239.01 3.9800
+Degree Information :
+(1) 'Bachelor of Science' Date Conferred :
+Major(s)
+Computer Science - Conc: Software Engineering
+Page : 2 of 2

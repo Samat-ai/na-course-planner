@@ -14,6 +14,11 @@ MAX_TERMS = 16
 ELECTIVE_PLACEHOLDER = "ELECTIVE"
 
 
+def display_label(code: str) -> str:
+    """Human-facing label for a planned course code (relabels the elective placeholder)."""
+    return "Elective credit" if code == ELECTIVE_PLACEHOLDER else code
+
+
 def _advance(season: str, year: int) -> tuple[str, int]:
     return ("spring", year + 1) if season == "fall" else ("fall", year)
 
@@ -134,7 +139,7 @@ def _elective_filler_terms(
     per_term = target_credits if target_credits > 0 else elective_remaining
     terms: list[TermPlan] = []
     remaining = elective_remaining
-    while remaining > 0:
+    while remaining > 1e-6:
         load = min(per_term, remaining)
         terms.append(TermPlan(
             season=season, year=year, label=f"{season.capitalize()} {year}",

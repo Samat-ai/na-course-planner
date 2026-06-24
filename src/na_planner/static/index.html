@@ -961,7 +961,7 @@ const app = {
         </div>
         <div style="flex:1;min-width:0;">
           <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;">
-            <span style="font-family:ui-monospace,monospace;font-size:13px;font-weight:600;color:#1E3A5F;">${esc(c.code)}</span>
+            <span style="font-family:ui-monospace,monospace;font-size:13px;font-weight:600;color:#1E3A5F;">${esc(c.code==='ELECTIVE'?'Elective credit':c.code)}</span>
             ${c.registered?`<span style="font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#1E7A52;background:#E4F2EA;border:1px solid #C3E2D1;padding:2px 7px;border-radius:20px;">Registered</span>`:''}
           </div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">${reasons}</div>

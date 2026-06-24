@@ -5,7 +5,7 @@ from na_planner.audit import audit
 from na_planner.catalog_loader import load_program
 from na_planner.models.preferences import StudentPreferences
 from na_planner.models.student import StudentRecord
-from na_planner.roadmap import recommend
+from na_planner.roadmap import display_label, recommend
 
 
 def _load_student(path: str) -> StudentRecord:
@@ -37,13 +37,13 @@ def _print_recommend(program_path: str, student_path: str) -> int:
     print(f"Next term: {rec.next_term.label} "
           f"({rec.next_term.total_credits:.0f} credits)")
     for c in rec.next_term.courses:
-        print(f"  - {c.code} ({c.credits:.0f}cr): {', '.join(c.reasons)}")
+        print(f"  - {display_label(c.code)} ({c.credits:.0f}cr): {', '.join(c.reasons)}")
     for w in rec.next_term.warnings:
         print(f"  ! {w}")
     if rec.roadmap:
         print("Tentative roadmap:")
         for t in rec.roadmap:
-            print(f"  {t.label}: {', '.join(c.code for c in t.courses)}")
+            print(f"  {t.label}: {', '.join(display_label(c.code) for c in t.courses)}")
     print(f"Projected graduation: {rec.projected_graduation or 'not yet projected'}")
     print(f"Elective credits remaining: {rec.elective_credits_remaining:.0f}")
     return 0

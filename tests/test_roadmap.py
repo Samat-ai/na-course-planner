@@ -105,6 +105,61 @@ def test_roadmap_shows_elective_filler_terms_up_to_graduation():
     assert rec.projected_graduation == "Fall 2027"
 
 
+def test_elective_filler_carries_remainder_in_last_term():
+    # 7 elective credits at 3 cr/term -> filler terms of 3, 3, 1 (remainder last).
+    courses = {"A 1000": Course(code="A 1000", credits=3)}
+    groups = [
+        RequirementGroup(id="core", name="Core", kind="all_of", courses=["A 1000"]),
+        RequirementGroup(id="elec", name="Electives", kind="credits_from_filter",
+                         min_credits=7, course_filter=CourseFilter(unrestricted=True)),
+    ]
+    prog = Program(code="X", name="X", catalog_year=2026, total_credits_required=10,
+                   courses=courses, groups=groups)
+    student = StudentRecord(program_code="X", catalog_year=2026)
+    prefs = StudentPreferences(target_credits=3, target_season="fall", target_year=2026)
+    rec = recommend(student, prog, prefs)
+    filler_loads = [t.total_credits for t in rec.roadmap]
+    assert filler_loads == [3, 3, 1]
+    assert sum(filler_loads) == 7
+
+
+def test_electives_only_student_with_no_structured_terms_shows_filler_as_next_term():
+    # Structured requirement already complete; only the elective bucket remains. The next
+    # term itself becomes an explicit elective-filler term (not an empty placeholder).
+    courses = {"A 1000": Course(code="A 1000", credits=3)}
+    groups = [
+        RequirementGroup(id="core", name="Core", kind="all_of", courses=["A 1000"]),
+        RequirementGroup(id="elec", name="Electives", kind="credits_from_filter",
+                         min_credits=3, course_filter=CourseFilter(unrestricted=True)),
+    ]
+    prog = Program(code="X", name="X", catalog_year=2026, total_credits_required=6,
+                   courses=courses, groups=groups)
+    student = StudentRecord(
+        program_code="X", catalog_year=2026,
+        completed=[CompletedCourse(code="A 1000", credits=3, grade=Grade.A)],
+    )
+    prefs = StudentPreferences(target_credits=15, target_season="fall", target_year=2026)
+    rec = recommend(student, prog, prefs)
+    assert [c.code for c in rec.next_term.courses] == ["ELECTIVE"]
+    assert rec.projected_graduation == "Fall 2026"
+
+
+def test_projected_graduation_none_when_structured_incomplete():
+    # A required course gated by a prereq the student can never satisfy (the prereq isn't
+    # in the program), so structure can't complete -> no graduation projection.
+    courses = {
+        "A 1000": Course(code="A 1000", credits=3,
+                         prereq=PrereqExpr(kind="course", course="MISSING 9999")),
+    }
+    groups = [RequirementGroup(id="core", name="Core", kind="all_of", courses=["A 1000"])]
+    prog = Program(code="X", name="X", catalog_year=2026, total_credits_required=3,
+                   courses=courses, groups=groups)
+    student = StudentRecord(program_code="X", catalog_year=2026)
+    prefs = StudentPreferences(target_credits=15, target_season="fall", target_year=2026)
+    rec = recommend(student, prog, prefs)
+    assert rec.projected_graduation is None
+
+
 def test_recommend_stops_when_complete():
     prog = _chain_prog()
     student = StudentRecord(

@@ -75,6 +75,7 @@ def plan_term(
     eligible: list[str], program: Program, prefs: StudentPreferences,
     weights: dict[str, float] = DEFAULT_WEIGHTS,
     audit_result: AuditResult | None = None,
+    pinned: list[PlannedCourse] | None = None,
 ) -> TermPlan:
     ranked = sorted(
         eligible, key=lambda c: (-score_course(c, program, weights), c)
@@ -85,7 +86,33 @@ def plan_term(
     filled_slots: list[set[str]] = []
     pool_remaining, pool_group = _pool_capacities(program, audit_result)
     hard_count = 0
+    # Pinned (already early-registered) courses are placed first. They bypass the
+    # credit/difficulty caps — the student is committed — but still consume slot/pool/hard
+    # budget so the fill loop below doesn't add a sibling for a requirement already met.
+    for pc in pinned or []:
+        course = program.courses.get(pc.code)
+        credits = course.credits if course is not None else pc.credits
+        slot = next((s for s in slots if pc.code in s), None)
+        gid = pool_group.get(pc.code)
+        term.courses.append(PlannedCourse(
+            code=pc.code, credits=credits,
+            score=score_course(pc.code, program, weights),
+            reasons=["Already registered for this term"], group_id=None,
+            is_choice_slot=slot is not None,
+            slot_options=sorted(slot) if slot is not None else [],
+            registered=True,
+        ))
+        if slot is not None:
+            filled_slots.append(slot)
+        if gid is not None and pool_remaining.get(gid, 0) > 0:
+            pool_remaining[gid] -= 1
+        term.total_credits += credits
+        if course is not None and difficulty(pc.code, program) == 3:
+            hard_count += 1
+    scheduled = {c.code for c in term.courses}
     for code in ranked:
+        if code in scheduled:
+            continue
         course = program.courses.get(code)
         if course is None:
             continue

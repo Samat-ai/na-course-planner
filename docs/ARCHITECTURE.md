@@ -193,7 +193,7 @@ _Resolve a student's reported exams (AP/CLEP/IB/SAT Subject) into NA course cred
 
 ### `src/na_planner/models/recommend.py`
   - **class `PlannedCourse`**
-    - fields: `code`, `credits`, `score`, `reasons`, `group_id`, `is_choice_slot`, `slot_options`, `provisional`
+    - fields: `code`, `credits`, `score`, `reasons`, `group_id`, `is_choice_slot`, `slot_options`, `provisional`, `registered`
   - **class `TermPlan`**
     - fields: `season`, `year`, `label`, `courses`, `total_credits`, `warnings`
   - **class `Recommendation`**
@@ -213,7 +213,7 @@ _Resolve a student's reported exams (AP/CLEP/IB/SAT Subject) into NA course cred
     - fields: `code`, `credits`, `grade`
 
 ### `src/na_planner/planner.py`
-  - `plan_term(eligible: list[str], program: Program, prefs: StudentPreferences, weights: dict[str, float]=DEFAULT_WEIGHTS, audit_result: AuditResult | None=None) -> TermPlan`
+  - `plan_term(eligible: list[str], program: Program, prefs: StudentPreferences, weights: dict[str, float]=DEFAULT_WEIGHTS, audit_result: AuditResult | None=None, pinned: list[PlannedCourse] | None=None) -> TermPlan`
 
 ### `src/na_planner/prereqs.py`
   - `course_subject(code: str) -> str`

@@ -10,6 +10,7 @@ class PlannedCourse(BaseModel):
     is_choice_slot: bool = False
     slot_options: list[str] = []
     provisional: bool = False     # roadmap provisional pick for an open choice slot
+    registered: bool = False      # student already early-registered for this in the term
 
 
 class TermPlan(BaseModel):

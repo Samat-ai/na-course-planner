@@ -92,6 +92,76 @@ def test_recommend_stops_when_complete():
     assert rec.roadmap == []
 
 
+def test_early_registered_target_term_course_is_pinned_into_next_term():
+    # 4 required courses, no prereqs. The student early-registered for A 1000 in the
+    # target term (Fall 2026) — grade WIP, term "Fall 2026". The engine must build the
+    # term *around* it: pin A (badged registered) and fill the rest with B/C/D.
+    courses = {c: Course(code=c, credits=3)
+               for c in ["A 1000", "B 1000", "C 1000", "D 1000"]}
+    groups = [RequirementGroup(id="core", name="Core", kind="all_of",
+                               courses=list(courses))]
+    prog = Program(code="X", name="X", catalog_year=2026, total_credits_required=12,
+                   courses=courses, groups=groups)
+    student = StudentRecord(
+        program_code="X", catalog_year=2026,
+        completed=[CompletedCourse(code="A 1000", credits=3, grade=Grade.WIP,
+                                   term="Fall 2026")],
+    )
+    prefs = StudentPreferences(target_credits=12, target_season="fall", target_year=2026)
+    rec = recommend(student, prog, prefs)
+    next_codes = [c.code for c in rec.next_term.courses]
+    assert next_codes.count("A 1000") == 1          # pinned exactly once, not dropped
+    assert set(next_codes) == {"A 1000", "B 1000", "C 1000", "D 1000"}
+    a = next(c for c in rec.next_term.courses if c.code == "A 1000")
+    assert a.registered is True
+
+
+def test_early_registered_course_in_choose_pool_does_not_overfill():
+    # choose(min_count=2) pool of three. The student early-registered for POOL 1 in the
+    # target term. The engine must add exactly ONE more (total 2), not two.
+    courses = {c: Course(code=c, credits=3) for c in ["POOL 1", "POOL 2", "POOL 3"]}
+    groups = [RequirementGroup(id="hum", name="Humanities", kind="choose", min_count=2,
+                               courses=list(courses))]
+    prog = Program(code="X", name="X", catalog_year=2026, total_credits_required=6,
+                   courses=courses, groups=groups)
+    student = StudentRecord(
+        program_code="X", catalog_year=2026,
+        completed=[CompletedCourse(code="POOL 1", credits=3, grade=Grade.WIP,
+                                   term="Fall 2026")],
+    )
+    prefs = StudentPreferences(target_credits=15, target_season="fall", target_year=2026)
+    rec = recommend(student, prog, prefs)
+    pool = [c.code for c in rec.next_term.courses if c.code in courses]
+    assert len(pool) == 2                            # exactly min_count, not the whole pool
+    assert "POOL 1" in pool                          # the registered one is kept
+    a = next(c for c in rec.next_term.courses if c.code == "POOL 1")
+    assert a.registered is True
+
+
+def test_wip_course_in_non_target_term_keeps_assumed_complete_behavior():
+    # A WIP course whose term is NOT the target term (e.g. a current summer course before
+    # the Fall target) keeps the old behavior: assumed-complete, excluded, unlocks next.
+    courses = {
+        "A 1000": Course(code="A 1000", credits=3),
+        "B 1000": Course(code="B 1000", credits=3,
+                         prereq=PrereqExpr(kind="course", course="A 1000")),
+    }
+    groups = [RequirementGroup(id="core", name="Core", kind="all_of",
+                               courses=["A 1000", "B 1000"])]
+    prog = Program(code="X", name="X", catalog_year=2026, total_credits_required=6,
+                   courses=courses, groups=groups)
+    student = StudentRecord(
+        program_code="X", catalog_year=2026,
+        completed=[CompletedCourse(code="A 1000", credits=3, grade=Grade.WIP,
+                                   term="Summer 2026")],
+    )
+    prefs = StudentPreferences(target_credits=6, target_season="fall", target_year=2026)
+    rec = recommend(student, prog, prefs)
+    next_codes = [c.code for c in rec.next_term.courses]
+    assert "A 1000" not in next_codes      # assumed-complete — excluded, not pinned
+    assert "B 1000" in next_codes          # still unlocks B's prereq
+
+
 def test_in_progress_course_not_rerecommended_and_unlocks_next():
     # A -> B (both required); A is currently in progress (WIP).
     courses = {

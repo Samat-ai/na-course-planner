@@ -5,7 +5,7 @@ from na_planner.eligibility import eligible_courses
 from na_planner.grades import Grade
 from na_planner.models.catalog import Program
 from na_planner.models.preferences import StudentPreferences
-from na_planner.models.recommend import Recommendation, TermPlan
+from na_planner.models.recommend import PlannedCourse, Recommendation, TermPlan
 from na_planner.models.student import CompletedCourse, StudentRecord
 from na_planner.planner import plan_term
 from na_planner.scoring import DEFAULT_WEIGHTS
@@ -15,6 +15,10 @@ MAX_TERMS = 16
 
 def _advance(season: str, year: int) -> tuple[str, int]:
     return ("spring", year + 1) if season == "fall" else ("fall", year)
+
+
+def _same_term(label: str | None, target: str) -> bool:
+    return label is not None and label.strip().casefold() == target.strip().casefold()
 
 
 def _state_record(program_code: str, year: int,
@@ -37,8 +41,20 @@ def recommend(
     for e in earned_courses(student):
         passed[e.code] = e.grade
         credits[e.code] = e.credits
+
+    # WIP courses split two ways. Those early-registered for the *target* term are pinned
+    # into that term's plan (counted, not re-recommended, but NOT treated as prereq-complete
+    # for their own term — same-term prereq rule). All other WIP courses (a current term
+    # finishing before the target) are assumed complete and unlock the target term.
+    target_label = f"{prefs.target_season.capitalize()} {prefs.target_year}"
+    pinned_codes: set[str] = set()
+    pinned_courses: list[PlannedCourse] = []
+    for c in student.completed:
+        if c.in_progress and _same_term(c.term, target_label) and c.code not in pinned_codes:
+            pinned_codes.add(c.code)
+            pinned_courses.append(PlannedCourse(code=c.code, credits=c.credits))
     for c in student.completed:                  # in-progress (WIP): assume complete next term
-        if c.in_progress and c.code not in passed:
+        if c.in_progress and c.code not in passed and c.code not in pinned_codes:
             passed[c.code] = Grade.A
             credits[c.code] = c.credits
     credits_earned = sum(credits.values())
@@ -47,16 +63,20 @@ def recommend(
     terms: list[TermPlan] = []
     last_audit = None
 
-    for _ in range(MAX_TERMS):
+    for i in range(MAX_TERMS):
         state = _state_record(program.code, program.catalog_year, passed, credits)
         last_audit = audit(state, program)
         if last_audit.is_complete:
             break
         term_prefs = prefs.model_copy(update={"target_season": season, "target_year": year})
         elig = eligible_courses(last_audit, program, term_prefs, passed, credits_earned)
-        if not elig:
+        term_pinned = pinned_courses if i == 0 else []
+        if i == 0:
+            elig = [code for code in elig if code not in pinned_codes]
+        if not elig and not term_pinned:
             break
-        term = plan_term(elig, program, term_prefs, weights, audit_result=last_audit)
+        term = plan_term(elig, program, term_prefs, weights, audit_result=last_audit,
+                         pinned=term_pinned)
         if not term.courses:
             break
         terms.append(term)

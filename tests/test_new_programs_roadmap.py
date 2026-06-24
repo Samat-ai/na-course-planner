@@ -10,7 +10,7 @@ from na_planner.catalog_loader import load_program
 from na_planner.models.preferences import StudentPreferences
 from na_planner.models.student import StudentRecord
 from na_planner.prereqs import prereqs_satisfied
-from na_planner.roadmap import recommend
+from na_planner.roadmap import ELECTIVE_PLACEHOLDER, recommend
 
 PROGRAMS = Path(__file__).parents[1] / "data" / "programs"
 
@@ -39,7 +39,11 @@ def test_roadmap_converges_and_respects_prereqs(filename, code, concentration):
     assert rec.projected_graduation is not None
     assert len(rec.next_term.courses) >= 1
 
+    # Drop synthetic elective-filler placeholders — they are not catalog courses.
     terms = [rec.next_term, *rec.roadmap]
+    for term in terms:
+        term.courses = [c for c in term.courses if c.code != ELECTIVE_PLACEHOLDER]
+
     # Every recommended course is a real program course.
     for term in terms:
         for c in term.courses:

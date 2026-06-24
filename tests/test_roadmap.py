@@ -80,6 +80,31 @@ def test_projects_graduation_through_free_elective_bucket():
     assert rec.elective_credits_remaining == 6
 
 
+def test_roadmap_shows_elective_filler_terms_up_to_graduation():
+    # 1 structured course + a 6-credit elective bucket. The structured course is Fall 2026;
+    # the remaining 6 elective credits (at 3 cr/term) should appear as explicit filler terms
+    # Spring 2027 and Fall 2027, instead of the roadmap stopping after Fall 2026.
+    courses = {"A 1000": Course(code="A 1000", credits=3)}
+    groups = [
+        RequirementGroup(id="core", name="Core", kind="all_of", courses=["A 1000"]),
+        RequirementGroup(id="elec", name="Electives", kind="credits_from_filter",
+                         min_credits=6, course_filter=CourseFilter(unrestricted=True)),
+    ]
+    prog = Program(code="X", name="X", catalog_year=2026, total_credits_required=9,
+                   courses=courses, groups=groups)
+    student = StudentRecord(program_code="X", catalog_year=2026)
+    prefs = StudentPreferences(target_credits=3, target_season="fall", target_year=2026)
+    rec = recommend(student, prog, prefs)
+    terms = [rec.next_term, *rec.roadmap]
+    assert [t.label for t in terms] == ["Fall 2026", "Spring 2027", "Fall 2027"]
+    elec_terms = terms[1:]
+    for t in elec_terms:
+        assert [c.code for c in t.courses] == ["ELECTIVE"]
+        assert t.courses[0].provisional is True
+    assert sum(t.total_credits for t in elec_terms) == 6
+    assert rec.projected_graduation == "Fall 2027"
+
+
 def test_recommend_stops_when_complete():
     prog = _chain_prog()
     student = StudentRecord(

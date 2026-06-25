@@ -47,7 +47,7 @@ def resolve_transcript_exam_credit(
     transfers and exams with no chart equivalent (or already-completed equivalents) pass through
     unchanged. Returns a copy with the rewritten ``external`` list."""
     index = {(e.exam_type, e.exam_name): e for e in chart.entries}
-    completed_codes = {c.code for c in student.completed}
+    seen = {c.code for c in student.completed}   # also dedups across exams (e.g. AP AB + BC)
     new_external: list[ExternalCredit] = []
     for ext in student.external:
         entry = index.get((ext.source, ext.equivalent_code)) if ext.source in EXAM_SOURCES else None
@@ -55,8 +55,9 @@ def resolve_transcript_exam_credit(
             new_external.append(ext)
             continue
         for code in entry.equivalents:
-            if code in completed_codes:
-                continue  # already earned the course — don't duplicate
+            if code in seen:
+                continue  # already earned/granted — don't duplicate the course
+            seen.add(code)
             new_external.append(ExternalCredit(
                 source=ext.source, equivalent_code=code, credits=credits_for_code(code)))
     return student.model_copy(update={"external": new_external})
@@ -146,16 +147,18 @@ def merge_exam_credit(
     already_earned = {c.code for c in student.completed} | {
         e.equivalent_code for e in student.external
     }
-    # An exam already recorded as transcript transfer credit (parsed with the exam title as
-    # equivalent_code) must not be resolved again, or the same CLEP would be counted twice.
-    # The transcript is authoritative (it carries NA's actual articulation), so the duplicate
-    # UI exam is dropped. Match on (type, name) case-insensitively; NA course codes never
-    # equal exam names, so a manual transfer mapped to a real course is never wrongly dropped.
-    on_transcript = {(e.source, e.equivalent_code.casefold()) for e in student.external}
-    exams = [
-        x for x in student.exams
-        if (x.exam_type, x.exam_name.casefold()) not in on_transcript
-    ]
+    # Drop a UI-entered exam whose NA equivalents are all already earned — e.g. the same exam
+    # also appears as transcript credit (now resolved to its NA code). Otherwise it would be
+    # re-counted as elective. Chart-based, so it works whether the transcript transfer still
+    # carries the exam title or has been resolved to an NA code.
+    index = {(e.exam_type, e.exam_name): e for e in chart.entries}
+
+    def _already_covered(x: ExamResult) -> bool:
+        entry = index.get((x.exam_type, x.exam_name))
+        return (entry is not None and bool(entry.equivalents)
+                and all(code in already_earned for code in entry.equivalents))
+
+    exams = [x for x in student.exams if not _already_covered(x)]
     resolution = resolve_exams(exams, chart, already_earned=already_earned)
     merged = student.model_copy(
         update={"external": [*student.external, *resolution.credits]}

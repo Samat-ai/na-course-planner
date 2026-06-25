@@ -116,18 +116,23 @@ def recommend(
     # `season, year` already points one term past the last planned term.
     if not last_audit.is_complete and structured_complete and elective_remaining > 0:
         remaining = elective_remaining
+        # Per-term capacity for new elective terms; fall back to the whole remainder if the
+        # target is non-positive so the overflow loop can't spin forever.
+        per_term = prefs.target_credits if prefs.target_credits > 1e-6 else remaining
         for term in terms:                            # top up under-target planned terms
             cap = prefs.target_credits - term.total_credits
             if cap > 1e-6:
                 remaining -= _fill_elective_slots(term, cap, remaining)
             if remaining <= 1e-6:
                 break
-        while remaining > 1e-6:                       # overflow into new terms
+        guard = 0
+        while remaining > 1e-6 and guard < MAX_TERMS:  # overflow into new terms
             term = TermPlan(season=season, year=year,
                             label=f"{season.capitalize()} {year}")
-            remaining -= _fill_elective_slots(term, prefs.target_credits, remaining)
+            remaining -= _fill_elective_slots(term, per_term, remaining)
             terms.append(term)
             season, year = _advance(season, year)
+            guard += 1
 
     if not terms:
         empty = TermPlan(season=prefs.target_season, year=prefs.target_year,

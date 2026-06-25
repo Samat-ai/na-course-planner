@@ -521,9 +521,13 @@ const app = {
     if(!name)return this.st.concentration||'';
     const list=CONCENTRATIONS[programCode]||[];
     const n=name.trim().toLowerCase();
-    const hit=list.find(c=>c.id&&(c.name.toLowerCase()===n
-      ||c.name.toLowerCase().includes(n)||n.includes(c.name.toLowerCase())));
-    return hit?hit.id:(this.st.concentration||'');
+    const exact=list.find(c=>c.id&&c.name.toLowerCase()===n);
+    if(exact)return exact.id;
+    // No exact match: prefer the longest substring match to avoid e.g. "Cyber" eclipsing
+    // "Cybersecurity".
+    const part=list.filter(c=>c.id&&(c.name.toLowerCase().includes(n)||n.includes(c.name.toLowerCase())))
+      .sort((a,b)=>b.name.length-a.name.length)[0];
+    return part?part.id:(this.st.concentration||'');
   },
 
   applyStudent(student){

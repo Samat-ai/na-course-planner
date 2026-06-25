@@ -86,16 +86,15 @@ def test_resolve_exams_endpoint_surfaces_diagnostics():
 
 
 def test_exam_already_on_transcript_transfer_not_double_counted():
-    # A CLEP shown as transcript transfer credit (equivalent_code = its title) must not be
-    # granted again when the same exam is also entered in the UI — match by (type, name).
+    # A CLEP already on the transcript (resolved to its NA course, MATH 1311) must not be
+    # granted again when the same exam is also entered in the UI.
     student = StudentRecord(
         program_code="CS-BS", catalog_year=2026,
-        external=[ExternalCredit(source="CLEP", equivalent_code="College Algebra",
-                                 credits=3)],
+        external=[ExternalCredit(source="CLEP", equivalent_code="MATH 1311", credits=3)],
         exams=[ExamResult(exam_type="CLEP", exam_name="College Algebra", score=99)],
     )
     merged, resolution = merge_exam_credit(student, CHART)
-    ca = [e for e in merged.external if e.equivalent_code == "College Algebra"]
+    ca = [e for e in merged.external if e.equivalent_code == "MATH 1311"]
     assert len(ca) == 1            # only the transcript transfer, not a second grant
     assert resolution.credits == []   # the duplicate exam grants nothing new
 

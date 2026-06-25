@@ -16,7 +16,7 @@ ELECTIVE_PLACEHOLDER = "ELECTIVE"
 
 def display_label(code: str) -> str:
     """Human-facing label for a planned course code (relabels the elective placeholder)."""
-    return "Elective credit" if code == ELECTIVE_PLACEHOLDER else code
+    return "Elective" if code == ELECTIVE_PLACEHOLDER else code
 
 
 def _advance(season: str, year: int) -> tuple[str, int]:
@@ -154,12 +154,16 @@ ELECTIVE_SLOT = 3.0  # the catalog's elective unit (ELEC 1 = one 3-credit electi
 
 
 def _fill_elective_slots(term: TermPlan, capacity: float, remaining: float) -> float:
-    """Add 3-credit elective placeholder rows to `term`, bounded by `capacity` (spare credits
-    in the term) and `remaining` (electives still to place). One row per slot so the count is
-    visible; the last slot carries any sub-3-credit remainder. Returns credits consumed."""
+    """Add whole-course elective placeholder rows to `term` (one per course), bounded by
+    `capacity` (spare credits) and `remaining` (electives still to place). Electives are
+    3-credit courses, so a slot is only placed when a full 3 credits fit — we never add a
+    1-2 credit partial just to top a term to an odd target. The final slot may be a sub-3
+    remainder (when the total elective requirement isn't a multiple of 3). Returns credits used."""
     used = 0.0
-    while remaining - used > 1e-6 and capacity - used > 1e-6:
-        slot = min(ELECTIVE_SLOT, capacity - used, remaining - used)
+    while remaining - used > 1e-6:
+        slot = min(ELECTIVE_SLOT, remaining - used)   # 3, or the final sub-3 remainder
+        if capacity - used + 1e-6 < slot:
+            break  # not enough room for a whole elective course
         term.courses.append(PlannedCourse(
             code=ELECTIVE_PLACEHOLDER, credits=slot,
             reasons=["Free elective credit"], provisional=True))

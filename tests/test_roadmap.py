@@ -126,6 +126,26 @@ def test_electives_fill_spare_capacity_in_under_target_term():
     assert rec.projected_graduation == "Fall 2026"
 
 
+def test_no_partial_elective_to_hit_odd_target():
+    # 5 required 3-cr courses fill term 1 to 15; target 16. The engine must NOT add a 1-cr
+    # partial elective to reach 16 — electives come in whole 3-cr courses.
+    courses = {f"C{i} 1000": Course(code=f"C{i} 1000", credits=3) for i in range(5)}
+    groups = [
+        RequirementGroup(id="core", name="Core", kind="all_of", courses=list(courses)),
+        RequirementGroup(id="elec", name="E", kind="credits_from_filter",
+                         min_credits=9, course_filter=CourseFilter(unrestricted=True)),
+    ]
+    prog = Program(code="X", name="X", catalog_year=2026, total_credits_required=24,
+                   courses=courses, groups=groups)
+    student = StudentRecord(program_code="X", catalog_year=2026)
+    prefs = StudentPreferences(target_credits=16, target_season="fall", target_year=2026)
+    rec = recommend(student, prog, prefs)
+    assert rec.next_term.total_credits == 15          # no 1-cr partial elective
+    elec = [c for t in [rec.next_term, *rec.roadmap] for c in t.courses
+            if c.code == "ELECTIVE"]
+    assert elec and all(c.credits == 3 for c in elec)  # whole 3-cr electives only
+
+
 def test_zero_target_credits_does_not_hang():
     # target_credits=0 must not infinite-loop the elective overflow; the remainder lands
     # in a single term.

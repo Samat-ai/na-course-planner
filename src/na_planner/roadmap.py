@@ -56,11 +56,13 @@ def recommend(
     pinned_codes: set[str] = set()
     pinned_courses: list[PlannedCourse] = []
     for c in student.completed:
-        if c.in_progress and _same_term(c.term, target_label) and c.code not in pinned_codes:
+        if (c.in_progress and not c.remedial and _same_term(c.term, target_label)
+                and c.code not in pinned_codes):
             pinned_codes.add(c.code)
             pinned_courses.append(PlannedCourse(code=c.code, credits=c.credits))
     for c in student.completed:                  # in-progress (WIP): assume complete next term
-        if c.in_progress and c.code not in passed and c.code not in pinned_codes:
+        if (c.in_progress and not c.remedial
+                and c.code not in passed and c.code not in pinned_codes):
             passed[c.code] = Grade.A
             credits[c.code] = c.credits
     credits_earned = sum(credits.values())

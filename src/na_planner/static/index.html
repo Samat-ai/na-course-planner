@@ -773,7 +773,7 @@ const app = {
   renderConfirm(){
     const s=this.st;
     const courses=s.editedCourses;
-    const cr=courses.reduce((a,c)=>a+(parseFloat(c.credits)||0),0);
+    const cr=courses.reduce((a,c)=>a+(c.remedial?0:(parseFloat(c.credits)||0)),0);
     el('course-count').textContent=`${courses.length} course${courses.length!==1?'s':''} parsed · ${cr} credits`;
 
     const deskRows=courses.map((c,i)=>`

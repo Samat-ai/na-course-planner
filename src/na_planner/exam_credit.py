@@ -34,6 +34,34 @@ def _elective_code(exam: ExamResult) -> str:
     return f"ELEC ({exam.exam_type} {exam.exam_name})"
 
 
+EXAM_SOURCES = frozenset({"AP", "CLEP", "IB", "SAT_SUBJECT"})
+
+
+def resolve_transcript_exam_credit(
+    student: StudentRecord, chart: ExamCreditChart
+) -> StudentRecord:
+    """Map already-accepted transcript exam credit (CLEP/AP/IB/SAT in the transfer section,
+    carrying the exam title as ``equivalent_code``) to the real NA course(s) via the chart, so
+    it satisfies the actual requirement instead of counting as a generic-elective "unmatched"
+    transfer. No score threshold applies — the transcript already granted the credit. Non-exam
+    transfers and exams with no chart equivalent (or already-completed equivalents) pass through
+    unchanged. Returns a copy with the rewritten ``external`` list."""
+    index = {(e.exam_type, e.exam_name): e for e in chart.entries}
+    completed_codes = {c.code for c in student.completed}
+    new_external: list[ExternalCredit] = []
+    for ext in student.external:
+        entry = index.get((ext.source, ext.equivalent_code)) if ext.source in EXAM_SOURCES else None
+        if entry is None or not entry.equivalents:
+            new_external.append(ext)
+            continue
+        for code in entry.equivalents:
+            if code in completed_codes:
+                continue  # already earned the course — don't duplicate
+            new_external.append(ExternalCredit(
+                source=ext.source, equivalent_code=code, credits=credits_for_code(code)))
+    return student.model_copy(update={"external": new_external})
+
+
 def resolve_exams(
     exams: list[ExamResult],
     chart: ExamCreditChart,

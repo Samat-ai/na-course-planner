@@ -119,6 +119,7 @@ py -3 scripts/gen_architecture.py                        # refresh module map be
 ### `src/na_planner/exam_credit.py`
 _Resolve a student's reported exams (AP/CLEP/IB/SAT Subject) into NA course credit_
   - `credits_for_code(code: str) -> float`
+  - `resolve_transcript_exam_credit(student: StudentRecord, chart: ExamCreditChart) -> StudentRecord`
   - `resolve_exams(exams: list[ExamResult], chart: ExamCreditChart, already_earned: Iterable[str]=(), cap: float=EXAM_CREDIT_CAP) -> ExamResolution`
   - `merge_exam_credit(student: StudentRecord, chart: ExamCreditChart) -> tuple[StudentRecord, ExamResolution]`
 

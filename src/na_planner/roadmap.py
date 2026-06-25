@@ -110,12 +110,24 @@ def recommend(
     )
 
     # Once every structured group is satisfied, only the free elective-credit bucket may
-    # remain. The planner can't enumerate courses for it, so surface explicit elective-filler
-    # terms up to graduation instead of stopping the roadmap early. `season, year` already
-    # points one term past the last planned term — where the first filler lands.
+    # remain. The planner can't enumerate courses for it, so fill the remaining elective
+    # credits as explicit 3-credit slots: first topping up any planned term that's under the
+    # credit target (earliest first), then overflowing into new terms up to graduation.
+    # `season, year` already points one term past the last planned term.
     if not last_audit.is_complete and structured_complete and elective_remaining > 0:
-        terms.extend(_elective_filler_terms(season, year, elective_remaining,
-                                            prefs.target_credits))
+        remaining = elective_remaining
+        for term in terms:                            # top up under-target planned terms
+            cap = prefs.target_credits - term.total_credits
+            if cap > 1e-6:
+                remaining -= _fill_elective_slots(term, cap, remaining)
+            if remaining <= 1e-6:
+                break
+        while remaining > 1e-6:                       # overflow into new terms
+            term = TermPlan(season=season, year=year,
+                            label=f"{season.capitalize()} {year}")
+            remaining -= _fill_elective_slots(term, prefs.target_credits, remaining)
+            terms.append(term)
+            season, year = _advance(season, year)
 
     if not terms:
         empty = TermPlan(season=prefs.target_season, year=prefs.target_year,
@@ -133,22 +145,19 @@ def recommend(
     )
 
 
-def _elective_filler_terms(
-    season: str, year: int, elective_remaining: float, target_credits: float,
-) -> list[TermPlan]:
-    """Explicit terms that absorb the remaining free-elective credits, target_credits per
-    term (the last term carries the remainder)."""
-    per_term = target_credits if target_credits > 0 else elective_remaining
-    terms: list[TermPlan] = []
-    remaining = elective_remaining
-    while remaining > 1e-6:
-        load = min(per_term, remaining)
-        terms.append(TermPlan(
-            season=season, year=year, label=f"{season.capitalize()} {year}",
-            courses=[PlannedCourse(code=ELECTIVE_PLACEHOLDER, credits=load,
-                                   reasons=["Free elective credit"], provisional=True)],
-            total_credits=load,
-        ))
-        remaining -= load
-        season, year = _advance(season, year)
-    return terms
+ELECTIVE_SLOT = 3.0  # the catalog's elective unit (ELEC 1 = one 3-credit elective course)
+
+
+def _fill_elective_slots(term: TermPlan, capacity: float, remaining: float) -> float:
+    """Add 3-credit elective placeholder rows to `term`, bounded by `capacity` (spare credits
+    in the term) and `remaining` (electives still to place). One row per slot so the count is
+    visible; the last slot carries any sub-3-credit remainder. Returns credits consumed."""
+    used = 0.0
+    while remaining - used > 1e-6 and capacity - used > 1e-6:
+        slot = min(ELECTIVE_SLOT, capacity - used, remaining - used)
+        term.courses.append(PlannedCourse(
+            code=ELECTIVE_PLACEHOLDER, credits=slot,
+            reasons=["Free elective credit"], provisional=True))
+        term.total_credits += slot
+        used += slot
+    return used

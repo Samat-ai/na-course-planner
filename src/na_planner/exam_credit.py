@@ -118,7 +118,17 @@ def merge_exam_credit(
     already_earned = {c.code for c in student.completed} | {
         e.equivalent_code for e in student.external
     }
-    resolution = resolve_exams(student.exams, chart, already_earned=already_earned)
+    # An exam already recorded as transcript transfer credit (parsed with the exam title as
+    # equivalent_code) must not be resolved again, or the same CLEP would be counted twice.
+    # The transcript is authoritative (it carries NA's actual articulation), so the duplicate
+    # UI exam is dropped. Match on (type, name) case-insensitively; NA course codes never
+    # equal exam names, so a manual transfer mapped to a real course is never wrongly dropped.
+    on_transcript = {(e.source, e.equivalent_code.casefold()) for e in student.external}
+    exams = [
+        x for x in student.exams
+        if (x.exam_type, x.exam_name.casefold()) not in on_transcript
+    ]
+    resolution = resolve_exams(exams, chart, already_earned=already_earned)
     merged = student.model_copy(
         update={"external": [*student.external, *resolution.credits]}
     )

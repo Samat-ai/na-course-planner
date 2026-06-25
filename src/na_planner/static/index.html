@@ -988,11 +988,18 @@ const app = {
   renderGroups(audit,comp){
     const e=el('groups-list');if(!e)return;
     const groups=comp
-      ?audit.groups.map(g=>({...g,status:'satisfied',credits_applied:g.credits_required,remaining_choices:[]}))
+      ?audit.groups.map(g=>({...g,status:'satisfied',credits_applied:g.credits_required,courses_applied:g.courses_required,remaining_choices:[]}))
       :audit.groups;
     e.innerHTML=groups.map(g=>{
       const c=SC[g.status]||SC.unmet;
-      const pct=Math.min(100,Math.round((g.credits_applied/g.credits_required)*100));
+      // Count-based groups (choose N courses / pick a concentration) have credits_required=0;
+      // show "X / N courses" for those, credits otherwise. Guard against divide-by-zero.
+      const useCourses=!(g.credits_required>0)&&g.courses_required>0;
+      const num=useCourses?(g.courses_applied||0):(g.credits_applied||0);
+      const denom=useCourses?g.courses_required:g.credits_required;
+      const unit=useCourses?` course${g.courses_required!==1?'s':''}`:' cr';
+      const pct=g.status==='satisfied'?100:(denom>0?Math.min(100,Math.round((num/denom)*100)):0);
+      const progressLabel=`${num} / ${denom}${unit}`;
       const sb=g.satisfied_by&&g.satisfied_by.length?g.satisfied_by.join(', '):'—';
       const rem=g.remaining_choices&&g.remaining_choices.length?g.remaining_choices.join(', '):'';
       return `<div style="background:#fff;border:1px solid #E7E1D6;border-radius:13px;padding:18px 20px;box-shadow:0 1px 2px rgba(26,39,51,.03);">
@@ -1005,7 +1012,7 @@ const app = {
           <div style="flex:1;height:7px;border-radius:6px;background:#EDE8DE;overflow:hidden;">
             <div style="height:100%;width:${pct}%;background:${c.color};border-radius:6px;transition:width .6s ease;"></div>
           </div>
-          <div style="font-size:12.5px;color:#5C6B79;font-weight:600;white-space:nowrap;">${g.credits_applied} / ${g.credits_required} cr</div>
+          <div style="font-size:12.5px;color:#5C6B79;font-weight:600;white-space:nowrap;">${progressLabel}</div>
         </div>
         <div style="font-size:12.5px;color:#7A8794;line-height:1.5;"><span style="color:#9AA3AC;">Counted:</span> ${esc(sb)}</div>
         ${rem?`<div style="font-size:12.5px;color:#7A8794;line-height:1.5;margin-top:4px;"><span style="color:#9AA3AC;">Still need:</span> ${esc(rem)}</div>`:''}

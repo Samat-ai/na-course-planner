@@ -8,6 +8,7 @@ class AuditRequest(BaseModel):
     student: StudentRecord
     program_code: str
     catalog_year: int
+    declared_concentration: str | None = None
 
 
 class RecommendRequest(BaseModel):

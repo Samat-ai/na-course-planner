@@ -33,7 +33,8 @@ def course_matches_filter(code: str, filt: CourseFilter, program: Program) -> bo
 
 
 def evaluate_group(
-    group: RequirementGroup, applied: list[EarnedCourse], program: Program
+    group: RequirementGroup, applied: list[EarnedCourse], program: Program,
+    declared: str | None = None,
 ) -> GroupStatus:
     min_grade = _effective_min_grade(group, program)
     counting = [c for c in applied if _counts(c, min_grade)]
@@ -101,6 +102,18 @@ def evaluate_group(
         )
 
     if group.kind == "choose_group":
+        # When the student has declared one of the tracks, report that track's progress
+        # (its real course requirements) instead of listing every track as "still need".
+        declared_sub = next((s for s in group.subgroups if s.id == declared), None)
+        if declared_sub is not None:
+            sub = evaluate_group(declared_sub, applied, program)
+            return GroupStatus(
+                group_id=group.id, name=group.name, status=sub.status,
+                credits_required=sub.credits_required, credits_applied=sub.credits_applied,
+                courses_required=sub.courses_required, courses_applied=sub.courses_applied,
+                satisfied_by=sub.satisfied_by, remaining_choices=sub.remaining_choices,
+                choose_remaining=sub.choose_remaining,
+            )
         sub_statuses = [evaluate_group(sub, applied, program) for sub in group.subgroups]
         satisfied_subs = [s for s in sub_statuses if s.status == "satisfied"]
         satisfied = len(satisfied_subs) >= group.choose_groups
@@ -178,11 +191,14 @@ def allocate(
     return result
 
 
-def audit(student: StudentRecord, program: Program) -> AuditResult:
+def audit(
+    student: StudentRecord, program: Program, declared_concentration: str | None = None
+) -> AuditResult:
     earned = earned_courses(student)
     alloc = allocate(earned, program)
     statuses = [
-        evaluate_group(g, alloc.get(g.id, []), program) for g in program.groups
+        evaluate_group(g, alloc.get(g.id, []), program, declared=declared_concentration)
+        for g in program.groups
     ]
     assigned_codes = {c.code for courses in alloc.values() for c in courses}
     allocations = []

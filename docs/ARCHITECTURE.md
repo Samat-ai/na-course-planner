@@ -211,7 +211,7 @@ _Resolve a student's reported exams (AP/CLEP/IB/SAT Subject) into NA course cred
   - **class `ExamResult`**
     - fields: `exam_type`, `exam_name`, `score`
   - **class `StudentRecord`**
-    - fields: `program_code`, `catalog_year`, `completed`, `external`, `exams`
+    - fields: `program_code`, `catalog_year`, `concentration`, `completed`, `external`, `exams`
   - **class `EarnedCourse`**
     - fields: `code`, `credits`, `grade`
 

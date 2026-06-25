@@ -33,6 +33,7 @@ class ExamResult(BaseModel):
 class StudentRecord(BaseModel):
     program_code: str
     catalog_year: int
+    concentration: str | None = None   # declared concentration parsed from the transcript
     completed: list[CompletedCourse] = []
     external: list[ExternalCredit] = []
     # AP/CLEP/IB/SAT Subject exams, resolved to external credit against the exam-credit

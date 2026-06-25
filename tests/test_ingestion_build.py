@@ -24,6 +24,14 @@ def test_builds_student_record():
     assert by_code["COMP 3317"].in_progress is True
 
 
+def test_concentration_carried_onto_student_record():
+    parsed = ParsedTranscript(
+        major="Computer Science", concentration="Software Engineering", courses=[],
+    )
+    rec = to_student_record(parsed, "CS-BS", 2026)
+    assert rec.concentration == "Software Engineering"
+
+
 def test_remedial_course_flagged_on_completed():
     parsed = ParsedTranscript(courses=[
         ParsedCourse(code="ENGL R300", title="Basic Writing", grade="P",

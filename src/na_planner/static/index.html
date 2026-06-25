@@ -515,11 +515,22 @@ const app = {
     }
   },
 
+  matchConcentration(programCode,name){
+    if(!name)return this.st.concentration||'';
+    const list=CONCENTRATIONS[programCode]||[];
+    const n=name.trim().toLowerCase();
+    const hit=list.find(c=>c.id&&(c.name.toLowerCase()===n
+      ||c.name.toLowerCase().includes(n)||n.includes(c.name.toLowerCase())));
+    return hit?hit.id:(this.st.concentration||'');
+  },
+
   applyStudent(student){
+    const pc=student.program_code||this.st.programCode;
     this.set({
       student,
-      programCode:student.program_code||this.st.programCode,
+      programCode:pc,
       catalogYear:student.catalog_year||this.st.catalogYear,
+      concentration:this.matchConcentration(pc,student.concentration),
       editedCourses:(student.completed||[]).map(c=>({
         code:c.code||'',title:c.title||'',
         credits:String(c.credits??''),grade:c.grade||'',term:c.term||'',

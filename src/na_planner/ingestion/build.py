@@ -9,7 +9,7 @@ def to_student_record(
     completed = [
         CompletedCourse(
             code=c.code, title=c.title, credits=c.credits,
-            grade=parse_grade(c.grade), term=c.term_label,
+            grade=parse_grade(c.grade), term=c.term_label, remedial=c.remedial,
         )
         for c in parsed.courses
     ]

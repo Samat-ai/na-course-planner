@@ -3,8 +3,10 @@ import re
 from na_planner.ingestion.models import ParsedCourse, ParsedTranscript, ParsedTransfer
 
 _TERM_RE = re.compile(r"(\d{4})-(\d{4})\s+Academic Year\s*:\s*(\w+)")
+# Course row. Type is UG (degree) or RM (remedial/developmental). Course numbers are 4 digits,
+# optionally R-prefixed for remedial courses (e.g. "ENGL R300").
 _ROW_RE = re.compile(
-    r"^([A-Z]{2,5}\s+\d{4})\s+(.*?)\s+UG\s+([A-Za-z][A-Za-z+\-]*)\s+"
+    r"^([A-Z]{2,5}\s+[A-Z]?\d{3,4})\s+(.*?)\s+(UG|RM)\s+([A-Za-z][A-Za-z+\-]*)\s+"
     r"([\d.]+)\s+[\d.]+\s+[\d.]+\s+[\d.]+\s*$"
 )
 # Transfer/exam credit row, e.g. "CLEP COLL.AL College Algebra TR T 3.00 3.00 0.00 0.00".
@@ -74,8 +76,9 @@ def parse_transcript_text(text: str) -> ParsedTranscript:
         if row:
             code = re.sub(r"\s+", " ", row.group(1)).strip()
             courses.append(ParsedCourse(
-                code=code, title=row.group(2).strip(), grade=row.group(3).strip(),
-                credits=float(row.group(4)), term_label=current_term,
+                code=code, title=row.group(2).strip(), grade=row.group(4).strip(),
+                credits=float(row.group(5)), term_label=current_term,
+                remedial=row.group(3) == "RM",
             ))
 
     if not courses:

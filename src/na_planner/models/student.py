@@ -11,6 +11,7 @@ class CompletedCourse(BaseModel):
     credits: float
     grade: Grade
     term: str | None = None
+    remedial: bool = False   # developmental course — no degree credit (catalog 5.2.11)
 
     @property
     def in_progress(self) -> bool:

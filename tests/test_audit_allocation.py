@@ -48,6 +48,20 @@ def test_earned_courses_skips_failures_and_includes_external():
     assert art.grade is None                          # external -> no letter grade
 
 
+def test_earned_courses_excludes_remedial():
+    # Remedial (developmental) courses carry no degree credit (NA catalog 5.2.11).
+    s = StudentRecord(
+        program_code="X", catalog_year=2026,
+        completed=[
+            CompletedCourse(code="ENGL R300", credits=3, grade=Grade.P, remedial=True),
+            CompletedCourse(code="COMP 1411", credits=4, grade=Grade.A),
+        ],
+    )
+    codes = {e.code for e in earned_courses(s)}
+    assert "ENGL R300" not in codes
+    assert "COMP 1411" in codes
+
+
 def test_no_double_counting_allocation():
     prog = _prog()
     # ARTS 1311 is accepted by BOTH 'hum' (specific) and 'elec' (unrestricted).

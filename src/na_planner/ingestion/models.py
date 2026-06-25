@@ -7,6 +7,7 @@ class ParsedCourse(BaseModel):
     grade: str
     credits: float
     term_label: str
+    remedial: bool = False   # developmental (RM) course — no degree credit (catalog 5.2.11)
 
 
 class ParsedTransfer(BaseModel):

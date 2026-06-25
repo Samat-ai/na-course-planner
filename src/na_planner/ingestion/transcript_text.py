@@ -6,7 +6,7 @@ _TERM_RE = re.compile(r"(\d{4})-(\d{4})\s+Academic Year\s*:\s*(\w+)")
 # Course row. Type is UG (degree) or RM (remedial/developmental). Course numbers are 4 digits,
 # optionally R-prefixed for remedial courses (e.g. "ENGL R300").
 _ROW_RE = re.compile(
-    r"^([A-Z]{2,5}\s+[A-Z]?\d{3,4})\s+(.*?)\s+(UG|RM)\s+([A-Za-z][A-Za-z+\-]*)\s+"
+    r"^([A-Z]{2,5}\s+(?:R\d{3}|\d{4}))\s+(.*?)\s+(UG|RM)\s+([A-Za-z][A-Za-z+\-]*)\s+"
     r"([\d.]+)\s+[\d.]+\s+[\d.]+\s+[\d.]+\s*$"
 )
 # Transfer/exam credit row, e.g. "CLEP COLL.AL College Algebra TR T 3.00 3.00 0.00 0.00".

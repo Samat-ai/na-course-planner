@@ -160,6 +160,24 @@ def test_projected_graduation_none_when_structured_incomplete():
     assert rec.projected_graduation is None
 
 
+def test_remedial_wip_course_is_not_pinned_or_counted():
+    # A remedial course currently in progress carries no degree credit, so it must not be
+    # pinned into the term nor assumed-complete (no credit, no prereq unlock).
+    courses = {"A 1000": Course(code="A 1000", credits=3)}
+    groups = [RequirementGroup(id="core", name="Core", kind="all_of", courses=["A 1000"])]
+    prog = Program(code="X", name="X", catalog_year=2026, total_credits_required=3,
+                   courses=courses, groups=groups)
+    student = StudentRecord(
+        program_code="X", catalog_year=2026,
+        completed=[CompletedCourse(code="ENGL R300", credits=3, grade=Grade.WIP,
+                                   term="Fall 2026", remedial=True)],
+    )
+    prefs = StudentPreferences(target_credits=15, target_season="fall", target_year=2026)
+    rec = recommend(student, prog, prefs)
+    all_codes = [c.code for t in [rec.next_term, *rec.roadmap] for c in t.courses]
+    assert "ENGL R300" not in all_codes      # remedial WIP neither pinned nor counted
+
+
 def test_recommend_stops_when_complete():
     prog = _chain_prog()
     student = StudentRecord(

@@ -140,8 +140,11 @@ _Resolve a student's reported exams (AP/CLEP/IB/SAT Subject) into NA course cred
 ### `src/na_planner/ingestion/models.py`
   - **class `ParsedCourse`**
     - fields: `code`, `title`, `grade`, `credits`, `term_label`
+  - **class `ParsedTransfer`**
+    - A transfer/exam credit row from the transcript's Transfer section (e.g. a CLEP
+    - fields: `source`, `code`, `title`, `credits`
   - **class `ParsedTranscript`**
-    - fields: `major`, `concentration`, `courses`, `warnings`
+    - fields: `major`, `concentration`, `courses`, `transfers`, `warnings`
   - **class `NoTextLayerError`**
     - Raised when a PDF has no usable text layer (image-only scan).
   - **class `UnknownGradeError`**
@@ -225,6 +228,7 @@ _Resolve a student's reported exams (AP/CLEP/IB/SAT Subject) into NA course cred
   - `load_program_by(code: str, catalog_year: int, directory: Path=PROGRAMS_DIR) -> Program`
 
 ### `src/na_planner/roadmap.py`
+  - `display_label(code: str) -> str`
   - `recommend(student: StudentRecord, program: Program, prefs: StudentPreferences, weights: dict[str, float]=DEFAULT_WEIGHTS) -> Recommendation`
 
 ### `src/na_planner/scoring.py`

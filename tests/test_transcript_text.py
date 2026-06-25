@@ -44,3 +44,34 @@ def test_skips_totals_and_headers():
     parsed = parse_transcript_text(SAMPLE)
     assert all("Totals" not in c.title for c in parsed.courses)
     assert len(parsed.courses) == 4
+
+
+TRANSFER_SAMPLE = """\
+NORTH AMERICAN UNIVERSITY
+ID : 00000000
+Student Name
+Course Number Title CR Type Grade Rpt Hrs Att Hrs Ern Hrs Gpa Qual Pts GPA
+Transfer : Transfer
+Organization : Exams
+CLEP COLL.AL College Algebra TR T 3.00 3.00 0.00 0.00
+CLEP PRE- Pre-calculus TR T 3.00 3.00 0.00 0.00
+Term Totals : 6.00 6.00 0.00 0.00 0.0000
+Cumulative Totals : 6.00 6.00 0.00 0.00 0.0000
+2024-2025 Academic Year : Fall
+Subterm : Fall Full Term
+COMP 1411 Introduction to CS I UG A 4.00 4.00 4.00 16.00
+Major(s)
+Computer Science - Conc: Software Engineering
+"""
+
+
+def test_parses_transfer_credit_section():
+    parsed = parse_transcript_text(TRANSFER_SAMPLE)
+    # transfer rows are NOT mixed into completed courses
+    assert [c.code for c in parsed.courses] == ["COMP 1411"]
+    assert len(parsed.transfers) == 2
+    t0, t1 = parsed.transfers
+    assert (t0.source, t0.code, t0.title, t0.credits) == (
+        "CLEP", "CLEP COLL.AL", "College Algebra", 3.0)
+    assert (t1.source, t1.code, t1.title, t1.credits) == (
+        "CLEP", "CLEP PRE-", "Pre-calculus", 3.0)

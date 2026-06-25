@@ -105,6 +105,27 @@ def test_roadmap_shows_elective_filler_terms_up_to_graduation():
     assert rec.projected_graduation == "Fall 2027"
 
 
+def test_electives_fill_spare_capacity_in_under_target_term():
+    # 3 required courses (9 cr) all eligible in term 1; target 15; + 6 elective credits.
+    # The electives should top up the SAME term (9 -> 15) as two 3-cr slots — not a new term.
+    courses = {c: Course(code=c, credits=3) for c in ["A 1000", "B 1000", "C 1000"]}
+    groups = [
+        RequirementGroup(id="core", name="Core", kind="all_of", courses=list(courses)),
+        RequirementGroup(id="elec", name="Electives", kind="credits_from_filter",
+                         min_credits=6, course_filter=CourseFilter(unrestricted=True)),
+    ]
+    prog = Program(code="X", name="X", catalog_year=2026, total_credits_required=15,
+                   courses=courses, groups=groups)
+    student = StudentRecord(program_code="X", catalog_year=2026)
+    prefs = StudentPreferences(target_credits=15, target_season="fall", target_year=2026)
+    rec = recommend(student, prog, prefs)
+    assert rec.roadmap == []                          # no separate elective term
+    codes = [c.code for c in rec.next_term.courses]
+    assert codes.count("ELECTIVE") == 2               # two 3-cr rows, not one bundled
+    assert rec.next_term.total_credits == 15
+    assert rec.projected_graduation == "Fall 2026"
+
+
 def test_elective_filler_carries_remainder_in_last_term():
     # 7 elective credits at 3 cr/term -> filler terms of 3, 3, 1 (remainder last).
     courses = {"A 1000": Course(code="A 1000", credits=3)}

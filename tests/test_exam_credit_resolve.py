@@ -42,6 +42,22 @@ def test_resolve_transcript_exam_credit_maps_to_na_course():
     assert not any(e.equivalent_code == "College Algebra" for e in resolved.external)
 
 
+def test_resolve_transcript_exam_credit_dedups_duplicate_na_codes():
+    # AP Calculus AB -> MATH 2314; AP Calculus BC -> MATH 2314 + MATH 2315. The shared
+    # MATH 2314 must be emitted only once (no double-counting).
+    student = StudentRecord(
+        program_code="CS-BS", catalog_year=2026,
+        external=[
+            ExternalCredit(source="AP", equivalent_code="Calculus AB", credits=3),
+            ExternalCredit(source="AP", equivalent_code="Calculus BC", credits=3),
+        ],
+    )
+    resolved = resolve_transcript_exam_credit(student, CHART)
+    codes = [e.equivalent_code for e in resolved.external]
+    assert codes.count("MATH 2314") == 1
+    assert "MATH 2315" in codes
+
+
 def test_resolve_transcript_exam_credit_skips_already_completed_course():
     # If the NA equivalent is already a completed course, the transfer shouldn't duplicate it.
     student = StudentRecord(

@@ -126,6 +126,27 @@ def test_electives_fill_spare_capacity_in_under_target_term():
     assert rec.projected_graduation == "Fall 2026"
 
 
+def test_zero_target_credits_does_not_hang():
+    # target_credits=0 must not infinite-loop the elective overflow; the remainder lands
+    # in a single term.
+    courses = {"A 1000": Course(code="A 1000", credits=3)}
+    groups = [
+        RequirementGroup(id="core", name="Core", kind="all_of", courses=["A 1000"]),
+        RequirementGroup(id="elec", name="E", kind="credits_from_filter",
+                         min_credits=6, course_filter=CourseFilter(unrestricted=True)),
+    ]
+    prog = Program(code="X", name="X", catalog_year=2026, total_credits_required=9,
+                   courses=courses, groups=groups)
+    student = StudentRecord(
+        program_code="X", catalog_year=2026,
+        completed=[CompletedCourse(code="A 1000", credits=3, grade=Grade.A)],
+    )
+    prefs = StudentPreferences(target_credits=0, target_season="fall", target_year=2026)
+    rec = recommend(student, prog, prefs)              # must return, not hang
+    all_codes = [c.code for t in [rec.next_term, *rec.roadmap] for c in t.courses]
+    assert all_codes.count("ELECTIVE") >= 1
+
+
 def test_elective_filler_carries_remainder_in_last_term():
     # 7 elective credits at 3 cr/term -> filler terms of 3, 3, 1 (remainder last).
     courses = {"A 1000": Course(code="A 1000", credits=3)}

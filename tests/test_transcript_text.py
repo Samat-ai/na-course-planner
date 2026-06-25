@@ -65,6 +65,28 @@ Computer Science - Conc: Software Engineering
 """
 
 
+REMEDIAL_SAMPLE = """\
+2024-2025 Academic Year : Fall
+Subterm : Fall Full Term
+ENGL R300 Basic Writing RM P 3.00 0.00 0.00 0.00
+COMP 1411 Introduction to CS I UG A 4.00 4.00 4.00 16.00
+Major(s)
+Computer Science - Conc: Software Engineering
+"""
+
+
+def test_parses_remedial_rows_flagged():
+    parsed = parse_transcript_text(REMEDIAL_SAMPLE)
+    codes = [c.code for c in parsed.courses]
+    assert "ENGL R300" in codes          # remedial row parsed, not dropped
+    assert "COMP 1411" in codes
+    r300 = next(c for c in parsed.courses if c.code == "ENGL R300")
+    assert r300.remedial is True
+    assert r300.grade == "P"
+    comp = next(c for c in parsed.courses if c.code == "COMP 1411")
+    assert comp.remedial is False
+
+
 def test_parses_transfer_credit_section():
     parsed = parse_transcript_text(TRANSFER_SAMPLE)
     # transfer rows are NOT mixed into completed courses

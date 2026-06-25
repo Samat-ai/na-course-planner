@@ -410,7 +410,7 @@ const app = {
       completed:s.editedCourses.filter(c=>c.code&&c.credits).map(c=>({
         code:c.code.trim(),title:(c.title||'').trim(),
         credits:parseFloat(c.credits)||0,grade:(c.grade||'F').trim(),
-        term:c.term?c.term.trim():null,
+        term:c.term?c.term.trim():null,remedial:!!c.remedial,
       })),
       external:s.editedExternals.filter(e=>e.credits).map(e=>({
         source:(e.source||'Transfer').trim(),
@@ -523,6 +523,7 @@ const app = {
       editedCourses:(student.completed||[]).map(c=>({
         code:c.code||'',title:c.title||'',
         credits:String(c.credits??''),grade:c.grade||'',term:c.term||'',
+        remedial:!!c.remedial,
       })),
       editedExternals:(student.external||[]).map(e=>({
         source:e.source||'Transfer',equivalent_code:e.equivalent_code||'',credits:String(e.credits??''),
@@ -778,7 +779,10 @@ const app = {
     const deskRows=courses.map((c,i)=>`
       <div style="display:grid;grid-template-columns:90px 1fr 70px 64px 90px 34px;gap:10px;padding:7px 22px;align-items:center;border-bottom:1px solid #F2EEE6;">
         <input value="${esc(c.code)}" data-i="${i}" data-f="code" style="border:1px solid #E8E2D6;border-radius:7px;padding:7px 9px;font-family:ui-monospace,monospace;font-size:12.5px;background:#fff;color:#1A2733;width:100%;outline:none;">
-        <input value="${esc(c.title)}" data-i="${i}" data-f="title" style="border:1px solid #E8E2D6;border-radius:7px;padding:7px 9px;font-family:'Hanken Grotesk';font-size:13px;background:#fff;color:#1A2733;width:100%;outline:none;">
+        <div style="display:flex;align-items:center;gap:6px;min-width:0;">
+          <input value="${esc(c.title)}" data-i="${i}" data-f="title" style="flex:1;min-width:0;border:1px solid #E8E2D6;border-radius:7px;padding:7px 9px;font-family:'Hanken Grotesk';font-size:13px;background:#fff;color:#1A2733;outline:none;">
+          ${c.remedial?`<span title="Remedial course — carries no degree credit (NA catalog 5.2.11)" style="flex:none;font-size:9.5px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:#8A6512;background:#F6EEDB;border:1px solid #ECDFBE;padding:2px 6px;border-radius:5px;white-space:nowrap;">No credit</span>`:''}
+        </div>
         <input value="${esc(c.credits)}" data-i="${i}" data-f="credits" style="border:1px solid #E8E2D6;border-radius:7px;padding:7px 9px;font-family:'Hanken Grotesk';font-size:13px;background:#fff;color:#1A2733;width:100%;outline:none;text-align:center;">
         <input value="${esc(c.grade)}" data-i="${i}" data-f="grade" style="border:1px solid #E8E2D6;border-radius:7px;padding:7px 9px;font-family:'Hanken Grotesk';font-size:13px;background:#fff;color:#1A2733;width:100%;outline:none;text-align:center;">
         <input value="${esc(c.term)}" data-i="${i}" data-f="term" style="border:1px solid #E8E2D6;border-radius:7px;padding:7px 9px;font-family:'Hanken Grotesk';font-size:12.5px;background:#fff;color:#1A2733;width:100%;outline:none;">
@@ -791,6 +795,7 @@ const app = {
         <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;">
           <input value="${esc(c.code)}" data-i="${i}" data-f="code" placeholder="Code" style="flex:none;width:88px;border:1px solid #E8E2D6;border-radius:7px;padding:9px;font-family:ui-monospace,monospace;font-size:12.5px;background:#fff;color:#1A2733;outline:none;">
           <input value="${esc(c.title)}" data-i="${i}" data-f="title" placeholder="Course title" style="flex:1;min-width:0;border:1px solid #E8E2D6;border-radius:7px;padding:9px;font-family:'Hanken Grotesk';font-size:13px;background:#fff;color:#1A2733;outline:none;">
+          ${c.remedial?`<span title="Remedial course — carries no degree credit (NA catalog 5.2.11)" style="flex:none;font-size:9.5px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:#8A6512;background:#F6EEDB;border:1px solid #ECDFBE;padding:2px 6px;border-radius:5px;white-space:nowrap;">No credit</span>`:''}
           <button data-rm="${i}" style="flex:none;border:none;background:transparent;color:#C4B8A6;cursor:pointer;font-size:20px;line-height:1;padding:2px 4px;">×</button>
         </div>
         <div style="display:flex;gap:8px;">

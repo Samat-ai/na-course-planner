@@ -124,8 +124,8 @@ def evaluate_group(
 def earned_courses(student: StudentRecord) -> list[EarnedCourse]:
     out: list[EarnedCourse] = []
     for c in student.completed:
-        if c.grade in NON_PASSING_GRADES:
-            continue
+        if c.grade in NON_PASSING_GRADES or c.remedial:
+            continue  # remedial courses carry no degree credit (catalog 5.2.11)
         out.append(EarnedCourse(code=c.code, credits=c.credits, grade=c.grade))
     for e in student.external:
         out.append(EarnedCourse(code=e.equivalent_code, credits=e.credits, grade=None))

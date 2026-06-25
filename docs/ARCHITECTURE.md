@@ -139,7 +139,7 @@ _Resolve a student's reported exams (AP/CLEP/IB/SAT Subject) into NA course cred
 
 ### `src/na_planner/ingestion/models.py`
   - **class `ParsedCourse`**
-    - fields: `code`, `title`, `grade`, `credits`, `term_label`
+    - fields: `code`, `title`, `grade`, `credits`, `term_label`, `remedial`
   - **class `ParsedTransfer`**
     - A transfer/exam credit row from the transcript's Transfer section (e.g. a CLEP
     - fields: `source`, `code`, `title`, `credits`
@@ -204,7 +204,7 @@ _Resolve a student's reported exams (AP/CLEP/IB/SAT Subject) into NA course cred
 
 ### `src/na_planner/models/student.py`
   - **class `CompletedCourse`**
-    - fields: `code`, `title`, `credits`, `grade`, `term`
+    - fields: `code`, `title`, `credits`, `grade`, `term`, `remedial`
     - methods: in_progress
   - **class `ExternalCredit`**
     - fields: `source`, `equivalent_code`, `credits`

@@ -24,6 +24,19 @@ def test_builds_student_record():
     assert by_code["COMP 3317"].in_progress is True
 
 
+def test_remedial_course_flagged_on_completed():
+    parsed = ParsedTranscript(courses=[
+        ParsedCourse(code="ENGL R300", title="Basic Writing", grade="P",
+                     credits=3, term_label="Fall 2024", remedial=True),
+        ParsedCourse(code="COMP 1411", title="Intro", grade="A",
+                     credits=4, term_label="Fall 2024"),
+    ])
+    rec = to_student_record(parsed, "CS-BS", 2026)
+    by = {c.code: c for c in rec.completed}
+    assert by["ENGL R300"].remedial is True
+    assert by["COMP 1411"].remedial is False
+
+
 def test_builds_external_credit_from_transfers():
     parsed = ParsedTranscript(
         courses=[],

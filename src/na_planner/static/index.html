@@ -196,6 +196,7 @@ body { background: #F2EEE6; font-family: 'Hanken Grotesk', system-ui, sans-serif
     </div>
     <div id="exams-list" style="display:flex;flex-direction:column;gap:8px;"></div>
     <div id="exam-resolution" style="margin:10px 0 18px;"></div>
+    <div id="transcript-exam-credit" style="margin:0 0 18px;"></div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
       <div style="font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#A8AEB6;">Transfer credit</div>
       <button onclick="app.addExternal()" style="background:#F2EEE6;color:#1E3A5F;border:1px solid #DDD6C9;border-radius:8px;padding:7px 13px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:'Hanken Grotesk';">+ Add transfer</button>
@@ -364,6 +365,7 @@ const CONCENTRATIONS = {
   ]
 };
 const TERMS = ['Fall 2026','Spring 2027','Fall 2027','Spring 2028','Fall 2028','Spring 2029'];
+const EXAM_SOURCES = new Set(['AP','CLEP','IB','SAT_SUBJECT']);
 const SC = {
   satisfied:{color:'#2E7D52',bg:'#E6F1EA',border:'#CDE6D7',label:'Satisfied'},
   partial:{color:'#B07A16',bg:'#F6EEDB',border:'#ECDFBE',label:'In progress'},
@@ -871,7 +873,25 @@ const app = {
 
     const extSelStyle="border:1px solid #E8E2D6;border-radius:7px;padding:9px;font-family:'Hanken Grotesk';font-size:13px;background:#fff;color:#1A2733;outline:none;";
     const catalog=s.programCourses||[];
-    el('externals-list').innerHTML=s.editedExternals.map((e,i)=>{
+    // Split credit by source: exam-type credit (from the transcript) is shown read-only near
+    // the exam section; the Transfer section is for manual transfer credit only.
+    const rows=s.editedExternals.map((e,i)=>({e,i}));
+    const examRows=rows.filter(r=>EXAM_SOURCES.has(r.e.source));
+    const transferRows=rows.filter(r=>!EXAM_SOURCES.has(r.e.source));
+
+    el('transcript-exam-credit').innerHTML=examRows.length?`
+      <div style="background:#F7FAFC;border:1px solid #E1E9F1;border-radius:12px;padding:13px 15px;">
+        <div style="font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#6B7886;margin-bottom:8px;">Exam credit (from transcript — already accepted)</div>
+        ${examRows.map(({e,i})=>`
+          <div style="display:flex;align-items:center;gap:8px;padding:3px 0;font-size:12.5px;color:#3D4A56;">
+            <span style="flex:none;font-weight:700;color:#1E3A5F;">${esc(e.source)}</span>
+            <span style="flex:1;min-width:0;">→ ${esc(e.equivalent_code)}</span>
+            <span style="flex:none;color:#5C6B79;font-weight:600;">${esc(e.credits)} cr</span>
+            <button data-ext-rm="${i}" style="border:none;background:transparent;color:#C4B8A6;cursor:pointer;font-size:16px;line-height:1;">×</button>
+          </div>`).join('')}
+      </div>`:'';
+
+    el('externals-list').innerHTML=transferRows.map(({e,i})=>{
       // Known catalog code, "General elective", or a legacy free-text value not in the catalog.
       const known=e.equivalent_code==='General elective'||catalog.some(c=>c.code===e.equivalent_code);
       const codeOpts=[`<option value="General elective"${e.equivalent_code==='General elective'?' selected':''}>General elective</option>`]
@@ -880,7 +900,7 @@ const app = {
         .join('');
       return `
       <div style="display:flex;align-items:center;gap:8px;padding:9px 12px;background:#FBFAF7;border:1px solid #EDE8DE;border-radius:9px;">
-        <input value="${esc(e.source)}" data-ext-i="${i}" data-ext-f="source" placeholder="Source" style="${extSelStyle}width:92px;flex:none;">
+        <span style="flex:none;width:84px;font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:#1E3A5F;background:#E8EEF4;border:1px solid #D7E1EC;padding:6px 8px;border-radius:6px;text-align:center;">Transfer</span>
         <select data-ext-i="${i}" data-ext-f="equivalent_code" style="${extSelStyle}flex:1;width:0;">${codeOpts}</select>
         <input value="${esc(e.credits)}" data-ext-i="${i}" data-ext-f="credits" placeholder="cr" style="${extSelStyle}width:56px;flex:none;text-align:center;">
         <button data-ext-rm="${i}" style="border:none;background:transparent;color:#C4B8A6;cursor:pointer;font-size:17px;line-height:1;">×</button>

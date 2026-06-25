@@ -1,8 +1,13 @@
 from pathlib import Path
 
-from na_planner.exam_credit import credits_for_code, resolve_exams
+from na_planner.exam_credit import (
+    credits_for_code,
+    resolve_exams,
+    resolve_transcript_exam_credit,
+)
 from na_planner.exam_credit_loader import load_chart
-from na_planner.models.student import ExamResult
+from na_planner.grades import Grade
+from na_planner.models.student import CompletedCourse, ExamResult, ExternalCredit, StudentRecord
 
 CHART = load_chart(
     Path(__file__).parents[1] / "data" / "exam_credit" / "transferability-2026.yaml"
@@ -15,6 +20,37 @@ def _exam(t, n, s):
 
 def _granted(res):
     return {c.equivalent_code: c.credits for c in res.credits}
+
+
+def test_resolve_transcript_exam_credit_maps_to_na_course():
+    # Transcript CLEP transfers carry the exam title as equivalent_code; resolve them to the
+    # real NA course via the chart (no score threshold — already accepted), leaving non-exam
+    # transfers untouched.
+    student = StudentRecord(
+        program_code="CS-BS", catalog_year=2026,
+        external=[
+            ExternalCredit(source="CLEP", equivalent_code="College Algebra", credits=3),
+            ExternalCredit(source="CLEP", equivalent_code="Pre-calculus", credits=3),
+            ExternalCredit(source="Transfer", equivalent_code="General elective", credits=3),
+        ],
+    )
+    resolved = resolve_transcript_exam_credit(student, CHART)
+    pairs = {(e.source, e.equivalent_code) for e in resolved.external}
+    assert ("CLEP", "MATH 1311") in pairs
+    assert ("CLEP", "MATH 1313") in pairs
+    assert ("Transfer", "General elective") in pairs       # non-exam untouched
+    assert not any(e.equivalent_code == "College Algebra" for e in resolved.external)
+
+
+def test_resolve_transcript_exam_credit_skips_already_completed_course():
+    # If the NA equivalent is already a completed course, the transfer shouldn't duplicate it.
+    student = StudentRecord(
+        program_code="CS-BS", catalog_year=2026,
+        completed=[CompletedCourse(code="MATH 1311", credits=3, grade=Grade.A)],
+        external=[ExternalCredit(source="CLEP", equivalent_code="College Algebra", credits=3)],
+    )
+    resolved = resolve_transcript_exam_credit(student, CHART)
+    assert not any(e.equivalent_code == "MATH 1311" for e in resolved.external)
 
 
 def test_credits_for_code_follows_na_convention():

@@ -23,5 +23,6 @@ def to_student_record(
     ]
     return StudentRecord(
         program_code=program_code, catalog_year=catalog_year,
+        concentration=parsed.concentration,
         completed=completed, external=external,
     )

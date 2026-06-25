@@ -75,9 +75,15 @@ def evaluate_group(
             max(0, group.min_count - len(pool_counting)) if group.min_count else 0
         )
         status = "satisfied" if satisfied else ("partial" if pool_counting else "unmet")
+        # Count-based groups (min_count, no min_credits) still need a credit target for display;
+        # NA choice pools are 3-credit courses, so min_count*3 is the required credits.
+        credits_required = (
+            group.min_credits if group.min_credits is not None
+            else (group.min_count * 3.0 if group.min_count else 0.0)
+        )
         return GroupStatus(
             group_id=group.id, name=group.name, status=status,
-            credits_required=group.min_credits or 0,
+            credits_required=credits_required,
             credits_applied=sum(c.credits for c in pool_counting),
             courses_required=group.min_count, courses_applied=len(pool_counting),
             satisfied_by=satisfied_by, remaining_choices=remaining,
@@ -124,7 +130,9 @@ def evaluate_group(
         )
         return GroupStatus(
             group_id=group.id, name=group.name, status=status,
-            credits_required=0,
+            # No track declared yet: show the smallest track's credits as the target so the
+            # card reads in credits rather than "0 / 0 cr".
+            credits_required=min((s.credits_required for s in sub_statuses), default=0.0),
             credits_applied=sum(s.credits_applied for s in satisfied_subs),
             courses_required=group.choose_groups, courses_applied=len(satisfied_subs),
             satisfied_by=[s.group_id for s in satisfied_subs], remaining_choices=remaining,

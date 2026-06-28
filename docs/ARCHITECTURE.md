@@ -89,7 +89,7 @@ py -3 scripts/gen_architecture.py                        # refresh module map be
 
 ### `src/na_planner/api/schemas.py`
   - **class `AuditRequest`**
-    - fields: `student`, `program_code`, `catalog_year`, `declared_concentration`
+    - fields: `student`, `program_code`, `catalog_year`, `declared_concentration`, `target_term`
   - **class `RecommendRequest`**
     - fields: `student`, `program_code`, `catalog_year`, `preferences`
   - **class `ParseTextRequest`**
@@ -98,9 +98,9 @@ py -3 scripts/gen_architecture.py                        # refresh module map be
 ### `src/na_planner/audit.py`
   - `course_matches_filter(code: str, filt: CourseFilter, program: Program) -> bool`
   - `evaluate_group(group: RequirementGroup, applied: list[EarnedCourse], program: Program, declared: str | None=None) -> GroupStatus`
-  - `earned_courses(student: StudentRecord) -> list[EarnedCourse]`
+  - `earned_courses(student: StudentRecord, target_term: str | None=None) -> list[EarnedCourse]`
   - `allocate(earned: list[EarnedCourse], program: Program) -> dict[str, list[EarnedCourse]]`
-  - `audit(student: StudentRecord, program: Program, declared_concentration: str | None=None) -> AuditResult`
+  - `audit(student: StudentRecord, program: Program, declared_concentration: str | None=None, target_term: str | None=None) -> AuditResult`
 
 ### `src/na_planner/catalog_linter.py`
   - `lint_program(program: Program) -> list[str]`

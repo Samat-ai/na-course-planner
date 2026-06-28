@@ -85,7 +85,8 @@ def create_app() -> FastAPI:
         except KeyError as e:
             raise HTTPException(status_code=404, detail=str(e)) from e
         student = _with_exam_credit(req.student, req.catalog_year)
-        return audit(student, program, declared_concentration=req.declared_concentration)
+        return audit(student, program, declared_concentration=req.declared_concentration,
+                     target_term=req.target_term)
 
     @app.post("/recommend", response_model=Recommendation)
     def recommend_endpoint(req: RecommendRequest) -> Recommendation:

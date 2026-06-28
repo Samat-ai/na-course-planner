@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from na_planner.api.export import plan_to_json, plan_to_pdf
 from na_planner.api.schemas import AuditRequest, ParseTextRequest, RecommendRequest
 from na_planner.audit import audit
-from na_planner.exam_credit import merge_exam_credit
+from na_planner.exam_credit import merge_exam_credit, resolve_transcript_exam_credit
 from na_planner.exam_credit_loader import load_chart_for
 from na_planner.ingestion.build import to_student_record
 from na_planner.ingestion.models import NoTextLayerError
@@ -35,6 +35,18 @@ def create_app() -> FastAPI:
     @app.get("/programs")
     def programs() -> list[dict]:
         return list_programs()
+
+    @app.get("/programs/{code}/courses")
+    def program_courses(code: str, catalog_year: int = 2026) -> list[dict]:
+        # Catalog course codes + titles for the structured transfer-credit dropdown.
+        try:
+            program = load_program_by(code, catalog_year)
+        except KeyError as e:
+            raise HTTPException(status_code=404, detail=str(e)) from e
+        return [
+            {"code": c.code, "title": c.title}
+            for c in sorted(program.courses.values(), key=lambda c: c.code)
+        ]
 
     @app.get("/exam-chart", response_model=ExamCreditChart)
     def exam_chart(catalog_year: int = 2026) -> ExamCreditChart:
@@ -73,7 +85,8 @@ def create_app() -> FastAPI:
         except KeyError as e:
             raise HTTPException(status_code=404, detail=str(e)) from e
         student = _with_exam_credit(req.student, req.catalog_year)
-        return audit(student, program)
+        return audit(student, program, declared_concentration=req.declared_concentration,
+                     target_term=req.target_term)
 
     @app.post("/recommend", response_model=Recommendation)
     def recommend_endpoint(req: RecommendRequest) -> Recommendation:
@@ -84,10 +97,22 @@ def create_app() -> FastAPI:
         student = _with_exam_credit(req.student, req.catalog_year)
         return recommend(student, program, req.preferences)
 
+    def _resolve_transfers(student: StudentRecord, catalog_year: int) -> StudentRecord:
+        # Map already-accepted transcript exam credit (CLEP/AP/IB/SAT) to NA courses so it
+        # counts toward real requirements. Absence of a chart leaves transfers as-is.
+        if not student.external:
+            return student
+        try:
+            chart = load_chart_for(catalog_year)
+        except KeyError:
+            return student
+        return resolve_transcript_exam_credit(student, chart)
+
     @app.post("/parse/text", response_model=StudentRecord)
     def parse_text(req: ParseTextRequest) -> StudentRecord:
         parsed = parse_transcript_text(req.text)
-        return to_student_record(parsed, req.program_code, req.catalog_year)
+        student = to_student_record(parsed, req.program_code, req.catalog_year)
+        return _resolve_transfers(student, req.catalog_year)
 
     @app.post("/parse/pdf", response_model=StudentRecord)
     def parse_pdf(
@@ -100,7 +125,8 @@ def create_app() -> FastAPI:
             parsed = parse_transcript_pdf(data)
         except NoTextLayerError as e:
             raise HTTPException(status_code=422, detail=str(e)) from e
-        return to_student_record(parsed, program_code, catalog_year)
+        student = to_student_record(parsed, program_code, catalog_year)
+        return _resolve_transfers(student, catalog_year)
 
     @app.post("/export/json")
     def export_json(rec: Recommendation) -> Response:

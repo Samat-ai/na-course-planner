@@ -196,6 +196,7 @@ body { background: #F2EEE6; font-family: 'Hanken Grotesk', system-ui, sans-serif
     </div>
     <div id="exams-list" style="display:flex;flex-direction:column;gap:8px;"></div>
     <div id="exam-resolution" style="margin:10px 0 18px;"></div>
+    <div id="transcript-exam-credit" style="margin:0 0 18px;"></div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
       <div style="font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#A8AEB6;">Transfer credit</div>
       <button onclick="app.addExternal()" style="background:#F2EEE6;color:#1E3A5F;border:1px solid #DDD6C9;border-radius:8px;padding:7px 13px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:'Hanken Grotesk';">+ Add transfer</button>
@@ -364,6 +365,7 @@ const CONCENTRATIONS = {
   ]
 };
 const TERMS = ['Fall 2026','Spring 2027','Fall 2027','Spring 2028','Fall 2028','Spring 2029'];
+const EXAM_SOURCES = new Set(['AP','CLEP','IB','SAT_SUBJECT']);
 const SC = {
   satisfied:{color:'#2E7D52',bg:'#E6F1EA',border:'#CDE6D7',label:'Satisfied'},
   partial:{color:'#B07A16',bg:'#F6EEDB',border:'#ECDFBE',label:'In progress'},
@@ -386,7 +388,7 @@ const app = {
     programs:[], programCode:'CS-BS', catalogYear:2026, concentration:'',
     prefs:{targetCredits:15, pace:'full', term:'Fall 2026', difficulty:'balanced'},
     student:null, editedCourses:[], editedExternals:[], editedExams:[], examChart:null,
-    examResolution:null, auditResult:null, recommendation:null,
+    examResolution:null, auditResult:null, recommendation:null, programCourses:[],
   },
   _ct:null, _rt:null,
 
@@ -410,7 +412,7 @@ const app = {
       completed:s.editedCourses.filter(c=>c.code&&c.credits).map(c=>({
         code:c.code.trim(),title:(c.title||'').trim(),
         credits:parseFloat(c.credits)||0,grade:(c.grade||'F').trim(),
-        term:c.term?c.term.trim():null,
+        term:c.term?c.term.trim():null,remedial:!!c.remedial,
       })),
       external:s.editedExternals.filter(e=>e.credits).map(e=>({
         source:(e.source||'Transfer').trim(),
@@ -515,14 +517,30 @@ const app = {
     }
   },
 
+  matchConcentration(programCode,name){
+    if(!name)return this.st.concentration||'';
+    const list=CONCENTRATIONS[programCode]||[];
+    const n=name.trim().toLowerCase();
+    const exact=list.find(c=>c.id&&c.name.toLowerCase()===n);
+    if(exact)return exact.id;
+    // No exact match: prefer the longest substring match to avoid e.g. "Cyber" eclipsing
+    // "Cybersecurity".
+    const part=list.filter(c=>c.id&&(c.name.toLowerCase().includes(n)||n.includes(c.name.toLowerCase())))
+      .sort((a,b)=>b.name.length-a.name.length)[0];
+    return part?part.id:(this.st.concentration||'');
+  },
+
   applyStudent(student){
+    const pc=student.program_code||this.st.programCode;
     this.set({
       student,
-      programCode:student.program_code||this.st.programCode,
+      programCode:pc,
       catalogYear:student.catalog_year||this.st.catalogYear,
+      concentration:this.matchConcentration(pc,student.concentration),
       editedCourses:(student.completed||[]).map(c=>({
         code:c.code||'',title:c.title||'',
         credits:String(c.credits??''),grade:c.grade||'',term:c.term||'',
+        remedial:!!c.remedial,
       })),
       editedExternals:(student.external||[]).map(e=>({
         source:e.source||'Transfer',equivalent_code:e.equivalent_code||'',credits:String(e.credits??''),
@@ -531,19 +549,21 @@ const app = {
         exam_type:e.exam_type||'AP',exam_name:e.exam_name||'',score:String(e.score??''),
       })),
     });
+    this.loadProgramCourses();
   },
 
   showErr(id,msg){const e=el(id);if(e){e.textContent=msg;e.style.display='';}},
 
   // ---- Confirm ----
-  onProgramChange(v){this.set({programCode:v,concentration:''});},
-  onYearChange(v){this.set({catalogYear:parseInt(v,10)});},
+  onProgramChange(v){this.set({programCode:v,concentration:''});this.loadProgramCourses();},
+  onYearChange(v){this.set({catalogYear:parseInt(v,10)});this.loadProgramCourses();},
   onConcChange(v){this.set({concentration:v});},
   addCourse(){this.set(s=>({editedCourses:[...s.editedCourses,{code:'',title:'',credits:'',grade:'',term:''}]}));},
   removeCourse(i){this.set(s=>({editedCourses:s.editedCourses.filter((_,j)=>j!==i)}));},
   editCourse(i,f,v){this.set(s=>{const c=s.editedCourses.slice();c[i]={...c[i],[f]:v};return{editedCourses:c};});},
-  addExternal(){this.set(s=>({editedExternals:[...s.editedExternals,{source:'Transfer',equivalent_code:'New credit',credits:'3'}]}));},
+  addExternal(){this.set(s=>({editedExternals:[...s.editedExternals,{source:'Transfer',equivalent_code:'General elective',credits:'3'}]}));},
   removeExternal(i){this.set(s=>({editedExternals:s.editedExternals.filter((_,j)=>j!==i)}));},
+  editExternal(i,f,v){this.set(s=>{const x=s.editedExternals.slice();x[i]={...x[i],[f]:v};return{editedExternals:x};});},
   addExam(){this.set(s=>{const names=this.examNames('AP');return{editedExams:[...s.editedExams,{exam_type:'AP',exam_name:names[0]||'',score:''}]};});},
   removeExam(i){this.set(s=>({editedExams:s.editedExams.filter((_,j)=>j!==i)}));this.refreshExamResolution();},
   editExam(i,f,v){this.set(s=>{const x=s.editedExams.slice();x[i]={...x[i],[f]:v};
@@ -570,7 +590,7 @@ const app = {
     try{
       const student=this.buildRec();
       const [audit,rec]=await Promise.all([
-        this.post('/audit',{student,program_code:this.st.programCode,catalog_year:this.st.catalogYear}),
+        this.post('/audit',{student,program_code:this.st.programCode,catalog_year:this.st.catalogYear,declared_concentration:this.st.concentration||null,target_term:this.st.prefs.term}),
         this.post('/recommend',{student,program_code:this.st.programCode,catalog_year:this.st.catalogYear,preferences:this.buildPrefs()}),
       ]);
       this.set({auditResult:audit,recommendation:rec,student,planLoading:false,screen:'plan'});scrollTo(0,0);
@@ -593,12 +613,12 @@ const app = {
     if(!this.st.student)return;
     this.set({planLoading:true});
     try{
-      const rec=await this.post('/recommend',{
-        student:this.buildRec(),
-        program_code:this.st.programCode,catalog_year:this.st.catalogYear,
-        preferences:this.buildPrefs(),
-      });
-      this.set({recommendation:rec,planLoading:false});
+      const student=this.buildRec();
+      const [audit,rec]=await Promise.all([
+        this.post('/audit',{student,program_code:this.st.programCode,catalog_year:this.st.catalogYear,declared_concentration:this.st.concentration||null,target_term:this.st.prefs.term}),
+        this.post('/recommend',{student,program_code:this.st.programCode,catalog_year:this.st.catalogYear,preferences:this.buildPrefs()}),
+      ]);
+      this.set({auditResult:audit,recommendation:rec,planLoading:false});
     }catch{this.set({planLoading:false});}
   },
 
@@ -636,6 +656,14 @@ const app = {
       const r=await this.req('/exam-chart');
       this.set({examChart:await r.json()});
     }catch{ /* chart unavailable — exam entry falls back to no live preview */ }
+  },
+
+  // Catalog course codes for the transfer-credit dropdown (validated equivalencies).
+  async loadProgramCourses(){
+    try{
+      const r=await this.req(`/programs/${encodeURIComponent(this.st.programCode)}/courses?catalog_year=${this.st.catalogYear}`);
+      this.set({programCourses:await r.json()});
+    }catch{ this.set({programCourses:[]}); /* fall back to General elective only */ }
   },
 
   examEntry(type,name){
@@ -762,13 +790,16 @@ const app = {
   renderConfirm(){
     const s=this.st;
     const courses=s.editedCourses;
-    const cr=courses.reduce((a,c)=>a+(parseFloat(c.credits)||0),0);
+    const cr=courses.reduce((a,c)=>a+(c.remedial?0:(parseFloat(c.credits)||0)),0);
     el('course-count').textContent=`${courses.length} course${courses.length!==1?'s':''} parsed · ${cr} credits`;
 
     const deskRows=courses.map((c,i)=>`
       <div style="display:grid;grid-template-columns:90px 1fr 70px 64px 90px 34px;gap:10px;padding:7px 22px;align-items:center;border-bottom:1px solid #F2EEE6;">
         <input value="${esc(c.code)}" data-i="${i}" data-f="code" style="border:1px solid #E8E2D6;border-radius:7px;padding:7px 9px;font-family:ui-monospace,monospace;font-size:12.5px;background:#fff;color:#1A2733;width:100%;outline:none;">
-        <input value="${esc(c.title)}" data-i="${i}" data-f="title" style="border:1px solid #E8E2D6;border-radius:7px;padding:7px 9px;font-family:'Hanken Grotesk';font-size:13px;background:#fff;color:#1A2733;width:100%;outline:none;">
+        <div style="display:flex;align-items:center;gap:6px;min-width:0;">
+          <input value="${esc(c.title)}" data-i="${i}" data-f="title" style="flex:1;min-width:0;border:1px solid #E8E2D6;border-radius:7px;padding:7px 9px;font-family:'Hanken Grotesk';font-size:13px;background:#fff;color:#1A2733;outline:none;">
+          ${c.remedial?`<span title="Remedial course — carries no degree credit (NA catalog 5.2.11)" style="flex:none;font-size:9.5px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:#8A6512;background:#F6EEDB;border:1px solid #ECDFBE;padding:2px 6px;border-radius:5px;white-space:nowrap;">No credit</span>`:''}
+        </div>
         <input value="${esc(c.credits)}" data-i="${i}" data-f="credits" style="border:1px solid #E8E2D6;border-radius:7px;padding:7px 9px;font-family:'Hanken Grotesk';font-size:13px;background:#fff;color:#1A2733;width:100%;outline:none;text-align:center;">
         <input value="${esc(c.grade)}" data-i="${i}" data-f="grade" style="border:1px solid #E8E2D6;border-radius:7px;padding:7px 9px;font-family:'Hanken Grotesk';font-size:13px;background:#fff;color:#1A2733;width:100%;outline:none;text-align:center;">
         <input value="${esc(c.term)}" data-i="${i}" data-f="term" style="border:1px solid #E8E2D6;border-radius:7px;padding:7px 9px;font-family:'Hanken Grotesk';font-size:12.5px;background:#fff;color:#1A2733;width:100%;outline:none;">
@@ -781,6 +812,7 @@ const app = {
         <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;">
           <input value="${esc(c.code)}" data-i="${i}" data-f="code" placeholder="Code" style="flex:none;width:88px;border:1px solid #E8E2D6;border-radius:7px;padding:9px;font-family:ui-monospace,monospace;font-size:12.5px;background:#fff;color:#1A2733;outline:none;">
           <input value="${esc(c.title)}" data-i="${i}" data-f="title" placeholder="Course title" style="flex:1;min-width:0;border:1px solid #E8E2D6;border-radius:7px;padding:9px;font-family:'Hanken Grotesk';font-size:13px;background:#fff;color:#1A2733;outline:none;">
+          ${c.remedial?`<span title="Remedial course — carries no degree credit (NA catalog 5.2.11)" style="flex:none;font-size:9.5px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:#8A6512;background:#F6EEDB;border:1px solid #ECDFBE;padding:2px 6px;border-radius:5px;white-space:nowrap;">No credit</span>`:''}
           <button data-rm="${i}" style="flex:none;border:none;background:transparent;color:#C4B8A6;cursor:pointer;font-size:20px;line-height:1;padding:2px 4px;">×</button>
         </div>
         <div style="display:flex;gap:8px;">
@@ -825,23 +857,60 @@ const app = {
       };
       const tc={ok:'#1E7A52',warn:'#B4541E',muted:'#9AA3AC'};
       const items=rz.diagnostics.map(d=>{const[t,tone]=(line[d.status]||(x=>[x.exam_name,'muted']))(d);
-        return `<div style="font-size:12.5px;color:${tc[tone]};padding:1px 0;">• ${esc(t)}</div>`;}).join('');
+        // Neutral text for granted rows; color only the rows that need attention.
+        const txt=tone==='ok'?'#3D4A56':tc[tone];
+        return `<div style="display:flex;align-items:flex-start;gap:8px;padding:3px 0;">
+          <span style="flex:none;width:6px;height:6px;border-radius:50%;background:${tc[tone]};margin-top:6px;"></span>
+          <span style="font-size:12.5px;line-height:1.45;color:${txt};">${esc(t)}</span>
+        </div>`;}).join('');
       el('exam-resolution').innerHTML=`
-        <div style="background:#F4F7FB;border:1px solid #DCE6F0;border-radius:9px;padding:10px 12px;">
-          <div style="font-size:12px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:#1E3A5F;margin-bottom:5px;">Resolved exam credit · ${granted} cr</div>
-          ${items}
+        <div style="background:#F7FAFC;border:1px solid #E1E9F1;border-radius:12px;padding:13px 15px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <div style="font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#6B7886;">Resolved exam credit</div>
+            <span style="font-size:11.5px;font-weight:700;color:#1E7A52;background:#E4F2EA;border:1px solid #C3E2D1;padding:3px 9px;border-radius:20px;">+${granted} cr</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:1px;">${items}</div>
         </div>`;
     }else{
       el('exam-resolution').innerHTML='';
     }
 
-    el('externals-list').innerHTML=s.editedExternals.map((e,i)=>`
-      <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:#FBFAF7;border:1px solid #EDE8DE;border-radius:9px;">
-        <span style="font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;background:#E8EEF4;color:#1E3A5F;padding:3px 8px;border-radius:5px;">${esc(e.source)}</span>
-        <span style="flex:1;font-size:13.5px;color:#1A2733;">${esc(e.equivalent_code)}</span>
-        <span style="font-size:13px;color:#5C6B79;font-weight:600;">${esc(e.credits)} cr</span>
+    const extSelStyle="border:1px solid #E8E2D6;border-radius:7px;padding:9px;font-family:'Hanken Grotesk';font-size:13px;background:#fff;color:#1A2733;outline:none;";
+    const catalog=s.programCourses||[];
+    // Split credit by source: exam-type credit (from the transcript) is shown read-only near
+    // the exam section; the Transfer section is for manual transfer credit only.
+    const rows=s.editedExternals.map((e,i)=>({e,i}));
+    const examRows=rows.filter(r=>EXAM_SOURCES.has(r.e.source));
+    const transferRows=rows.filter(r=>!EXAM_SOURCES.has(r.e.source));
+
+    el('transcript-exam-credit').innerHTML=examRows.length?`
+      <div style="background:#F7FAFC;border:1px solid #E1E9F1;border-radius:12px;padding:13px 15px;">
+        <div style="font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#6B7886;margin-bottom:8px;">Exam credit (from transcript — already accepted)</div>
+        ${examRows.map(({e,i})=>`
+          <div style="display:flex;align-items:center;gap:8px;padding:3px 0;font-size:12.5px;color:#3D4A56;">
+            <span style="flex:none;font-weight:700;color:#1E3A5F;">${esc(e.source)}</span>
+            <span style="flex:1;min-width:0;">→ ${esc(e.equivalent_code)}</span>
+            <span style="flex:none;color:#5C6B79;font-weight:600;">${esc(e.credits)} cr</span>
+            <button data-ext-rm="${i}" style="border:none;background:transparent;color:#C4B8A6;cursor:pointer;font-size:16px;line-height:1;">×</button>
+          </div>`).join('')}
+      </div>`:'';
+
+    el('externals-list').innerHTML=transferRows.map(({e,i})=>{
+      // Known catalog code, "General elective", or a legacy free-text value not in the catalog.
+      const known=e.equivalent_code==='General elective'||catalog.some(c=>c.code===e.equivalent_code);
+      const codeOpts=[`<option value="General elective"${e.equivalent_code==='General elective'?' selected':''}>General elective</option>`]
+        .concat(catalog.map(c=>`<option value="${esc(c.code)}"${c.code===e.equivalent_code?' selected':''}>${esc(c.code)}${c.title?' — '+esc(c.title):''}</option>`))
+        .concat(known?[]:[`<option value="${esc(e.equivalent_code)}" selected>${esc(e.equivalent_code)} (unmatched)</option>`])
+        .join('');
+      return `
+      <div style="display:flex;align-items:center;gap:8px;padding:9px 12px;background:#FBFAF7;border:1px solid #EDE8DE;border-radius:9px;">
+        <span style="flex:none;width:84px;font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:#1E3A5F;background:#E8EEF4;border:1px solid #D7E1EC;padding:6px 8px;border-radius:6px;text-align:center;">Transfer</span>
+        <select data-ext-i="${i}" data-ext-f="equivalent_code" style="${extSelStyle}flex:1;width:0;">${codeOpts}</select>
+        <input value="${esc(e.credits)}" data-ext-i="${i}" data-ext-f="credits" placeholder="cr" style="${extSelStyle}width:56px;flex:none;text-align:center;">
         <button data-ext-rm="${i}" style="border:none;background:transparent;color:#C4B8A6;cursor:pointer;font-size:17px;line-height:1;">×</button>
-      </div>`).join('');
+      </div>`;
+    }).join('')
+      ||`<div style="font-size:12.5px;color:#B3A597;padding:4px 2px;">No transfer credit added.</div>`;
 
     this.renderProgramDropdowns();
 
@@ -923,13 +992,16 @@ const app = {
   renderGroups(audit,comp){
     const e=el('groups-list');if(!e)return;
     const groups=comp
-      ?audit.groups.map(g=>({...g,status:'satisfied',credits_applied:g.credits_required,remaining_choices:[]}))
+      ?audit.groups.map(g=>({...g,status:'satisfied',credits_applied:g.credits_required,courses_applied:g.courses_required,remaining_choices:[]}))
       :audit.groups;
     e.innerHTML=groups.map(g=>{
       const c=SC[g.status]||SC.unmet;
-      const pct=Math.min(100,Math.round((g.credits_applied/g.credits_required)*100));
+      // Always show credits (with a divide-by-zero guard).
+      const pct=g.status==='satisfied'?100:(g.credits_required>0?Math.min(100,Math.round((g.credits_applied/g.credits_required)*100)):0);
+      const progressLabel=`${g.credits_applied} / ${g.credits_required} cr`;
       const sb=g.satisfied_by&&g.satisfied_by.length?g.satisfied_by.join(', '):'—';
-      const rem=g.remaining_choices&&g.remaining_choices.length?g.remaining_choices.join(', '):'';
+      // Don't list "still need" courses for a group that's already satisfied (optional extras).
+      const rem=(g.status!=='satisfied'&&g.remaining_choices&&g.remaining_choices.length)?g.remaining_choices.join(', '):'';
       return `<div style="background:#fff;border:1px solid #E7E1D6;border-radius:13px;padding:18px 20px;box-shadow:0 1px 2px rgba(26,39,51,.03);">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px;">
           <div style="font-size:15px;font-weight:600;color:#1A2733;line-height:1.3;">${esc(g.name)}</div>
@@ -940,7 +1012,7 @@ const app = {
           <div style="flex:1;height:7px;border-radius:6px;background:#EDE8DE;overflow:hidden;">
             <div style="height:100%;width:${pct}%;background:${c.color};border-radius:6px;transition:width .6s ease;"></div>
           </div>
-          <div style="font-size:12.5px;color:#5C6B79;font-weight:600;white-space:nowrap;">${g.credits_applied} / ${g.credits_required} cr</div>
+          <div style="font-size:12.5px;color:#5C6B79;font-weight:600;white-space:nowrap;">${progressLabel}</div>
         </div>
         <div style="font-size:12.5px;color:#7A8794;line-height:1.5;"><span style="color:#9AA3AC;">Counted:</span> ${esc(sb)}</div>
         ${rem?`<div style="font-size:12.5px;color:#7A8794;line-height:1.5;margin-top:4px;"><span style="color:#9AA3AC;">Still need:</span> ${esc(rem)}</div>`:''}
@@ -961,7 +1033,8 @@ const app = {
         </div>
         <div style="flex:1;min-width:0;">
           <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;">
-            <span style="font-family:ui-monospace,monospace;font-size:13px;font-weight:600;color:#1E3A5F;">${esc(c.code)}</span>
+            <span style="font-family:ui-monospace,monospace;font-size:13px;font-weight:600;color:#1E3A5F;">${esc(c.code==='ELECTIVE'?'Elective':c.code)}</span>
+            ${c.registered?`<span style="font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#1E7A52;background:#E4F2EA;border:1px solid #C3E2D1;padding:2px 7px;border-radius:20px;">Registered</span>`:''}
           </div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">${reasons}</div>
         </div>
@@ -981,11 +1054,13 @@ const app = {
     const grad=rec.projected_graduation||'TBD';
     e.innerHTML=roadmap.map((t,ti)=>{
       const first=ti===0;
-      const courses=(t.courses||[]).map(c=>`
+      const courses=(t.courses||[]).map(c=>{
+        const label=c.code==='ELECTIVE'?'Elective':c.code;
+        return `
         <div style="display:flex;align-items:baseline;gap:7px;">
           <span style="flex:none;width:5px;height:5px;border-radius:50%;background:#1E3A5F;margin-top:6px;"></span>
-          <span style="font-family:ui-monospace,monospace;font-size:11px;font-weight:600;color:#5C6B79;">${esc(c.code)}</span>
-        </div>`).join('');
+          <span style="font-family:ui-monospace,monospace;font-size:11px;font-weight:600;color:#5C6B79;">${esc(label)}</span>
+        </div>`;}).join('');
       return `<div style="flex:none;width:185px;border:1px solid ${first?'#1E3A5F':'#EAE4D8'};border-radius:12px;padding:14px;background:${first?'#F4F7FB':'#fff'};">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
           <div style="font-size:13.5px;font-weight:700;color:#1A2733;">${esc(t.label)}</div>
@@ -1024,10 +1099,16 @@ const app = {
 
     // Event delegation — externals
     const ext=el('externals-list');
-    if(ext)ext.addEventListener('click',e=>{
-      const b=e.target.closest('[data-ext-rm]');
-      if(b)this.removeExternal(parseInt(b.dataset.extRm,10));
-    });
+    if(ext){
+      ext.addEventListener('change',e=>{
+        const inp=e.target.closest('[data-ext-i][data-ext-f]');
+        if(inp)this.editExternal(parseInt(inp.dataset.extI,10),inp.dataset.extF,inp.value);
+      });
+      ext.addEventListener('click',e=>{
+        const b=e.target.closest('[data-ext-rm]');
+        if(b)this.removeExternal(parseInt(b.dataset.extRm,10));
+      });
+    }
 
     // Event delegation — exams
     const exl=el('exams-list');

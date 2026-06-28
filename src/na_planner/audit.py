@@ -33,7 +33,8 @@ def course_matches_filter(code: str, filt: CourseFilter, program: Program) -> bo
 
 
 def evaluate_group(
-    group: RequirementGroup, applied: list[EarnedCourse], program: Program
+    group: RequirementGroup, applied: list[EarnedCourse], program: Program,
+    declared: str | None = None,
 ) -> GroupStatus:
     min_grade = _effective_min_grade(group, program)
     counting = [c for c in applied if _counts(c, min_grade)]
@@ -74,9 +75,15 @@ def evaluate_group(
             max(0, group.min_count - len(pool_counting)) if group.min_count else 0
         )
         status = "satisfied" if satisfied else ("partial" if pool_counting else "unmet")
+        # Count-based groups (min_count, no min_credits) still need a credit target for display;
+        # NA choice pools are 3-credit courses, so min_count*3 is the required credits.
+        credits_required = (
+            group.min_credits if group.min_credits is not None
+            else (group.min_count * 3.0 if group.min_count else 0.0)
+        )
         return GroupStatus(
             group_id=group.id, name=group.name, status=status,
-            credits_required=group.min_credits or 0,
+            credits_required=credits_required,
             credits_applied=sum(c.credits for c in pool_counting),
             courses_required=group.min_count, courses_applied=len(pool_counting),
             satisfied_by=satisfied_by, remaining_choices=remaining,
@@ -101,6 +108,18 @@ def evaluate_group(
         )
 
     if group.kind == "choose_group":
+        # When the student has declared one of the tracks, report that track's progress
+        # (its real course requirements) instead of listing every track as "still need".
+        declared_sub = next((s for s in group.subgroups if s.id == declared), None)
+        if declared_sub is not None:
+            sub = evaluate_group(declared_sub, applied, program)
+            return GroupStatus(
+                group_id=group.id, name=group.name, status=sub.status,
+                credits_required=sub.credits_required, credits_applied=sub.credits_applied,
+                courses_required=sub.courses_required, courses_applied=sub.courses_applied,
+                satisfied_by=sub.satisfied_by, remaining_choices=sub.remaining_choices,
+                choose_remaining=sub.choose_remaining,
+            )
         sub_statuses = [evaluate_group(sub, applied, program) for sub in group.subgroups]
         satisfied_subs = [s for s in sub_statuses if s.status == "satisfied"]
         satisfied = len(satisfied_subs) >= group.choose_groups
@@ -111,7 +130,9 @@ def evaluate_group(
         )
         return GroupStatus(
             group_id=group.id, name=group.name, status=status,
-            credits_required=0,
+            # No track declared yet: show the smallest track's credits as the target so the
+            # card reads in credits rather than "0 / 0 cr".
+            credits_required=min((s.credits_required for s in sub_statuses), default=0.0),
             credits_applied=sum(s.credits_applied for s in satisfied_subs),
             courses_required=group.choose_groups, courses_applied=len(satisfied_subs),
             satisfied_by=[s.group_id for s in satisfied_subs], remaining_choices=remaining,
@@ -121,10 +142,37 @@ def evaluate_group(
     raise ValueError(f"evaluate_group does not handle kind={group.kind!r}")
 
 
-def earned_courses(student: StudentRecord) -> list[EarnedCourse]:
+_SEASON_ORDER = {"spring": 0, "summer": 1, "fall": 2}
+
+
+def _term_key(label: str | None) -> tuple[int, int] | None:
+    """Sortable (year, season) key for a term label like 'Summer 2026'; None if unparseable."""
+    if not label:
+        return None
+    parts = label.split()
+    if len(parts) != 2 or parts[0].lower() not in _SEASON_ORDER:
+        return None
+    try:
+        return (int(parts[1]), _SEASON_ORDER[parts[0].lower()])
+    except ValueError:
+        return None
+
+
+def earned_courses(
+    student: StudentRecord, target_term: str | None = None
+) -> list[EarnedCourse]:
     out: list[EarnedCourse] = []
+    target_key = _term_key(target_term)
     for c in student.completed:
+        if c.remedial:
+            continue  # remedial courses carry no degree credit (catalog 5.2.11)
         if c.grade in NON_PASSING_GRADES:
+            # A course in progress in a term *before* the target term (currently being taken,
+            # finishing first) counts as in-progress credit; everything else not-yet-earned.
+            ck = _term_key(c.term)
+            if (c.in_progress and target_key is not None
+                    and ck is not None and ck < target_key):
+                out.append(EarnedCourse(code=c.code, credits=c.credits, grade=None))
             continue
         out.append(EarnedCourse(code=c.code, credits=c.credits, grade=c.grade))
     for e in student.external:
@@ -178,11 +226,15 @@ def allocate(
     return result
 
 
-def audit(student: StudentRecord, program: Program) -> AuditResult:
-    earned = earned_courses(student)
+def audit(
+    student: StudentRecord, program: Program, declared_concentration: str | None = None,
+    target_term: str | None = None,
+) -> AuditResult:
+    earned = earned_courses(student, target_term=target_term)
     alloc = allocate(earned, program)
     statuses = [
-        evaluate_group(g, alloc.get(g.id, []), program) for g in program.groups
+        evaluate_group(g, alloc.get(g.id, []), program, declared=declared_concentration)
+        for g in program.groups
     ]
     assigned_codes = {c.code for courses in alloc.values() for c in courses}
     allocations = []

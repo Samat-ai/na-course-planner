@@ -89,7 +89,7 @@ py -3 scripts/gen_architecture.py                        # refresh module map be
 
 ### `src/na_planner/api/schemas.py`
   - **class `AuditRequest`**
-    - fields: `student`, `program_code`, `catalog_year`
+    - fields: `student`, `program_code`, `catalog_year`, `declared_concentration`, `target_term`
   - **class `RecommendRequest`**
     - fields: `student`, `program_code`, `catalog_year`, `preferences`
   - **class `ParseTextRequest`**
@@ -97,10 +97,10 @@ py -3 scripts/gen_architecture.py                        # refresh module map be
 
 ### `src/na_planner/audit.py`
   - `course_matches_filter(code: str, filt: CourseFilter, program: Program) -> bool`
-  - `evaluate_group(group: RequirementGroup, applied: list[EarnedCourse], program: Program) -> GroupStatus`
-  - `earned_courses(student: StudentRecord) -> list[EarnedCourse]`
+  - `evaluate_group(group: RequirementGroup, applied: list[EarnedCourse], program: Program, declared: str | None=None) -> GroupStatus`
+  - `earned_courses(student: StudentRecord, target_term: str | None=None) -> list[EarnedCourse]`
   - `allocate(earned: list[EarnedCourse], program: Program) -> dict[str, list[EarnedCourse]]`
-  - `audit(student: StudentRecord, program: Program) -> AuditResult`
+  - `audit(student: StudentRecord, program: Program, declared_concentration: str | None=None, target_term: str | None=None) -> AuditResult`
 
 ### `src/na_planner/catalog_linter.py`
   - `lint_program(program: Program) -> list[str]`
@@ -119,6 +119,7 @@ py -3 scripts/gen_architecture.py                        # refresh module map be
 ### `src/na_planner/exam_credit.py`
 _Resolve a student's reported exams (AP/CLEP/IB/SAT Subject) into NA course credit_
   - `credits_for_code(code: str) -> float`
+  - `resolve_transcript_exam_credit(student: StudentRecord, chart: ExamCreditChart) -> StudentRecord`
   - `resolve_exams(exams: list[ExamResult], chart: ExamCreditChart, already_earned: Iterable[str]=(), cap: float=EXAM_CREDIT_CAP) -> ExamResolution`
   - `merge_exam_credit(student: StudentRecord, chart: ExamCreditChart) -> tuple[StudentRecord, ExamResolution]`
 
@@ -139,9 +140,12 @@ _Resolve a student's reported exams (AP/CLEP/IB/SAT Subject) into NA course cred
 
 ### `src/na_planner/ingestion/models.py`
   - **class `ParsedCourse`**
-    - fields: `code`, `title`, `grade`, `credits`, `term_label`
+    - fields: `code`, `title`, `grade`, `credits`, `term_label`, `remedial`
+  - **class `ParsedTransfer`**
+    - A transfer/exam credit row from the transcript's Transfer section (e.g. a CLEP
+    - fields: `source`, `code`, `title`, `credits`
   - **class `ParsedTranscript`**
-    - fields: `major`, `concentration`, `courses`, `warnings`
+    - fields: `major`, `concentration`, `courses`, `transfers`, `warnings`
   - **class `NoTextLayerError`**
     - Raised when a PDF has no usable text layer (image-only scan).
   - **class `UnknownGradeError`**
@@ -193,7 +197,7 @@ _Resolve a student's reported exams (AP/CLEP/IB/SAT Subject) into NA course cred
 
 ### `src/na_planner/models/recommend.py`
   - **class `PlannedCourse`**
-    - fields: `code`, `credits`, `score`, `reasons`, `group_id`, `is_choice_slot`, `slot_options`, `provisional`
+    - fields: `code`, `credits`, `score`, `reasons`, `group_id`, `is_choice_slot`, `slot_options`, `provisional`, `registered`
   - **class `TermPlan`**
     - fields: `season`, `year`, `label`, `courses`, `total_credits`, `warnings`
   - **class `Recommendation`**
@@ -201,19 +205,19 @@ _Resolve a student's reported exams (AP/CLEP/IB/SAT Subject) into NA course cred
 
 ### `src/na_planner/models/student.py`
   - **class `CompletedCourse`**
-    - fields: `code`, `title`, `credits`, `grade`, `term`
+    - fields: `code`, `title`, `credits`, `grade`, `term`, `remedial`
     - methods: in_progress
   - **class `ExternalCredit`**
     - fields: `source`, `equivalent_code`, `credits`
   - **class `ExamResult`**
     - fields: `exam_type`, `exam_name`, `score`
   - **class `StudentRecord`**
-    - fields: `program_code`, `catalog_year`, `completed`, `external`, `exams`
+    - fields: `program_code`, `catalog_year`, `concentration`, `completed`, `external`, `exams`
   - **class `EarnedCourse`**
     - fields: `code`, `credits`, `grade`
 
 ### `src/na_planner/planner.py`
-  - `plan_term(eligible: list[str], program: Program, prefs: StudentPreferences, weights: dict[str, float]=DEFAULT_WEIGHTS, audit_result: AuditResult | None=None) -> TermPlan`
+  - `plan_term(eligible: list[str], program: Program, prefs: StudentPreferences, weights: dict[str, float]=DEFAULT_WEIGHTS, audit_result: AuditResult | None=None, pinned: list[PlannedCourse] | None=None) -> TermPlan`
 
 ### `src/na_planner/prereqs.py`
   - `course_subject(code: str) -> str`
@@ -225,6 +229,7 @@ _Resolve a student's reported exams (AP/CLEP/IB/SAT Subject) into NA course cred
   - `load_program_by(code: str, catalog_year: int, directory: Path=PROGRAMS_DIR) -> Program`
 
 ### `src/na_planner/roadmap.py`
+  - `display_label(code: str) -> str`
   - `recommend(student: StudentRecord, program: Program, prefs: StudentPreferences, weights: dict[str, float]=DEFAULT_WEIGHTS) -> Recommendation`
 
 ### `src/na_planner/scoring.py`

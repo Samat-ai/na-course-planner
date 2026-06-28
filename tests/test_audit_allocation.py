@@ -48,6 +48,39 @@ def test_earned_courses_skips_failures_and_includes_external():
     assert art.grade is None                          # external -> no letter grade
 
 
+def test_earned_courses_counts_in_progress_before_target_term():
+    # Courses in progress in a term BEFORE the target (e.g. summer, finishing first) count
+    # toward earned credit; target-term registered courses do not (not started yet).
+    s = StudentRecord(
+        program_code="X", catalog_year=2026,
+        completed=[
+            CompletedCourse(code="ENGL 1311", credits=3, grade=Grade.WIP, term="Summer 2026"),
+            CompletedCourse(code="COMP 4326", credits=3, grade=Grade.WIP, term="Fall 2026"),
+            CompletedCourse(code="COMP 1411", credits=4, grade=Grade.A),
+        ],
+    )
+    codes = {e.code for e in earned_courses(s, target_term="Fall 2026")}
+    assert "ENGL 1311" in codes          # in progress before target -> counts
+    assert "COMP 4326" not in codes      # registered for the target term -> not yet
+    assert "COMP 1411" in codes
+    # Back-compat: with no target term, WIP is not counted.
+    assert "ENGL 1311" not in {e.code for e in earned_courses(s)}
+
+
+def test_earned_courses_excludes_remedial():
+    # Remedial (developmental) courses carry no degree credit (NA catalog 5.2.11).
+    s = StudentRecord(
+        program_code="X", catalog_year=2026,
+        completed=[
+            CompletedCourse(code="ENGL R300", credits=3, grade=Grade.P, remedial=True),
+            CompletedCourse(code="COMP 1411", credits=4, grade=Grade.A),
+        ],
+    )
+    codes = {e.code for e in earned_courses(s)}
+    assert "ENGL R300" not in codes
+    assert "COMP 1411" in codes
+
+
 def test_no_double_counting_allocation():
     prog = _prog()
     # ARTS 1311 is accepted by BOTH 'hum' (specific) and 'elec' (unrestricted).

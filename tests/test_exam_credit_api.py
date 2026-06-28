@@ -8,7 +8,7 @@ from na_planner.catalog_loader import load_program
 from na_planner.exam_credit import merge_exam_credit
 from na_planner.exam_credit_loader import load_chart
 from na_planner.models.preferences import StudentPreferences
-from na_planner.models.student import ExamResult, StudentRecord
+from na_planner.models.student import ExamResult, ExternalCredit, StudentRecord
 from na_planner.roadmap import recommend
 
 client = TestClient(create_app())
@@ -83,6 +83,20 @@ def test_resolve_exams_endpoint_surfaces_diagnostics():
     assert "deduped_to_elective" in statuses  # CLEP Macro duplicate -> elective
     assert "below_threshold" in statuses    # AP Calc AB score 2
     assert any(c["equivalent_code"] == "ECON 2311" for c in data["credits"])
+
+
+def test_exam_already_on_transcript_transfer_not_double_counted():
+    # A CLEP already on the transcript (resolved to its NA course, MATH 1311) must not be
+    # granted again when the same exam is also entered in the UI.
+    student = StudentRecord(
+        program_code="CS-BS", catalog_year=2026,
+        external=[ExternalCredit(source="CLEP", equivalent_code="MATH 1311", credits=3)],
+        exams=[ExamResult(exam_type="CLEP", exam_name="College Algebra", score=99)],
+    )
+    merged, resolution = merge_exam_credit(student, CHART)
+    ca = [e for e in merged.external if e.equivalent_code == "MATH 1311"]
+    assert len(ca) == 1            # only the transcript transfer, not a second grant
+    assert resolution.credits == []   # the duplicate exam grants nothing new
 
 
 def test_exam_credit_unlocks_downstream_prereq_in_roadmap():

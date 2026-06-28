@@ -34,6 +34,35 @@ def _elective_code(exam: ExamResult) -> str:
     return f"ELEC ({exam.exam_type} {exam.exam_name})"
 
 
+EXAM_SOURCES = frozenset({"AP", "CLEP", "IB", "SAT_SUBJECT"})
+
+
+def resolve_transcript_exam_credit(
+    student: StudentRecord, chart: ExamCreditChart
+) -> StudentRecord:
+    """Map already-accepted transcript exam credit (CLEP/AP/IB/SAT in the transfer section,
+    carrying the exam title as ``equivalent_code``) to the real NA course(s) via the chart, so
+    it satisfies the actual requirement instead of counting as a generic-elective "unmatched"
+    transfer. No score threshold applies — the transcript already granted the credit. Non-exam
+    transfers and exams with no chart equivalent (or already-completed equivalents) pass through
+    unchanged. Returns a copy with the rewritten ``external`` list."""
+    index = {(e.exam_type, e.exam_name): e for e in chart.entries}
+    seen = {c.code for c in student.completed}   # also dedups across exams (e.g. AP AB + BC)
+    new_external: list[ExternalCredit] = []
+    for ext in student.external:
+        entry = index.get((ext.source, ext.equivalent_code)) if ext.source in EXAM_SOURCES else None
+        if entry is None or not entry.equivalents:
+            new_external.append(ext)
+            continue
+        for code in entry.equivalents:
+            if code in seen:
+                continue  # already earned/granted — don't duplicate the course
+            seen.add(code)
+            new_external.append(ExternalCredit(
+                source=ext.source, equivalent_code=code, credits=credits_for_code(code)))
+    return student.model_copy(update={"external": new_external})
+
+
 def resolve_exams(
     exams: list[ExamResult],
     chart: ExamCreditChart,
@@ -118,7 +147,19 @@ def merge_exam_credit(
     already_earned = {c.code for c in student.completed} | {
         e.equivalent_code for e in student.external
     }
-    resolution = resolve_exams(student.exams, chart, already_earned=already_earned)
+    # Drop a UI-entered exam whose NA equivalents are all already earned — e.g. the same exam
+    # also appears as transcript credit (now resolved to its NA code). Otherwise it would be
+    # re-counted as elective. Chart-based, so it works whether the transcript transfer still
+    # carries the exam title or has been resolved to an NA code.
+    index = {(e.exam_type, e.exam_name): e for e in chart.entries}
+
+    def _already_covered(x: ExamResult) -> bool:
+        entry = index.get((x.exam_type, x.exam_name))
+        return (entry is not None and bool(entry.equivalents)
+                and all(code in already_earned for code in entry.equivalents))
+
+    exams = [x for x in student.exams if not _already_covered(x)]
+    resolution = resolve_exams(exams, chart, already_earned=already_earned)
     merged = student.model_copy(
         update={"external": [*student.external, *resolution.credits]}
     )

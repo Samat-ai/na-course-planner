@@ -1,6 +1,7 @@
 from fpdf import FPDF
 
 from na_planner.models.recommend import Recommendation, TermPlan
+from na_planner.roadmap import display_label
 
 
 def plan_to_json(rec: Recommendation) -> bytes:
@@ -14,7 +15,7 @@ def _term_lines(pdf: FPDF, title: str, term: TermPlan) -> None:
     pdf.set_font("Helvetica", size=10)
     for c in term.courses:
         reasons = f" - {', '.join(c.reasons)}" if c.reasons else ""
-        pdf.cell(0, 6, f"  - {c.code} ({c.credits:.0f} cr){reasons}",
+        pdf.cell(0, 6, f"  - {display_label(c.code)} ({c.credits:.0f} cr){reasons}",
                  new_x="LMARGIN", new_y="NEXT")
     for w in term.warnings:
         pdf.cell(0, 6, f"  ! {w}", new_x="LMARGIN", new_y="NEXT")

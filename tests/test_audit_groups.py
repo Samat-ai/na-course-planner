@@ -135,3 +135,28 @@ def test_choose_group_concentration():
     applied = [EarnedCourse(code="COMP 4361", credits=3, grade=Grade.A)]
     assert evaluate_group(group, applied, prog).status == "satisfied"
     assert evaluate_group(group, [], prog).status == "unmet"
+
+
+def test_choose_group_focuses_declared_concentration():
+    # When a concentration is declared, the group reports ONLY that track's progress —
+    # not all subgroups as "still need".
+    prog = _program({
+        "COMP 4331": Course(code="COMP 4331", credits=3),
+        "COMP 4351": Course(code="COMP 4351", credits=3),
+        "COMP 4361": Course(code="COMP 4361", credits=3),
+    })
+    net = RequirementGroup(id="net", name="Networking", kind="all_of",
+                           courses=["COMP 4331", "COMP 4351"])
+    cyber = RequirementGroup(id="cyber", name="Cyber", kind="all_of",
+                             courses=["COMP 4361"])
+    group = RequirementGroup(id="conc", name="Concentration", kind="choose_group",
+                             subgroups=[net, cyber], choose_groups=1)
+    applied = [EarnedCourse(code="COMP 4331", credits=3, grade=Grade.A)]
+    g = evaluate_group(group, applied, prog, declared="net")
+    assert g.courses_required == 2                      # the Networking track has 2 courses
+    assert g.courses_applied == 1
+    assert g.remaining_choices == ["COMP 4351"]         # only the declared track's remainder
+    assert g.status == "partial"
+    # undeclared keeps the choose-one behavior (subgroup names as choices)
+    g2 = evaluate_group(group, applied, prog)
+    assert "Networking" in g2.remaining_choices or "Cyber" in g2.remaining_choices

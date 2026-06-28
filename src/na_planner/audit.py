@@ -142,11 +142,38 @@ def evaluate_group(
     raise ValueError(f"evaluate_group does not handle kind={group.kind!r}")
 
 
-def earned_courses(student: StudentRecord) -> list[EarnedCourse]:
+_SEASON_ORDER = {"spring": 0, "summer": 1, "fall": 2}
+
+
+def _term_key(label: str | None) -> tuple[int, int] | None:
+    """Sortable (year, season) key for a term label like 'Summer 2026'; None if unparseable."""
+    if not label:
+        return None
+    parts = label.split()
+    if len(parts) != 2 or parts[0].lower() not in _SEASON_ORDER:
+        return None
+    try:
+        return (int(parts[1]), _SEASON_ORDER[parts[0].lower()])
+    except ValueError:
+        return None
+
+
+def earned_courses(
+    student: StudentRecord, target_term: str | None = None
+) -> list[EarnedCourse]:
     out: list[EarnedCourse] = []
+    target_key = _term_key(target_term)
     for c in student.completed:
-        if c.grade in NON_PASSING_GRADES or c.remedial:
+        if c.remedial:
             continue  # remedial courses carry no degree credit (catalog 5.2.11)
+        if c.grade in NON_PASSING_GRADES:
+            # A course in progress in a term *before* the target term (currently being taken,
+            # finishing first) counts as in-progress credit; everything else not-yet-earned.
+            ck = _term_key(c.term)
+            if (c.in_progress and target_key is not None
+                    and ck is not None and ck < target_key):
+                out.append(EarnedCourse(code=c.code, credits=c.credits, grade=None))
+            continue
         out.append(EarnedCourse(code=c.code, credits=c.credits, grade=c.grade))
     for e in student.external:
         out.append(EarnedCourse(code=e.equivalent_code, credits=e.credits, grade=None))
@@ -200,9 +227,10 @@ def allocate(
 
 
 def audit(
-    student: StudentRecord, program: Program, declared_concentration: str | None = None
+    student: StudentRecord, program: Program, declared_concentration: str | None = None,
+    target_term: str | None = None,
 ) -> AuditResult:
-    earned = earned_courses(student)
+    earned = earned_courses(student, target_term=target_term)
     alloc = allocate(earned, program)
     statuses = [
         evaluate_group(g, alloc.get(g.id, []), program, declared=declared_concentration)

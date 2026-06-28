@@ -9,6 +9,7 @@ class AuditRequest(BaseModel):
     program_code: str
     catalog_year: int
     declared_concentration: str | None = None
+    target_term: str | None = None     # e.g. "Fall 2026" — current-vs-future WIP boundary
 
 
 class RecommendRequest(BaseModel):

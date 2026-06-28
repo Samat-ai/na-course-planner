@@ -590,7 +590,7 @@ const app = {
     try{
       const student=this.buildRec();
       const [audit,rec]=await Promise.all([
-        this.post('/audit',{student,program_code:this.st.programCode,catalog_year:this.st.catalogYear,declared_concentration:this.st.concentration||null}),
+        this.post('/audit',{student,program_code:this.st.programCode,catalog_year:this.st.catalogYear,declared_concentration:this.st.concentration||null,target_term:this.st.prefs.term}),
         this.post('/recommend',{student,program_code:this.st.programCode,catalog_year:this.st.catalogYear,preferences:this.buildPrefs()}),
       ]);
       this.set({auditResult:audit,recommendation:rec,student,planLoading:false,screen:'plan'});scrollTo(0,0);
@@ -613,12 +613,12 @@ const app = {
     if(!this.st.student)return;
     this.set({planLoading:true});
     try{
-      const rec=await this.post('/recommend',{
-        student:this.buildRec(),
-        program_code:this.st.programCode,catalog_year:this.st.catalogYear,
-        preferences:this.buildPrefs(),
-      });
-      this.set({recommendation:rec,planLoading:false});
+      const student=this.buildRec();
+      const [audit,rec]=await Promise.all([
+        this.post('/audit',{student,program_code:this.st.programCode,catalog_year:this.st.catalogYear,declared_concentration:this.st.concentration||null,target_term:this.st.prefs.term}),
+        this.post('/recommend',{student,program_code:this.st.programCode,catalog_year:this.st.catalogYear,preferences:this.buildPrefs()}),
+      ]);
+      this.set({auditResult:audit,recommendation:rec,planLoading:false});
     }catch{this.set({planLoading:false});}
   },
 

@@ -161,10 +161,13 @@ def test_zero_target_credits_does_not_hang():
         program_code="X", catalog_year=2026,
         completed=[CompletedCourse(code="A 1000", credits=3, grade=Grade.A)],
     )
-    prefs = StudentPreferences(target_credits=0, target_season="fall", target_year=2026)
-    rec = recommend(student, prog, prefs)              # must return, not hang
-    all_codes = [c.code for t in [rec.next_term, *rec.roadmap] for c in t.courses]
-    assert all_codes.count("ELECTIVE") >= 1
+    for tc in (0, 2):                                  # sub-one-course targets must not hang
+        prefs = StudentPreferences(target_credits=tc, target_season="fall", target_year=2026)
+        rec = recommend(student, prog, prefs)          # must return, not hang
+        terms = [rec.next_term, *rec.roadmap]
+        all_codes = [c.code for t in terms for c in t.courses]
+        assert all_codes.count("ELECTIVE") >= 1
+        assert all(t.courses for t in terms)           # no empty phantom terms
 
 
 def test_elective_filler_carries_remainder_in_last_term():

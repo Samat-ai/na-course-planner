@@ -211,18 +211,77 @@ def _accepts(group: RequirementGroup, course: EarnedCourse, program: Program) ->
     return course.code in _group_member_codes(group)
 
 
+def _group_capacity_take(
+    group: RequirementGroup, available: list[EarnedCourse], program: Program,
+    declared: str | None,
+) -> list[EarnedCourse]:
+    """The subset of `available` this group should claim, capped at its need.
+    Mandatory members first (all_of courses; choose forced + forced_choice slots),
+    then optional pool members up to the group's count/credit target."""
+    min_grade = _effective_min_grade(group, program)
+    counting = [c for c in available if _counts(c, min_grade)]
+
+    if group.kind == "all_of":
+        req = set(group.courses)
+        return [c for c in counting if c.code in req]
+
+    if group.kind == "choose":
+        taken: list[EarnedCourse] = []
+        taken_codes: set[str] = set()
+        for c in counting:                                   # 1) forced members
+            if c.code in group.forced and c.code not in taken_codes:
+                taken.append(c); taken_codes.add(c.code)
+        for fc in group.forced_choices:                      # 2) one per forced-choice slot
+            for c in counting:
+                if c.code in fc.any_of and c.code not in taken_codes:
+                    taken.append(c); taken_codes.add(c.code); break
+        pool = set(group.courses)                            # 3) optional fill to the target
+        for c in counting:
+            if c.code not in pool or c.code in taken_codes:
+                continue
+            if group.min_count is not None and len(taken) >= group.min_count:
+                break
+            if (group.min_credits is not None
+                    and sum(x.credits for x in taken) >= group.min_credits):
+                break
+            taken.append(c); taken_codes.add(c.code)
+        return taken
+
+    if group.kind == "credits_from_filter":
+        if group.course_filter is None:
+            return []
+        target = group.min_credits or 0.0
+        taken, total = [], 0.0
+        for c in counting:
+            if total >= target:
+                break
+            if course_matches_filter(c.code, group.course_filter, program):
+                taken.append(c); total += c.credits
+        return taken
+
+    if group.kind == "choose_group":
+        sub = next((s for s in group.subgroups if s.id == declared), None)
+        if sub is not None:
+            return _group_capacity_take(sub, available, program, declared)
+        return []   # undeclared: claim nothing, let courses flow to electives
+
+    return []
+
+
 def allocate(
-    earned: list[EarnedCourse], program: Program
+    earned: list[EarnedCourse], program: Program, declared: str | None = None,
 ) -> dict[str, list[EarnedCourse]]:
     ordered = sorted(
         enumerate(program.groups), key=lambda iv: (-_specificity(iv[1]), iv[0])
     )
+    available = list(earned)
     result: dict[str, list[EarnedCourse]] = {}
-    for course in earned:
-        for _, group in ordered:
-            if _accepts(group, course, program):
-                result.setdefault(group.id, []).append(course)
-                break
+    for _, group in ordered:
+        taken = _group_capacity_take(group, available, program, declared)
+        if taken:
+            result[group.id] = taken
+            taken_ids = {id(c) for c in taken}
+            available = [c for c in available if id(c) not in taken_ids]
     return result
 
 

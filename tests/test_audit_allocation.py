@@ -1,4 +1,9 @@
+from pathlib import Path
+
+import pytest
+
 from na_planner.audit import allocate, audit, earned_courses
+from na_planner.catalog_loader import load_program
 from na_planner.grades import Grade
 from na_planner.models.catalog import (
     Course,
@@ -12,6 +17,18 @@ from na_planner.models.student import (
     ExternalCredit,
     StudentRecord,
 )
+
+_FIXTURES = Path(__file__).parent / "fixtures"
+
+
+@pytest.fixture
+def mini_program():
+    return load_program(_FIXTURES / "mini_program.yaml")
+
+
+@pytest.fixture
+def conc_program():
+    return load_program(_FIXTURES / "conc_program.yaml")
 
 
 def _prog():
@@ -111,3 +128,37 @@ def test_audit_end_to_end_counts_once():
     # COMP 1411 went to core, ARTS to hum, COMP 3317 is free -> 3 elective credits
     assert by_id["elec"].status == "satisfied"
     assert result.is_complete is True
+
+
+def test_choose_group_caps_at_min_count_and_overflows_to_electives(mini_program):
+    # Student took 4 humanities-pool courses; the choose group needs only 2.
+    earned = [
+        EarnedCourse(code="HUM 1", credits=3, grade=Grade.A),
+        EarnedCourse(code="HUM 2", credits=3, grade=Grade.A),
+        EarnedCourse(code="HUM 3", credits=3, grade=Grade.A),
+        EarnedCourse(code="HUM 4", credits=3, grade=Grade.A),
+    ]
+    alloc = allocate(earned, mini_program)
+    assert len(alloc["humanities"]) == 2          # capped at min_count
+    assert len(alloc.get("electives", [])) == 2   # the 2 extras overflow to the bucket
+
+
+def test_choose_group_caps_at_min_credits(mini_program):
+    earned = [EarnedCourse(code="HUM 1", credits=3, grade=Grade.A),
+              EarnedCourse(code="HUM 2", credits=3, grade=Grade.A),
+              EarnedCourse(code="HUM 3", credits=3, grade=Grade.A)]
+    alloc = allocate(earned, mini_program)
+    # humanities is min_count 2 -> exactly 2 claimed, 1 overflows
+    assert sum(c.credits for c in alloc["humanities"]) == 6
+
+
+def test_concentration_only_claims_declared_track(conc_program):
+    # Student took 3 courses of track A and 2 of track B; declares track A.
+    earned = [EarnedCourse(code="A1", credits=3, grade=Grade.A),
+              EarnedCourse(code="A2", credits=3, grade=Grade.A),
+              EarnedCourse(code="B1", credits=3, grade=Grade.A),
+              EarnedCourse(code="B2", credits=3, grade=Grade.A)]
+    alloc = allocate(earned, conc_program, declared="track_a")
+    claimed = {c.code for c in alloc.get("concentration", [])}
+    assert claimed == {"A1", "A2"}                 # only the declared track's courses
+    assert {c.code for c in alloc.get("electives", [])} == {"B1", "B2"}  # off-track overflow

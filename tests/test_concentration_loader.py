@@ -13,3 +13,7 @@ def test_overlay_loads_with_se_slots_and_discontinued_stubs():
     # the 4353 (Data Mining) equivalence slot is present
     assert any({"COMP 4353", "COMP 4373"} <= set(fc.any_of) for fc in se.forced_choices)
     assert overlay.courses["COMP 3326"].discontinued is True
+    net = overlay.concentrations["concentration_networking"]
+    assert any({"COMP 3325", "COMP 4350", "COMP 4353"} <= set(fc.any_of)
+               for fc in net.forced_choices)   # Network Security spans all 3 catalog years
+    assert overlay.courses["COMP 4350"].discontinued is True

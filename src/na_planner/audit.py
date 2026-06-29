@@ -234,11 +234,14 @@ def _group_capacity_take(
         taken_codes: set[str] = set()
         for c in counting:                                   # 1) forced members
             if c.code in group.forced and c.code not in taken_codes:
-                taken.append(c); taken_codes.add(c.code)
+                taken.append(c)
+                taken_codes.add(c.code)
         for fc in group.forced_choices:                      # 2) one per forced-choice slot
             for c in counting:
                 if c.code in fc.any_of and c.code not in taken_codes:
-                    taken.append(c); taken_codes.add(c.code); break
+                    taken.append(c)
+                    taken_codes.add(c.code)
+                    break
         pool = set(group.courses)                            # 3) optional fill to the target
         for c in counting:
             if c.code not in pool or c.code in taken_codes:
@@ -248,7 +251,8 @@ def _group_capacity_take(
             if (group.min_credits is not None
                     and sum(x.credits for x in taken) >= group.min_credits):
                 break
-            taken.append(c); taken_codes.add(c.code)
+            taken.append(c)
+            taken_codes.add(c.code)
         return taken
 
     if group.kind == "credits_from_filter":
@@ -260,7 +264,8 @@ def _group_capacity_take(
             if total >= target:
                 break
             if course_matches_filter(c.code, group.course_filter, program):
-                taken.append(c); total += c.credits
+                taken.append(c)
+                total += c.credits
         return taken
 
     if group.kind == "choose_group":

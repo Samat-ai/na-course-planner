@@ -116,7 +116,9 @@ def test_remaining_surfaces_forced_choice_options_when_unmet():
 
 
 def test_eligible_courses_skips_discontinued():
-    prog = load_program_with_concentration("CS-BS", 2026, "concentration_software_engineering", 2024)
+    prog = load_program_with_concentration(
+        "CS-BS", 2026, "concentration_software_engineering", 2024
+    )
     # A student who has declared SE@2024 but taken none of its SE courses:
     # They have completed COMP 3322 (prereq for 4326) and earned 60+ credits
     student = StudentRecord(program_code="CS-BS", catalog_year=2026, completed=[])

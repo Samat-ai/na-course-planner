@@ -162,3 +162,10 @@ def test_concentration_only_claims_declared_track(conc_program):
     claimed = {c.code for c in alloc.get("concentration", [])}
     assert claimed == {"A1", "A2"}                 # only the declared track's courses
     assert {c.code for c in alloc.get("electives", [])} == {"B1", "B2"}  # off-track overflow
+
+
+def test_undeclared_concentration_still_auto_detects(conc_program):
+    earned = [EarnedCourse(code="A1", credits=3, grade=Grade.A),
+              EarnedCourse(code="A2", credits=3, grade=Grade.A)]
+    alloc = allocate(earned, conc_program)          # declared defaults to None
+    assert {c.code for c in alloc.get("concentration", [])} == {"A1", "A2"}

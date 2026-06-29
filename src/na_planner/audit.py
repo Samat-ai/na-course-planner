@@ -263,7 +263,11 @@ def _group_capacity_take(
         sub = next((s for s in group.subgroups if s.id == declared), None)
         if sub is not None:
             return _group_capacity_take(sub, available, program, declared)
-        return []   # undeclared: claim nothing, let courses flow to electives
+        # Undeclared: preserve auto-detect — claim every course any subgroup accepts so
+        # evaluate_group can still recognize a fully-taken track as satisfied. (The off-track
+        # overflow only applies once a concentration is DECLARED, via the branch above.)
+        return [c for c in counting
+                if any(_accepts(s, c, program) for s in group.subgroups)]
 
     return []
 

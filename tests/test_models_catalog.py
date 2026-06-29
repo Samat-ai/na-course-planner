@@ -40,6 +40,11 @@ def test_requirement_group_kinds():
     assert g2.course_filter.min_level == 3000
 
 
+def test_course_discontinued_defaults_false_and_round_trips():
+    assert Course(code="X 1", credits=3).discontinued is False
+    assert Course(code="X 1", credits=3, discontinued=True).discontinued is True
+
+
 def test_program_holds_courses_and_groups():
     p = Program(
         code="CS-BS", name="BS Computer Science", catalog_year=2026,

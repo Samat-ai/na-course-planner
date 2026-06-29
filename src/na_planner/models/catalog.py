@@ -37,6 +37,7 @@ class Course(BaseModel):
     coreqs: list[str] = []
     offering: OfferingPattern = OfferingPattern.EVERY
     difficulty: Literal["easy", "medium", "hard"] | None = None
+    discontinued: bool = False            # current catalog no longer offers it; match-only
 
 
 class ForcedChoice(BaseModel):

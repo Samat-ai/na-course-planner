@@ -1,0 +1,42 @@
+code: CONC-BS
+name: Concentration Program
+catalog_year: 2026
+total_credits_required: 12
+default_min_grade: null
+courses:
+  A1:
+    code: A1
+    title: Track A Course 1
+    credits: 3
+  A2:
+    code: A2
+    title: Track A Course 2
+    credits: 3
+  B1:
+    code: B1
+    title: Track B Course 1
+    credits: 3
+  B2:
+    code: B2
+    title: Track B Course 2
+    credits: 3
+groups:
+  - id: concentration
+    name: Concentration
+    kind: choose_group
+    choose_groups: 1
+    subgroups:
+      - id: track_a
+        name: Track A
+        kind: all_of
+        courses: [A1, A2]
+      - id: track_b
+        name: Track B
+        kind: all_of
+        courses: [B1, B2]
+  - id: electives
+    name: Electives
+    kind: credits_from_filter
+    course_filter:
+      unrestricted: true
+    min_credits: 6

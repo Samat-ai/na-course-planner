@@ -6,6 +6,7 @@ courses:
   COMP 4356: {code: COMP 4356, title: Software Project Management, credits: 3, discontinued: true}
   COMP 4339: {code: COMP 4339, title: Software Analysis and Design, credits: 3, discontinued: true}
   COMP 3325: {code: COMP 3325, title: Computer & Network Security, credits: 3, discontinued: true}
+  COMP 4350: {code: COMP 4350, title: Network Security, credits: 3, discontinued: true}
 concentrations:
   concentration_software_engineering:
     id: concentration_software_engineering
@@ -25,7 +26,7 @@ concentrations:
     kind: choose
     min_count: 6
     forced_choices:
-      - any_of: [COMP 3325, COMP 4353]
+      - any_of: [COMP 3325, COMP 4350, COMP 4353]
       - any_of: [COMP 4331]
       - any_of: [COMP 4351]
       - any_of: [COMP 4352]

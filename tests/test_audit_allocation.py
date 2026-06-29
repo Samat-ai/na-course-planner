@@ -169,3 +169,14 @@ def test_undeclared_concentration_still_auto_detects(conc_program):
               EarnedCourse(code="A2", credits=3, grade=Grade.A)]
     alloc = allocate(earned, conc_program)          # declared defaults to None
     assert {c.code for c in alloc.get("concentration", [])} == {"A1", "A2"}
+
+
+def test_audit_overflows_off_track_concentration_to_electives(conc_program):
+    student = StudentRecord(program_code=conc_program.code, catalog_year=conc_program.catalog_year,
+                            completed=[
+                                CompletedCourse(code="A1", credits=3, grade=Grade.A),
+                                CompletedCourse(code="A2", credits=3, grade=Grade.A),
+                                CompletedCourse(code="B1", credits=3, grade=Grade.A)])
+    result = audit(student, conc_program, declared_concentration="track_a")
+    elec = [a for a in result.allocations if a.group_id == "electives"]
+    assert "B1" in {a.code for a in elec}   # off-track B1 counts as an elective, not trapped

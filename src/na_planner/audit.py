@@ -294,7 +294,7 @@ def audit(
     target_term: str | None = None,
 ) -> AuditResult:
     earned = earned_courses(student, target_term=target_term)
-    alloc = allocate(earned, program)
+    alloc = allocate(earned, program, declared=declared_concentration)
     statuses = [
         evaluate_group(g, alloc.get(g.id, []), program, declared=declared_concentration)
         for g in program.groups

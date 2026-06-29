@@ -755,14 +755,7 @@ courses:
 # REQUIREMENT GROUPS
 # ─────────────────────────────────────────────────────────────────────────────
 groups:
-  # ── 1. Freshman Seminar (1 course, 3 cr) ──────────────────────────────────
-  - id: freshman_seminar
-    name: Freshman Seminar
-    kind: all_of
-    courses:
-      - FRSH 1311
-
-  # ── 2. Gen-Ed: Composition, Communications, and Foreign Languages (≥3 courses, ≥9 cr) ──
+  # ── 1. Gen-Ed: Composition, Communications, and Foreign Languages (≥3 courses, ≥9 cr) ──
   - id: gen_ed_composition_comm
     name: "Gen-Ed: Composition, Communications, and Foreign Languages"
     kind: choose

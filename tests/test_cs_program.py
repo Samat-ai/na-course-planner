@@ -57,3 +57,13 @@ def test_cli_runs_against_real_program(capsys):
     out = capsys.readouterr().out
     assert code == 0
     assert "credits remaining" in out.lower()
+
+
+def test_freshman_seminar_counts_as_elective_not_its_own_group():
+    prog = load_program(CS)
+    assert all(g.id != "freshman_seminar" for g in prog.groups)
+    student = StudentRecord(program_code="CS-BS", catalog_year=2026, completed=[
+        CompletedCourse(code="FRSH 1311", credits=3, grade=Grade.A)])
+    result = audit(student, prog)
+    frsh = next(a for a in result.allocations if a.code == "FRSH 1311")
+    assert frsh.group_id == "unrestricted_electives"

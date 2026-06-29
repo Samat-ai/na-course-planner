@@ -1,0 +1,125 @@
+
+Gradution Plan (NAU):
+Name: Student
+First Semester: FALL 2024-2025
+COMP 1314 1
+3 credits
+completed
+COMP 1411 1
+4 credits
+completed
+ENGL R300 2
+0 credits
+pass
+FRSH 1311 1
+3 credits
+completed
+MATH 2314 1
+3 credits
+completed
+Earn credits: 13 credits
+Second Semester: SPRING 2025-2026
+ARTS 1311 3
+3 credits
+completed
+COMM 1311 3
+3 credits
+completed
+COMP 1412 2
+4 credits
+completed
+HIST 1312 1
+3 credits
+completed
+MATH 2317 1
+3 credits
+completed
+Earn credits: 16 credits                                                                          Final: 29 
+Third Semester: FALL 2025-2026
+BIOL 1312 1
+3 credits
+completed
+COMP 2313 1
+3 credits
+completed
+COMP 2316 1
+3 credits
+completed
+COMP 3322 1
+3 credits
+completed
+COMP 3324 1
+3 credits
+completed
+Earn credits: 15 credits                                                                          Final: 44
+Fourth Semester: SPRING 2026-2027
+COMP 2415
+4 credits
+completed
+COMP 2419
+3 credits
+completed
+COMP 3317
+3 credits
+completed
+COMP 3320
+3 credits
+completed
+COMP 3321
+3 credits
+completed
+Earn credits: 16 credits                                                                          Final: 60
+Fifth Semester: SUMMER 2026-2027
+ENGL 1311
+3 credits
+ENGL 1312
+3 credits
+COMP 3317
+3 credits
+COMP 4353
+3 credits
+COMP 4356
+3 credits
+Earn credits:  15 credits                                                                          Final: 75
+Six Semester: FALL 2026-2027
+COMP 4326
+3 credits
+COMP 4337
+3 credits
+COMP 4371
+3 credits
+COMP 4372
+3 credits
+COMP 4374
+3 credits
+Earn credits:  15 credits                                                                          Final: 90
+Seven Semester: SPRING  2027-2028
+COMP 4327
+3 credits
+COMP 3318
+3 credits
+Statistical Methods for Big Data
+3 credits
+COMP 4393
+3 credits
+Earn credits:  12 credits                                                                          Final: 102
+CLEP (Modern State):
+College Algebra (3 cr.)
+05.01.2026
+72/80
+Pre-Calculus (3 cr.)
+10.01.2026
+64/80
+Introductory Sociology (3 cr.)
+23.05.2026
+67/80
+Introductory Psychology (3 cr.)
+30.05.2026
+63/80
+Principles of Macroeconomics
+09.06.2026
+66/80
+American Government
+15.06.2026
+61/80
+Earn credits: 18 credits                                                                          

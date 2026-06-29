@@ -42,3 +42,13 @@ def test_no_swap_when_year_matches_or_missing():
     assert "COMP 3326" not in base.courses
     # missing overlay year falls back to baseline, no error
     assert load_program_with_concentration("CS-BS", 2026, "concentration_software_engineering", 1999)
+
+
+def test_fresh_2026_student_uses_current_concentration():
+    # concentration_year None => baseline 2026 SE (all_of of current courses), no stubs.
+    prog = load_program_with_concentration("CS-BS", 2026, "concentration_software_engineering", None)
+    se = next(s for g in prog.groups if g.kind == "choose_group"
+              for s in g.subgroups if s.id == "concentration_software_engineering")
+    assert se.kind == "all_of"
+    assert "COMP 4331" in se.courses          # current SE course present
+    assert "COMP 3326" not in prog.courses    # no discontinued stub leaked in

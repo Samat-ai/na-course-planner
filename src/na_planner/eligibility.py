@@ -9,7 +9,14 @@ def _subgroup_remaining(group: RequirementGroup, conc_id: str | None,
                         satisfied_codes: set[str]) -> list[str]:
     for sub in group.subgroups:
         if sub.id == conc_id:
-            return [c for c in sub.courses if c not in satisfied_codes]
+            out = [c for c in sub.courses if c not in satisfied_codes]
+            # forced choices: surface every option of an unfilled slot for the student to pick
+            for choice in sub.forced_choices:
+                if not any(opt in satisfied_codes for opt in choice.any_of):
+                    for opt in choice.any_of:
+                        if opt not in out:
+                            out.append(opt)
+            return out
     return []
 
 
@@ -67,6 +74,8 @@ def eligible_courses(
             continue
         course = program.courses.get(code)
         if course is None:
+            continue
+        if course.discontinued:
             continue
         if not is_offered(course, prefs.target_season):
             continue

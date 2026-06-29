@@ -1,4 +1,5 @@
 from na_planner.audit import audit
+from na_planner.concentration_loader import load_program_with_concentration
 from na_planner.eligibility import eligible_courses, is_offered, remaining_required_courses
 from na_planner.grades import Grade
 from na_planner.models.catalog import (
@@ -112,3 +113,17 @@ def test_remaining_surfaces_forced_choice_options_when_unmet():
                                                     grade=Grade.A)])
     rem2 = remaining_required_courses(audit(done, prog), prog, prefs)
     assert "HIST 1311" not in rem2 and "HIST 1312" not in rem2
+
+
+def test_eligible_courses_skips_discontinued():
+    prog = load_program_with_concentration("CS-BS", 2026, "concentration_software_engineering", 2024)
+    # A student who has declared SE@2024 but taken none of its SE courses:
+    # They have completed COMP 3322 (prereq for 4326) and earned 60+ credits
+    student = StudentRecord(program_code="CS-BS", catalog_year=2026, completed=[])
+    result = audit(student, prog, declared_concentration="concentration_software_engineering")
+    prefs = StudentPreferences(target_season="fall", target_year=2026,
+                               declared_concentration="concentration_software_engineering")
+    # Assume prereqs for 4326 satisfied externally
+    elig = eligible_courses(result, prog, prefs, passed={"COMP 3322": None}, credits_earned=60)
+    assert "COMP 3326" not in elig    # discontinued old code never recommended
+    assert "COMP 4326" in elig        # current equivalent IS recommendable

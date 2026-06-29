@@ -99,7 +99,7 @@ py -3 scripts/gen_architecture.py                        # refresh module map be
   - `course_matches_filter(code: str, filt: CourseFilter, program: Program) -> bool`
   - `evaluate_group(group: RequirementGroup, applied: list[EarnedCourse], program: Program, declared: str | None=None) -> GroupStatus`
   - `earned_courses(student: StudentRecord, target_term: str | None=None) -> list[EarnedCourse]`
-  - `allocate(earned: list[EarnedCourse], program: Program) -> dict[str, list[EarnedCourse]]`
+  - `allocate(earned: list[EarnedCourse], program: Program, declared: str | None=None) -> dict[str, list[EarnedCourse]]`
   - `audit(student: StudentRecord, program: Program, declared_concentration: str | None=None, target_term: str | None=None) -> AuditResult`
 
 ### `src/na_planner/catalog_linter.py`

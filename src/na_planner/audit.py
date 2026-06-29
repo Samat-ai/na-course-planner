@@ -318,5 +318,6 @@ def audit(
         total_credits_required=program.total_credits_required,
         total_credits_earned=total_earned,
         credits_remaining=max(0.0, program.total_credits_required - total_earned),
-        is_complete=all(s.status == "satisfied" for s in statuses),
+        is_complete=(all(s.status == "satisfied" for s in statuses)
+                     and total_earned >= program.total_credits_required),
     )

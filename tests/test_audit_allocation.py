@@ -180,3 +180,12 @@ def test_audit_overflows_off_track_concentration_to_electives(conc_program):
     result = audit(student, conc_program, declared_concentration="track_a")
     elec = [a for a in result.allocations if a.group_id == "electives"]
     assert "B1" in {a.code for a in elec}   # off-track B1 counts as an elective, not trapped
+
+
+def test_is_complete_requires_total_credits():
+    # All groups satisfiable at minimums sum to 120 now; a student 3 cr short must NOT be complete
+    # even if (hypothetically) all groups read satisfied. Use a tiny program to isolate the rule:
+    prog = Program(code="X", name="X", catalog_year=2026, total_credits_required=120, groups=[])
+    student = StudentRecord(program_code="X", catalog_year=2026, completed=[])
+    result = audit(student, prog)
+    assert result.is_complete is False   # no groups => all() is True, but 0 < 120 credits

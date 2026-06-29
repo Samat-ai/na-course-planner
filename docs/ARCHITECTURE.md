@@ -89,9 +89,9 @@ py -3 scripts/gen_architecture.py                        # refresh module map be
 
 ### `src/na_planner/api/schemas.py`
   - **class `AuditRequest`**
-    - fields: `student`, `program_code`, `catalog_year`, `declared_concentration`, `target_term`
+    - fields: `student`, `program_code`, `catalog_year`, `declared_concentration`, `concentration_catalog_year`, `target_term`
   - **class `RecommendRequest`**
-    - fields: `student`, `program_code`, `catalog_year`, `preferences`
+    - fields: `student`, `program_code`, `catalog_year`, `concentration_catalog_year`, `preferences`
   - **class `ParseTextRequest`**
     - fields: `text`, `program_code`, `catalog_year`
 
@@ -110,6 +110,10 @@ py -3 scripts/gen_architecture.py                        # refresh module map be
 
 ### `src/na_planner/cli.py`
   - `main(argv: list[str]) -> int`
+
+### `src/na_planner/concentration_loader.py`
+  - `load_overlay(program_code: str, catalog_year: int, directory: Path=CONCENTRATIONS_DIR) -> ConcentrationOverlay | None`
+  - `load_program_with_concentration(program_code: str, baseline_year: int, concentration_id: str | None, concentration_year: int | None, directory: Path=CONCENTRATIONS_DIR) -> Program`
 
 ### `src/na_planner/eligibility.py`
   - `remaining_required_courses(audit: AuditResult, program: Program, prefs: StudentPreferences) -> list[str]`
@@ -173,13 +177,17 @@ _Resolve a student's reported exams (AP/CLEP/IB/SAT Subject) into NA course cred
   - **class `CourseFilter`**
     - fields: `min_level`, `subjects`, `unrestricted`
   - **class `Course`**
-    - fields: `code`, `title`, `credits`, `prereq`, `coreqs`, `offering`, `difficulty`
+    - fields: `code`, `title`, `credits`, `prereq`, `coreqs`, `offering`, `difficulty`, `discontinued`
   - **class `ForcedChoice`**
     - fields: `any_of`
   - **class `RequirementGroup`**
     - fields: `id`, `name`, `kind`, `courses`, `forced`, `forced_choices`, `min_count`, `min_credits`, `subgroups`, `choose_groups`, `course_filter`, `min_grade`
   - **class `Program`**
     - fields: `code`, `name`, `catalog_year`, `total_credits_required`, `default_min_grade`, `courses`, `groups`
+
+### `src/na_planner/models/concentration.py`
+  - **class `ConcentrationOverlay`**
+    - fields: `program_code`, `catalog_year`, `courses`, `concentrations`
 
 ### `src/na_planner/models/exam_credit.py`
   - **class `ExamCreditEntry`**

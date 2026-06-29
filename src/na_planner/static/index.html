@@ -22,7 +22,7 @@ body { background: #F2EEE6; font-family: 'Hanken Grotesk', system-ui, sans-serif
 .plan-grid { display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:26px;align-items:start; }
 .band-stats { display:flex;flex-direction:row;gap:40px;flex-wrap:wrap; }
 .stat-div { border-left:1px solid rgba(255,255,255,.15);padding-left:40px; }
-.prog-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:16px; }
+.prog-grid { display:grid;grid-template-columns:repeat(4,1fr);gap:16px; }
 .band-inner { display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:30px;flex-wrap:wrap; }
 .band-ctrl { display:flex;flex-direction:column;align-items:flex-end;gap:12px; }
 .stat-num { font-family:'Spectral',serif;font-size:42px;font-weight:600;line-height:1; }
@@ -166,6 +166,10 @@ body { background: #F2EEE6; font-family: 'Hanken Grotesk', system-ui, sans-serif
       <div>
         <label style="display:block;font-size:12.5px;font-weight:600;color:#5C6B79;margin-bottom:6px;">Declared concentration</label>
         <select id="conc-sel" onchange="app.onConcChange(this.value)" style="width:100%;border:1px solid #E2DCCF;border-radius:9px;padding:10px 12px;font-family:'Hanken Grotesk';font-size:14px;background:#FBFAF7;color:#1A2733;cursor:pointer;"></select>
+      </div>
+      <div id="conc-year-wrap">
+        <label style="display:block;font-size:12.5px;font-weight:600;color:#5C6B79;margin-bottom:6px;">Concentration year</label>
+        <select id="conc-year-sel" onchange="app.onConcYearChange(this.value)" style="width:100%;border:1px solid #E2DCCF;border-radius:9px;padding:10px 12px;font-family:'Hanken Grotesk';font-size:14px;background:#FBFAF7;color:#1A2733;cursor:pointer;"></select>
       </div>
     </div>
   </div>
@@ -385,7 +389,7 @@ const app = {
   st: {
     screen:'input', tab:'paste', parsing:false, uploadError:false,
     planLoading:false, completeView:false, copied:false,
-    programs:[], programCode:'CS-BS', catalogYear:2026, concentration:'',
+    programs:[], programCode:'CS-BS', catalogYear:2026, concentration:'', concentrationYear:2026,
     prefs:{targetCredits:15, pace:'full', term:'Fall 2026', difficulty:'balanced'},
     student:null, editedCourses:[], editedExternals:[], editedExams:[], examChart:null,
     examResolution:null, auditResult:null, recommendation:null, programCourses:[],
@@ -489,6 +493,7 @@ const app = {
       this.set({
         programCode:bundle.programCode||this.st.programCode,
         catalogYear:bundle.catalogYear||this.st.catalogYear,
+        concentrationYear:bundle.concentrationYear||bundle.catalogYear||this.st.catalogYear,
         concentration:bundle.concentration||'',
         prefs:bundle.prefs||this.st.prefs,
         auditResult:bundle.auditResult||null,
@@ -536,6 +541,7 @@ const app = {
       student,
       programCode:pc,
       catalogYear:student.catalog_year||this.st.catalogYear,
+      concentrationYear:student.catalog_year||this.st.catalogYear,
       concentration:this.matchConcentration(pc,student.concentration),
       editedCourses:(student.completed||[]).map(c=>({
         code:c.code||'',title:c.title||'',
@@ -556,8 +562,9 @@ const app = {
 
   // ---- Confirm ----
   onProgramChange(v){this.set({programCode:v,concentration:''});this.loadProgramCourses();},
-  onYearChange(v){this.set({catalogYear:parseInt(v,10)});this.loadProgramCourses();},
-  onConcChange(v){this.set({concentration:v});},
+  onYearChange(v){const y=parseInt(v,10);this.set({catalogYear:y,concentrationYear:y});this.loadProgramCourses();this.renderConcYear();},
+  onConcChange(v){this.set({concentration:v});this.renderConcYear();},
+  onConcYearChange(v){this.set({concentrationYear:parseInt(v,10)});},
   addCourse(){this.set(s=>({editedCourses:[...s.editedCourses,{code:'',title:'',credits:'',grade:'',term:''}]}));},
   removeCourse(i){this.set(s=>({editedCourses:s.editedCourses.filter((_,j)=>j!==i)}));},
   editCourse(i,f,v){this.set(s=>{const c=s.editedCourses.slice();c[i]={...c[i],[f]:v};return{editedCourses:c};});},
@@ -590,8 +597,8 @@ const app = {
     try{
       const student=this.buildRec();
       const [audit,rec]=await Promise.all([
-        this.post('/audit',{student,program_code:this.st.programCode,catalog_year:this.st.catalogYear,declared_concentration:this.st.concentration||null,target_term:this.st.prefs.term}),
-        this.post('/recommend',{student,program_code:this.st.programCode,catalog_year:this.st.catalogYear,preferences:this.buildPrefs()}),
+        this.post('/audit',{student,program_code:this.st.programCode,catalog_year:this.st.catalogYear,declared_concentration:this.st.concentration||null,concentration_catalog_year:this.st.concentration?this.st.concentrationYear:null,target_term:this.st.prefs.term}),
+        this.post('/recommend',{student,program_code:this.st.programCode,catalog_year:this.st.catalogYear,concentration_catalog_year:this.st.concentration?this.st.concentrationYear:null,preferences:this.buildPrefs()}),
       ]);
       this.set({auditResult:audit,recommendation:rec,student,planLoading:false,screen:'plan'});scrollTo(0,0);
     }catch(err){
@@ -615,8 +622,8 @@ const app = {
     try{
       const student=this.buildRec();
       const [audit,rec]=await Promise.all([
-        this.post('/audit',{student,program_code:this.st.programCode,catalog_year:this.st.catalogYear,declared_concentration:this.st.concentration||null,target_term:this.st.prefs.term}),
-        this.post('/recommend',{student,program_code:this.st.programCode,catalog_year:this.st.catalogYear,preferences:this.buildPrefs()}),
+        this.post('/audit',{student,program_code:this.st.programCode,catalog_year:this.st.catalogYear,declared_concentration:this.st.concentration||null,concentration_catalog_year:this.st.concentration?this.st.concentrationYear:null,target_term:this.st.prefs.term}),
+        this.post('/recommend',{student,program_code:this.st.programCode,catalog_year:this.st.catalogYear,concentration_catalog_year:this.st.concentration?this.st.concentrationYear:null,preferences:this.buildPrefs()}),
       ]);
       this.set({auditResult:audit,recommendation:rec,planLoading:false});
     }catch{this.set({planLoading:false});}
@@ -636,7 +643,7 @@ const app = {
     const s=this.st;
     const blob=new Blob([JSON.stringify({
       student:this.buildRec(),programCode:s.programCode,catalogYear:s.catalogYear,
-      concentration:s.concentration,prefs:s.prefs,auditResult:s.auditResult,recommendation:s.recommendation,
+      concentrationYear:s.concentrationYear,concentration:s.concentration,prefs:s.prefs,auditResult:s.auditResult,recommendation:s.recommendation,
     },null,2)],{type:'application/json'});
     const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='plan.json';a.click();URL.revokeObjectURL(a.href);
   },
@@ -705,6 +712,17 @@ const app = {
     const years=programs.filter(p=>p.code===programCode).map(p=>p.catalog_year);
     yearSel.innerHTML=years.map(y=>`<option value="${y}"${y===catalogYear?' selected':''}>${y}–${y+1}</option>`).join('');
     this.renderConcs();
+    this.renderConcYear();
+  },
+
+  renderConcYear(){
+    const {programs,programCode,concentrationYear,concentration}=this.st;
+    const wrap=el('conc-year-wrap');const sel=el('conc-year-sel');if(!wrap||!sel)return;
+    const hasConcSelection = !!concentration;
+    wrap.style.opacity = hasConcSelection ? '1' : '0.4';
+    sel.disabled = !hasConcSelection;
+    const years=programs.filter(p=>p.code===programCode).map(p=>p.catalog_year);
+    sel.innerHTML=years.map(y=>`<option value="${y}"${y===concentrationYear?' selected':''}>${y}–${y+1}</option>`).join('');
   },
 
   renderConcs(){

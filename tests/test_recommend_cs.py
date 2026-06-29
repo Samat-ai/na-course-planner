@@ -113,6 +113,7 @@ def test_roadmap_does_not_overshoot_120_with_excess_courses(cs_program):
         declared_concentration="concentration_software_engineering"))
     earned = sum(e.credits for e in earned_courses(student))
     planned = sum(c.credits for t in [rec.next_term, *rec.roadmap] for c in t.courses)
+    assert planned > 0, "roadmap must plan the missing concentration + electives"
     assert earned + planned == 120, (
         f"Expected 120 cr total, got earned={earned} + planned={planned} = {earned + planned}"
     )

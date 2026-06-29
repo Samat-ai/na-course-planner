@@ -74,6 +74,51 @@ def test_fresh_2026_student_uses_current_concentration():
 
 # --- 2025 overlay ---
 
+def test_2024_networking_student_concentration_satisfied_via_overlay():
+    """Oracle: 2024 Networking student satisfies the concentration via the 2024 overlay.
+
+    2024 Networking courses: 3325 (Computer & Network Security), 4331, 4351, 4352, 4358, 4393.
+    In 2026 the security course is COMP 4353 — baseline audit misses it; overlay slot
+    any_of: [COMP 3325, COMP 4350, COMP 4353] bridges the gap.
+    Contrast: same student against baseline 2026 program is NOT satisfied (missing 4353).
+    """
+    def cc(code: str) -> CompletedCourse:
+        return CompletedCourse(code=code, credits=3, grade=Grade.A)
+
+    student = StudentRecord(
+        program_code="CS-BS",
+        catalog_year=2026,
+        completed=[cc(c) for c in (
+            "COMP 3325", "COMP 4331", "COMP 4351",
+            "COMP 4352", "COMP 4358", "COMP 4393",
+        )],
+    )
+
+    prog_2024 = load_program_with_concentration(
+        "CS-BS", 2026, "concentration_networking", 2024
+    )
+    audit_2024 = audit(
+        student, prog_2024, declared_concentration="concentration_networking"
+    )
+    conc_2024 = next(g for g in audit_2024.groups if g.group_id == "concentration")
+    assert conc_2024.status == "satisfied", (
+        f"Expected Networking concentration 'satisfied' with 2024 overlay, "
+        f"got '{conc_2024.status}'. remaining={conc_2024.remaining}"
+    )
+
+    # Contrast: baseline 2026 Networking requires 4331/4351/4352/4353/4358/4393 —
+    # student has 4331/4351/4352/4358/4393 but not 4353, so must NOT be satisfied.
+    baseline_prog = load_program_by("CS-BS", 2026)
+    baseline_audit = audit(
+        student, baseline_prog, declared_concentration="concentration_networking"
+    )
+    baseline_conc = next(g for g in baseline_audit.groups if g.group_id == "concentration")
+    assert baseline_conc.status != "satisfied", (
+        f"Baseline 2026 audit must NOT satisfy Networking with COMP 3325 "
+        f"(student lacks COMP 4353), but got '{baseline_conc.status}'."
+    )
+
+
 def test_2025_overlay_loads_with_correct_slots_and_stubs():
     overlay = ConcentrationOverlay.model_validate(
         yaml.safe_load(OVERLAY_2025.read_text(encoding="utf-8"))

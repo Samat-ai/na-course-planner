@@ -225,6 +225,10 @@ def _group_capacity_take(
         req = set(group.courses)
         return [c for c in counting if c.code in req]
 
+    # Invariant (holds for all current programs): a choose group's forced +
+    # forced_choices members never exceed its min_count, so steps 1-2 never
+    # overshoot the cap. If a future group violates this, the optional-fill cap
+    # below won't retroactively trim mandatory members.
     if group.kind == "choose":
         taken: list[EarnedCourse] = []
         taken_codes: set[str] = set()

@@ -12,6 +12,9 @@ def _subgroup_remaining(group: RequirementGroup, conc_id: str | None,
             out = [c for c in sub.courses if c not in satisfied_codes]
             # forced choices: surface every option of an unfilled slot for the student to pick
             for choice in sub.forced_choices:
+                # Safe because allocate() routes a DECLARED concentration's courses into the
+                # concentration group (group_id set), so a satisfied slot's course is always in
+                # satisfied_codes; off-track courses overflow to electives and never reach here.
                 if not any(opt in satisfied_codes for opt in choice.any_of):
                     for opt in choice.any_of:
                         if opt not in out:

@@ -150,7 +150,11 @@ def _group_capacity_take(
         sub = next((s for s in group.subgroups if s.id == declared), None)
         if sub is not None:
             return _group_capacity_take(sub, available, program, declared)
-        return []   # undeclared: claim nothing, let courses flow to electives
+        # Undeclared: preserve auto-detect — claim every course any subgroup accepts so
+        # evaluate_group can still recognize a fully-taken track as satisfied. (The off-track
+        # overflow only applies once a concentration is DECLARED, via the branch above.)
+        return [c for c in counting
+                if any(_accepts(s, c, program) for s in group.subgroups)]
 
     return []
 
@@ -172,10 +176,23 @@ def allocate(
     return result
 ```
 
+Also add one focused regression test proving the **undeclared** auto-detect path is preserved
+(a `choose_group` with all of one track's courses, audited with `declared=None`, still claims
+those courses):
+
+```python
+def test_undeclared_concentration_still_auto_detects(conc_program):
+    earned = [EarnedCourse(code="A1", credits=3, grade=Grade.A),
+              EarnedCourse(code="A2", credits=3, grade=Grade.A)]
+    alloc = allocate(earned, conc_program)          # declared defaults to None
+    assert {c.code for c in alloc.get("concentration", [])} == {"A1", "A2"}
+```
+
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `py -3 -m pytest tests/test_audit_allocation.py -q`
-Expected: PASS.
+Run: `py -3 -m pytest tests/test_audit_allocation.py tests/test_audit_groups.py tests/test_busa_program.py tests/test_crjs_program.py tests/test_educ_program.py -q`
+Expected: PASS. The three program suites audit concentrations **undeclared** and must keep
+passing — they are the regression guard for the auto-detect branch.
 
 - [ ] **Step 5: Commit**
 

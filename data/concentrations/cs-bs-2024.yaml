@@ -1,0 +1,33 @@
+program_code: CS-BS
+catalog_year: 2024
+courses:
+  COMP 3326: {code: COMP 3326, title: Web Application Development, credits: 3, discontinued: true}
+  COMP 4342: {code: COMP 4342, title: Advanced Web Application Development, credits: 3, discontinued: true}
+  COMP 4356: {code: COMP 4356, title: Software Project Management, credits: 3, discontinued: true}
+  COMP 4339: {code: COMP 4339, title: Software Analysis and Design, credits: 3, discontinued: true}
+  COMP 3325: {code: COMP 3325, title: Computer & Network Security, credits: 3, discontinued: true}
+concentrations:
+  concentration_software_engineering:
+    id: concentration_software_engineering
+    name: Software Engineering Concentration (2024 catalog)
+    kind: choose
+    min_count: 6
+    forced_choices:
+      - any_of: [COMP 3326, COMP 4326]
+      - any_of: [COMP 4342, COMP 4327]
+      - any_of: [COMP 4339, COMP 4337]
+      - any_of: [COMP 4353, COMP 4373]
+      - any_of: [COMP 4356, COMP 4336]
+      - any_of: [COMP 4393]
+  concentration_networking:
+    id: concentration_networking
+    name: Computer Networking Concentration (2024 catalog)
+    kind: choose
+    min_count: 6
+    forced_choices:
+      - any_of: [COMP 3325, COMP 4353]
+      - any_of: [COMP 4331]
+      - any_of: [COMP 4351]
+      - any_of: [COMP 4352]
+      - any_of: [COMP 4358]
+      - any_of: [COMP 4393]

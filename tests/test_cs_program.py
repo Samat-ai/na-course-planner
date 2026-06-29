@@ -67,3 +67,20 @@ def test_freshman_seminar_counts_as_elective_not_its_own_group():
     result = audit(student, prog)
     frsh = next(a for a in result.allocations if a.code == "FRSH 1311")
     assert frsh.group_id == "unrestricted_electives"
+
+
+GEN_ED_GROUP_IDS = {"gen_ed_composition_comm", "gen_ed_humanities", "gen_ed_social",
+                    "gen_ed_natural_science_math", "gen_ed_additional"}
+
+
+def test_gen_ed_totals_36(cs_program):
+    from na_planner.audit import evaluate_group
+    total = sum(evaluate_group(g, [], cs_program).credits_required
+                for g in cs_program.groups if g.id in GEN_ED_GROUP_IDS)
+    assert total == 36
+
+
+def test_program_group_credits_sum_to_120(cs_program):
+    from na_planner.audit import evaluate_group
+    total = sum(evaluate_group(g, [], cs_program).credits_required for g in cs_program.groups)
+    assert total == cs_program.total_credits_required == 120

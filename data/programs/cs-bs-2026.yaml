@@ -835,6 +835,32 @@ groups:
           - GEOL 1311
     courses: []
 
+  # ── 5b. Gen-Ed: Additional (6 cr from any gen-ed category) ─────────────────
+  # Catalog requires 36 gen-ed credits; the four category minimums total 30, leaving
+  # 6 cr of "additional general education" from any category. Specificity 1 (subject-
+  # filtered) so it claims leftover gen-ed courses before the unrestricted electives.
+  - id: gen_ed_additional
+    name: "Gen-Ed: Additional (any category)"
+    kind: credits_from_filter
+    min_credits: 6
+    course_filter:
+      subjects:
+        - ARTS
+        - COMM
+        - ENGL
+        - HIST
+        - MUSI
+        - PHIL
+        - ECON
+        - GOVT
+        - PSYC
+        - SOCI
+        - SPAN
+        - BIOL
+        - GEOG
+        - GEOL
+        - MATH
+
   # ── 6. CS Core (51 credits) ───────────────────────────────────────────────
   # COMP 1314 (3) + COMP 1411 (4) + COMP 1412 (4) + COMP 2313 (3) +
   # COMP 2415 (4) + COMP 2316 (3) + COMP 2319 (3) + COMP 3317 (3) +

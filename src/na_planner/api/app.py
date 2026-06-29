@@ -18,6 +18,7 @@ from na_planner.models.audit import AuditResult
 from na_planner.models.exam_credit import ExamCreditChart, ExamResolution
 from na_planner.models.recommend import Recommendation
 from na_planner.models.student import StudentRecord
+from na_planner.concentration_loader import load_program_with_concentration
 from na_planner.programs import list_programs, load_program_by
 from na_planner.roadmap import recommend
 
@@ -81,7 +82,9 @@ def create_app() -> FastAPI:
     @app.post("/audit", response_model=AuditResult)
     def audit_endpoint(req: AuditRequest) -> AuditResult:
         try:
-            program = load_program_by(req.program_code, req.catalog_year)
+            program = load_program_with_concentration(
+                req.program_code, req.catalog_year,
+                req.declared_concentration, req.concentration_catalog_year)
         except KeyError as e:
             raise HTTPException(status_code=404, detail=str(e)) from e
         student = _with_exam_credit(req.student, req.catalog_year)
@@ -91,7 +94,9 @@ def create_app() -> FastAPI:
     @app.post("/recommend", response_model=Recommendation)
     def recommend_endpoint(req: RecommendRequest) -> Recommendation:
         try:
-            program = load_program_by(req.program_code, req.catalog_year)
+            program = load_program_with_concentration(
+                req.program_code, req.catalog_year,
+                req.preferences.declared_concentration, req.concentration_catalog_year)
         except KeyError as e:
             raise HTTPException(status_code=404, detail=str(e)) from e
         student = _with_exam_credit(req.student, req.catalog_year)

@@ -32,3 +32,14 @@ groups:
     kind: choose
     courses: [ARTS 1311]
     min_count: 1
+  - id: humanities
+    name: Humanities Elective
+    kind: choose
+    courses: [HUM 1, HUM 2, HUM 3, HUM 4]
+    min_count: 2
+  - id: electives
+    name: Electives
+    kind: credits_from_filter
+    course_filter:
+      unrestricted: true
+    min_credits: 6

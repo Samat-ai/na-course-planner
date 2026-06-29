@@ -57,3 +57,30 @@ def test_cli_runs_against_real_program(capsys):
     out = capsys.readouterr().out
     assert code == 0
     assert "credits remaining" in out.lower()
+
+
+def test_freshman_seminar_counts_as_elective_not_its_own_group():
+    prog = load_program(CS)
+    assert all(g.id != "freshman_seminar" for g in prog.groups)
+    student = StudentRecord(program_code="CS-BS", catalog_year=2026, completed=[
+        CompletedCourse(code="FRSH 1311", credits=3, grade=Grade.A)])
+    result = audit(student, prog)
+    frsh = next(a for a in result.allocations if a.code == "FRSH 1311")
+    assert frsh.group_id == "unrestricted_electives"
+
+
+GEN_ED_GROUP_IDS = {"gen_ed_composition_comm", "gen_ed_humanities", "gen_ed_social",
+                    "gen_ed_natural_science_math", "gen_ed_additional"}
+
+
+def test_gen_ed_totals_36(cs_program):
+    from na_planner.audit import evaluate_group
+    total = sum(evaluate_group(g, [], cs_program).credits_required
+                for g in cs_program.groups if g.id in GEN_ED_GROUP_IDS)
+    assert total == 36
+
+
+def test_program_group_credits_sum_to_120(cs_program):
+    from na_planner.audit import evaluate_group
+    total = sum(evaluate_group(g, [], cs_program).credits_required for g in cs_program.groups)
+    assert total == cs_program.total_credits_required == 120

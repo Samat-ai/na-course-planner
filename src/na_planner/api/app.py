@@ -8,6 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from na_planner.api.export import plan_to_json, plan_to_pdf
 from na_planner.api.schemas import AuditRequest, ParseTextRequest, RecommendRequest
 from na_planner.audit import audit
+from na_planner.concentration_loader import load_program_with_concentration
 from na_planner.exam_credit import merge_exam_credit, resolve_transcript_exam_credit
 from na_planner.exam_credit_loader import load_chart_for
 from na_planner.ingestion.build import to_student_record
@@ -81,7 +82,9 @@ def create_app() -> FastAPI:
     @app.post("/audit", response_model=AuditResult)
     def audit_endpoint(req: AuditRequest) -> AuditResult:
         try:
-            program = load_program_by(req.program_code, req.catalog_year)
+            program = load_program_with_concentration(
+                req.program_code, req.catalog_year,
+                req.declared_concentration, req.concentration_catalog_year)
         except KeyError as e:
             raise HTTPException(status_code=404, detail=str(e)) from e
         student = _with_exam_credit(req.student, req.catalog_year)
@@ -91,7 +94,9 @@ def create_app() -> FastAPI:
     @app.post("/recommend", response_model=Recommendation)
     def recommend_endpoint(req: RecommendRequest) -> Recommendation:
         try:
-            program = load_program_by(req.program_code, req.catalog_year)
+            program = load_program_with_concentration(
+                req.program_code, req.catalog_year,
+                req.preferences.declared_concentration, req.concentration_catalog_year)
         except KeyError as e:
             raise HTTPException(status_code=404, detail=str(e)) from e
         student = _with_exam_credit(req.student, req.catalog_year)

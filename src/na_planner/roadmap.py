@@ -73,7 +73,8 @@ def recommend(
 
     for i in range(MAX_TERMS):
         state = _state_record(program.code, program.catalog_year, passed, credits)
-        last_audit = audit(state, program)
+        last_audit = audit(state, program,
+                           declared_concentration=prefs.declared_concentration)
         if last_audit.is_complete:
             break
         term_prefs = prefs.model_copy(update={"target_season": season, "target_year": year})
@@ -95,7 +96,8 @@ def recommend(
         season, year = _advance(season, year)
 
     if last_audit is None:
-        last_audit = audit(student, program)
+        last_audit = audit(student, program,
+                           declared_concentration=prefs.declared_concentration)
 
     group_kinds = {grp.id: grp.kind for grp in program.groups}
     elective_remaining = max(0.0, sum(

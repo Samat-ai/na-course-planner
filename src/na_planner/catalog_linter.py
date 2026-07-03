@@ -1,4 +1,9 @@
+import re
+
 from na_planner.models.catalog import PrereqExpr, Program, RequirementGroup
+
+# NA encodes credit hours in the 2nd digit of the course number (COMP 1412 -> 4 cr).
+_STANDARD_CODE = re.compile(r"^[A-Z]+ \d{4}$")
 
 
 def _prereq_course_codes(expr: PrereqExpr | None) -> list[str]:
@@ -57,6 +62,13 @@ def lint_program(program: Program) -> list[str]:
     known = set(program.courses.keys())
     problems: list[str] = []
     for course in program.courses.values():
+        if _STANDARD_CODE.match(course.code):
+            expected = int(course.code.split()[1][1])
+            if course.credits != expected:
+                problems.append(
+                    f"course {course.code} credits {course.credits} disagree with "
+                    f"code 2nd digit ({expected} cr)"
+                )
         for code in _prereq_course_codes(course.prereq):
             if code not in known:
                 problems.append(f"course {course.code} prereq references unknown course {code}")

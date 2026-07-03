@@ -2,7 +2,10 @@ from na_planner.models.catalog import Course, Program, RequirementGroup
 from na_planner.models.preferences import StudentPreferences
 from na_planner.scoring import DEFAULT_WEIGHTS
 from na_planner.term_state import (
-    TermState, can_place, place, build_planned_course, choice_slots,
+    TermState,
+    build_planned_course,
+    can_place,
+    place,
 )
 
 

@@ -1,7 +1,9 @@
 from pathlib import Path
 
 from na_planner.ingestion.schedule_csv import (
-    parse_days, parse_schedule_csv, parse_time,
+    parse_days,
+    parse_schedule_csv,
+    parse_time,
 )
 from na_planner.models.schedule import Weekday
 

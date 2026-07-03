@@ -6,7 +6,12 @@ from na_planner.models.schedule import Section, SectionInfo
 from na_planner.scoring import DEFAULT_WEIGHTS, score_course
 from na_planner.section_conflict import campus_days, sections_conflict
 from na_planner.term_state import (
-    TermState, build_planned_course, can_place, choice_slots, place, pool_capacities,
+    TermState,
+    build_planned_course,
+    can_place,
+    choice_slots,
+    place,
+    pool_capacities,
 )
 
 _MAX_BENCH = 16

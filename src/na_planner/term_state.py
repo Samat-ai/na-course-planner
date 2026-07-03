@@ -4,7 +4,7 @@ from na_planner.models.audit import AuditResult
 from na_planner.models.catalog import OfferingPattern, Program
 from na_planner.models.preferences import StudentPreferences
 from na_planner.models.recommend import PlannedCourse
-from na_planner.scoring import DEFAULT_WEIGHTS, difficulty, score_course, unlocking_power
+from na_planner.scoring import difficulty, score_course, unlocking_power
 
 
 def course_reasons(code: str, program: Program) -> list[str]:

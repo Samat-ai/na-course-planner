@@ -96,11 +96,12 @@ def recommend(
             elig = [code for code in elig if code not in pinned_codes]
         if not elig and not term_pinned:
             break
-        # Only the next term (i == 0) is timetabled against real sections, and only
-        # when a snapshot exists for the target season; every later term stays the
-        # heuristic course-set plan.
-        sections = _sections_for(term_prefs) if i == 0 else {}
-        if i == 0 and sections:
+        # Timetable any term the published snapshot actually covers (its file is keyed by
+        # target_year, its bands by season), not just the next term; terms with no snapshot
+        # gracefully degrade to the heuristic course-set plan. WIP early-registration pinning
+        # still applies to the immediate term only (handled by term_pinned above).
+        sections = _sections_for(term_prefs)
+        if sections:
             term = timetable_term(elig, program, term_prefs, sections, weights,
                                   audit_result=last_audit, pinned=term_pinned)
         else:

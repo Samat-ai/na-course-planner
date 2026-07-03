@@ -160,6 +160,11 @@ _Resolve a student's reported exams (AP/CLEP/IB/SAT Subject) into NA course cred
   - `extract_pdf_text(data: bytes, min_chars: int=20) -> str`
   - `parse_transcript_pdf(data: bytes) -> ParsedTranscript`
 
+### `src/na_planner/ingestion/schedule_csv.py`
+  - `parse_time(s: str) -> int | None`
+  - `parse_days(s: str) -> list[Weekday]`
+  - `parse_schedule_csv(text: str) -> list[Section]`
+
 ### `src/na_planner/ingestion/transcript_text.py`
   - `parse_transcript_text(text: str) -> ParsedTranscript`
 
@@ -202,15 +207,24 @@ _Resolve a student's reported exams (AP/CLEP/IB/SAT Subject) into NA course cred
 
 ### `src/na_planner/models/preferences.py`
   - **class `StudentPreferences`**
-    - fields: `target_credits`, `max_hard_courses`, `target_season`, `target_year`, `declared_concentration`, `max_load`
+    - fields: `target_credits`, `max_hard_courses`, `target_season`, `target_year`, `declared_concentration`, `max_load`, `compact_week`
 
 ### `src/na_planner/models/recommend.py`
   - **class `PlannedCourse`**
-    - fields: `code`, `credits`, `score`, `reasons`, `group_id`, `is_choice_slot`, `slot_options`, `provisional`, `registered`
+    - fields: `code`, `credits`, `score`, `reasons`, `group_id`, `is_choice_slot`, `slot_options`, `provisional`, `registered`, `section`
   - **class `TermPlan`**
     - fields: `season`, `year`, `label`, `courses`, `total_credits`, `warnings`
   - **class `Recommendation`**
     - fields: `next_term`, `roadmap`, `projected_graduation`, `elective_credits_remaining`, `is_tentative`
+
+### `src/na_planner/models/schedule.py`
+  - **class `Weekday`**
+  - **class `Section`**
+    - fields: `course_code`, `section`, `term`, `days`, `start_min`, `end_min`, `room`, `professor`, `meeting_type`
+    - methods: is_async
+  - **class `SectionInfo`**
+    - fields: `section`, `days`, `start_min`, `end_min`, `room`, `professor`, `meeting_type`, `note`
+    - methods: from_section
 
 ### `src/na_planner/models/student.py`
   - **class `CompletedCourse`**
@@ -241,10 +255,32 @@ _Resolve a student's reported exams (AP/CLEP/IB/SAT Subject) into NA course cred
   - `display_label(code: str) -> str`
   - `recommend(student: StudentRecord, program: Program, prefs: StudentPreferences, weights: dict[str, float]=DEFAULT_WEIGHTS) -> Recommendation`
 
+### `src/na_planner/schedule_loader.py`
+  - `default_schedule_path(year: int=2026) -> Path`
+  - `load_sections(path: str | Path, season: str) -> dict[str, list[Section]]`
+
 ### `src/na_planner/scoring.py`
   - `direct_dependents(code: str, program: Program) -> list[str]`
   - `unlocking_power(code: str, program: Program) -> int`
   - `difficulty(code: str, program: Program) -> int`
   - `graduation_urgency(code: str, program: Program) -> float`
   - `score_course(code: str, program: Program, weights: dict[str, float]=DEFAULT_WEIGHTS) -> float`
+
+### `src/na_planner/section_conflict.py`
+  - `sections_conflict(a: Section, b: Section) -> bool`
+  - `campus_days(sections: list[Section]) -> int`
+
+### `src/na_planner/term_state.py`
+  - **class `TermState`**
+    - fields: `total_credits`, `hard_count`, `filled_slots`, `pool_remaining`, `scheduled`
+    - methods: snapshot
+  - `course_reasons(code: str, program: Program) -> list[str]`
+  - `choice_slots(program: Program) -> list[set[str]]`
+  - `pool_capacities(program: Program, audit_result: AuditResult | None) -> tuple[dict[str, int], dict[str, str]]`
+  - `can_place(state: TermState, code: str, program: Program, prefs: StudentPreferences, slots: list[set[str]], pool_group: dict[str, str]) -> bool`
+  - `build_planned_course(code: str, program: Program, weights: dict[str, float], slots: list[set[str]], registered: bool=False) -> PlannedCourse`
+  - `place(state: TermState, pc: PlannedCourse, program: Program, slots: list[set[str]], pool_group: dict[str, str]) -> None`
+
+### `src/na_planner/timetabler.py`
+  - `timetable_term(eligible: list[str], program: Program, prefs: StudentPreferences, sections_by_code: dict[str, list[Section]], weights: dict[str, float]=DEFAULT_WEIGHTS, audit_result: AuditResult | None=None, pinned: list[PlannedCourse] | None=None) -> TermPlan`
 <!-- AUTOGEN:END -->

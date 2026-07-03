@@ -1,7 +1,8 @@
 # NA Course Schedule — reference snapshot (2025–2026)
 
-Captured **2026-07-03**. This is source data for future `Course.offering` population; it is
-**not yet wired into the engine**.
+Captured **2026-07-03**. Source data for the next-term timetabler (`na_planner.timetabler`);
+the runtime copy lives at `data/schedules/2026-undergrad.csv`. Still also the reference for
+future `Course.offering` population.
 
 ## Source
 
@@ -19,8 +20,9 @@ https://docs.google.com/spreadsheets/d/e/2PACX-1vTkbx0zucRwnQQhViabDbXkd5o3K5sb1
 | `course-schedule-2026-summer.csv`    | `2129721481` | Summer 2026 undergrad |
 
 The page publishes only the **current academic year** and rotates each term, so this snapshot
-is ephemeral — re-pull to refresh. Row format: `Course Code <section#>, Title, Professor,
-Start, End, Days, Room, Meeting Type`.
+is ephemeral. Refresh with `py -3 scripts/pull_schedule.py <year>` → writes
+`data/schedules/<year>-{undergrad,graduate,summer}.csv`. Row format: `Course Code <section#>,
+Title, Professor, Start, End, Days, Room, Meeting Type`.
 
 ## Meeting-type codes (legend at bottom of the undergrad sheet)
 

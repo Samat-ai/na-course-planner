@@ -160,3 +160,23 @@ def test_choose_group_focuses_declared_concentration():
     # undeclared keeps the choose-one behavior (subgroup names as choices)
     g2 = evaluate_group(group, applied, prog)
     assert "Networking" in g2.remaining_choices or "Cyber" in g2.remaining_choices
+    # undeclared but mid-track: credits_applied should reflect the best partial subgroup,
+    # not 0 (which was the bug — only satisfied subs were summed).
+    assert g2.credits_applied == 3  # COMP 4331 (3 cr) is partway through Networking
+
+
+def test_choose_group_undeclared_unmet_shows_zero_applied():
+    prog = _program({
+        "COMP 4331": Course(code="COMP 4331", credits=3),
+        "COMP 4351": Course(code="COMP 4351", credits=3),
+        "COMP 4361": Course(code="COMP 4361", credits=3),
+    })
+    net = RequirementGroup(id="net", name="Networking", kind="all_of",
+                           courses=["COMP 4331", "COMP 4351"])
+    cyber = RequirementGroup(id="cyber", name="Cyber", kind="all_of",
+                             courses=["COMP 4361"])
+    group = RequirementGroup(id="conc", name="Concentration", kind="choose_group",
+                             subgroups=[net, cyber], choose_groups=1)
+    g = evaluate_group(group, [], prog)
+    assert g.status == "unmet"
+    assert g.credits_applied == 0

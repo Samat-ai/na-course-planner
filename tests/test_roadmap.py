@@ -188,6 +188,29 @@ def test_elective_filler_carries_remainder_in_last_term():
     assert sum(filler_loads) == 7
 
 
+def test_sparse_elective_overflow_term_merged_into_previous():
+    # A student at target_credits=15 finishes structured work with one planned term at 15 cr;
+    # only 3 elective credits remain. The overflow should be absorbed into the previous term
+    # (raising it to 18 cr) rather than creating a separate near-empty graduation term.
+    courses = {f"C{i} 1000": Course(code=f"C{i} 1000", credits=3) for i in range(5)}
+    groups = [
+        RequirementGroup(id="core", name="Core", kind="all_of", courses=list(courses)),
+        RequirementGroup(id="elec", name="Electives", kind="credits_from_filter",
+                         min_credits=3, course_filter=CourseFilter(unrestricted=True)),
+    ]
+    prog = Program(code="X", name="X", catalog_year=2026, total_credits_required=18,
+                   courses=courses, groups=groups)
+    student = StudentRecord(program_code="X", catalog_year=2026)
+    prefs = StudentPreferences(target_credits=15, target_season="fall", target_year=2026)
+    rec = recommend(student, prog, prefs)
+    terms = [rec.next_term, *rec.roadmap]
+    # The 5 structured courses fill 15 cr; 3 elective cr merges in instead of a new term.
+    assert len(terms) == 1, f"Expected 1 term, got {len(terms)}: {[t.label for t in terms]}"
+    assert rec.next_term.total_credits == 18
+    elec_codes = [c.code for c in rec.next_term.courses if c.code == "ELECTIVE"]
+    assert len(elec_codes) == 1
+
+
 def test_electives_only_student_with_no_structured_terms_shows_filler_as_next_term():
     # Structured requirement already complete; only the elective bucket remains. The next
     # term itself becomes an explicit elective-filler term (not an empty placeholder).

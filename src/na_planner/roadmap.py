@@ -138,6 +138,23 @@ def recommend(
             season, year = _advance(season, year)
             guard += 1
 
+        # If the final elective-overflow term is sparse (< target load) and contains only
+        # whole elective slots (not a sub-3-cr fractional remainder), absorb it into the
+        # previous term up to max_load rather than showing a near-empty graduation term.
+        if len(terms) >= 2:
+            last_t = terms[-1]
+            prev_t = terms[-2]
+            is_elec_only = all(c.code == ELECTIVE_PLACEHOLDER for c in last_t.courses)
+            is_whole_slots = all(c.credits >= ELECTIVE_SLOT - 1e-6 for c in last_t.courses)
+            is_sparse = last_t.total_credits < prefs.target_credits - 1e-6
+            room = prefs.max_load - prev_t.total_credits
+            fits = room >= last_t.total_credits - 1e-6
+            if is_elec_only and is_whole_slots and is_sparse and fits:
+                for c in last_t.courses:
+                    prev_t.courses.append(c)
+                    prev_t.total_credits += c.credits
+                terms.pop()
+
     if not terms:
         empty = TermPlan(season=prefs.target_season, year=prefs.target_year,
                          label=f"{prefs.target_season.capitalize()} {prefs.target_year}")

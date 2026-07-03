@@ -29,3 +29,4 @@ Thumbs.db
 .tmp_extract/
 *.tmp
 .vercel
+.playwright-mcp/

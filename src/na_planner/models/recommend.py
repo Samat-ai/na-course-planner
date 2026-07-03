@@ -1,5 +1,7 @@
 from pydantic import BaseModel
 
+from na_planner.models.schedule import SectionInfo
+
 
 class PlannedCourse(BaseModel):
     code: str
@@ -11,6 +13,7 @@ class PlannedCourse(BaseModel):
     slot_options: list[str] = []
     provisional: bool = False     # roadmap provisional pick for an open choice slot
     registered: bool = False      # student already early-registered for this in the term
+    section: SectionInfo | None = None   # set only for the timetabled next term
 
 
 class TermPlan(BaseModel):

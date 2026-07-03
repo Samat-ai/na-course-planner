@@ -77,7 +77,7 @@ body { background: #F2EEE6; font-family: 'Hanken Grotesk', system-ui, sans-serif
     <div style="display:flex;align-items:center;gap:12px;cursor:pointer;" onclick="app.goInput()">
       <div style="width:34px;height:34px;border-radius:9px;background:#1E3A5F;display:flex;align-items:center;justify-content:center;color:#F2EEE6;font-family:'Spectral',serif;font-weight:600;font-size:18px;">N</div>
       <div style="font-family:'Spectral',serif;font-weight:600;font-size:19px;color:#1A2733;letter-spacing:-.01em;">Course Planner</div>
-      <div class="sub-label" style="font-size:12px;color:#8A95A0;border-left:1px solid #D8D1C5;padding-left:12px;">Northvale Academy</div>
+      <div class="sub-label" style="font-size:12px;color:#8A95A0;border-left:1px solid #D8D1C5;padding-left:12px;">For NAU students</div>
     </div>
     <div id="stepper-desktop" class="step-desktop" style="align-items:center;gap:6px;"></div>
     <div id="stepper-mobile" class="step-mobile" style="align-items:center;gap:8px;background:#fff;border:1px solid #E7E1D6;border-radius:20px;padding:5px 6px 5px 12px;">
@@ -555,9 +555,13 @@ const app = {
       editedExams:(student.exams||[]).map(e=>({
         exam_type:e.exam_type||'AP',exam_name:e.exam_name||'',score:String(e.score??''),
       })),
+      // Loading a new transcript must clear all state derived from the previous one,
+      // or a stale exam-resolution / plan renders as a phantom on the Confirm step.
+      examResolution:null, auditResult:null, recommendation:null, completeView:false,
     });
     this.loadProgramCourses();
     this.loadConcentrationYears();
+    this.refreshExamResolution();
   },
 
   showErr(id,msg){const e=el(id);if(e){e.textContent=msg;e.style.display='';}},
@@ -1059,6 +1063,24 @@ const app = {
   renderNextTerm(rec){
     const e=el('next-term-list');if(!e)return;
     const courses=rec.next_term.courses||[];
+    const MEETING={IP:'In Person',H:'Hybrid',OF:'Online (Flexible)',OS:'Online (Sync)',I:'Internship'};
+    const sep='<span style="opacity:.4;">·</span>';
+    const fmtT=m=>{const h=Math.floor(m/60),mm=m%60,ap=h<12?'AM':'PM',h12=((h+11)%12)+1;return `${h12}:${String(mm).padStart(2,'0')} ${ap}`;};
+    const meetingHtml=s=>{
+      if(!s)return '';
+      const parts=[];
+      if(s.days&&s.days.length&&s.start_min!=null){
+        parts.push(esc(s.days.join(', ')));
+        parts.push(`${fmtT(s.start_min)}${s.end_min!=null?'–'+fmtT(s.end_min):''}`);
+      }else{
+        parts.push('No set meeting time');
+      }
+      if(s.room)parts.push('Rm '+esc(s.room));
+      const label=MEETING[s.meeting_type]||s.meeting_type;
+      if(label)parts.push(esc(label));
+      const noteHtml=s.note?`<div style="margin-top:6px;"><span style="font-size:10.5px;font-weight:600;color:#8A6512;background:#F6EEDB;border:1px solid #ECDFBE;padding:2px 8px;border-radius:20px;">${esc(s.note)}</span></div>`:'';
+      return `<div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:7px;font-size:12px;color:#5C6B79;">${parts.map(p=>`<span>${p}</span>`).join(sep)}</div>${noteHtml}`;
+    };
     e.innerHTML=courses.map((c,i)=>{
       const ic=ICON_STYLES[i%ICON_STYLES.length];
       const reasons=(c.reasons||[]).map(r=>`<span style="font-size:11.5px;color:#5C6B79;background:#F4F1EA;border:1px solid #EAE4D8;padding:3px 9px;border-radius:20px;">${esc(r)}</span>`).join('');
@@ -1072,6 +1094,7 @@ const app = {
             <span style="font-family:ui-monospace,monospace;font-size:13px;font-weight:600;color:#1E3A5F;">${esc(c.code==='ELECTIVE'?'Elective':c.code)}</span>
             ${c.registered?`<span style="font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#1E7A52;background:#E4F2EA;border:1px solid #C3E2D1;padding:2px 7px;border-radius:20px;">Registered</span>`:''}
           </div>
+          ${meetingHtml(c.section)}
           <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">${reasons}</div>
         </div>
       </div>`;

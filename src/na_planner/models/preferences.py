@@ -10,3 +10,4 @@ class StudentPreferences(BaseModel):
     target_year: int = 2026
     declared_concentration: str | None = None   # subgroup id in the concentration choose_group
     max_load: float = 19.0
+    compact_week: bool = True               # prefer fewer distinct campus days when timetabling

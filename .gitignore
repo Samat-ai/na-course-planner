@@ -28,3 +28,4 @@ Thumbs.db
 # Scratch
 .tmp_extract/
 *.tmp
+.vercel

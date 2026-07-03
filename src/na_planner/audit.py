@@ -131,12 +131,17 @@ def evaluate_group(
             "satisfied" if satisfied
             else ("partial" if any(s.status != "unmet" for s in sub_statuses) else "unmet")
         )
+        # For partial progress show the best sub's credit count, not just fully-satisfied subs.
+        credits_applied = (
+            sum(s.credits_applied for s in satisfied_subs) if satisfied_subs
+            else max((s.credits_applied for s in sub_statuses), default=0.0)
+        )
         return GroupStatus(
             group_id=group.id, name=group.name, status=status,
             # No track declared yet: show the smallest track's credits as the target so the
             # card reads in credits rather than "0 / 0 cr".
             credits_required=min((s.credits_required for s in sub_statuses), default=0.0),
-            credits_applied=sum(s.credits_applied for s in satisfied_subs),
+            credits_applied=credits_applied,
             courses_required=group.choose_groups, courses_applied=len(satisfied_subs),
             satisfied_by=[s.group_id for s in satisfied_subs], remaining_choices=remaining,
             choose_remaining=max(0, group.choose_groups - len(satisfied_subs)),

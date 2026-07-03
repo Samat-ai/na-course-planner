@@ -21,6 +21,19 @@ def load_overlay(
     return None
 
 
+def list_overlay_years(
+    program_code: str, directory: Path = CONCENTRATIONS_DIR
+) -> list[int]:
+    years = []
+    for path in sorted(directory.glob("*.yaml")):
+        overlay = ConcentrationOverlay.model_validate(
+            yaml.safe_load(path.read_text(encoding="utf-8"))
+        )
+        if overlay.program_code == program_code:
+            years.append(overlay.catalog_year)
+    return sorted(years)
+
+
 def load_program_with_concentration(
     program_code: str,
     baseline_year: int,

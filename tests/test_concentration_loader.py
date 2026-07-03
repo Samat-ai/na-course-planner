@@ -32,7 +32,18 @@ def test_overlay_loads_with_se_slots_and_discontinued_stubs():
 # --- Task 3: load_program_with_concentration ---
 
 from na_planner.catalog_linter import lint_program  # noqa: E402
-from na_planner.concentration_loader import load_program_with_concentration  # noqa: E402
+from na_planner.concentration_loader import (  # noqa: E402
+    list_overlay_years,
+    load_program_with_concentration,
+)
+
+
+def test_list_overlay_years_returns_sorted_years_for_program():
+    assert list_overlay_years("CS-BS") == [2024, 2025]
+
+
+def test_list_overlay_years_empty_for_unknown_program():
+    assert list_overlay_years("BUSA-BS") == []
 
 
 def test_swaps_se_subgroup_and_merges_stubs():

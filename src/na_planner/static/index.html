@@ -393,6 +393,7 @@ const app = {
     prefs:{targetCredits:15, pace:'full', term:'Fall 2026', difficulty:'balanced'},
     student:null, editedCourses:[], editedExternals:[], editedExams:[], examChart:null,
     examResolution:null, auditResult:null, recommendation:null, programCourses:[],
+    concentrationYears:[],
   },
   _ct:null, _rt:null,
 
@@ -556,12 +557,13 @@ const app = {
       })),
     });
     this.loadProgramCourses();
+    this.loadConcentrationYears();
   },
 
   showErr(id,msg){const e=el(id);if(e){e.textContent=msg;e.style.display='';}},
 
   // ---- Confirm ----
-  onProgramChange(v){this.set({programCode:v,concentration:''});this.loadProgramCourses();},
+  onProgramChange(v){this.set({programCode:v,concentration:''});this.loadProgramCourses();this.loadConcentrationYears();},
   onYearChange(v){const y=parseInt(v,10);this.set({catalogYear:y,concentrationYear:y});this.loadProgramCourses();this.renderConcYear();},
   onConcChange(v){this.set({concentration:v});this.renderConcYear();},
   onConcYearChange(v){this.set({concentrationYear:parseInt(v,10)});},
@@ -673,6 +675,21 @@ const app = {
     }catch{ this.set({programCourses:[]}); /* fall back to General elective only */ }
   },
 
+  // Years a student can pick for the *concentration* definition: the program's own
+  // catalog years plus any earlier years with a grandfathered concentration overlay.
+  async loadConcentrationYears(){
+    const {programs,programCode}=this.st;
+    const baseYears=programs.filter(p=>p.code===programCode).map(p=>p.catalog_year);
+    let overlayYears=[];
+    try{
+      const r=await this.req(`/programs/${encodeURIComponent(programCode)}/concentration-years`);
+      overlayYears=await r.json();
+    }catch{ /* no overlays for this program: base years only */ }
+    const years=[...new Set([...baseYears,...overlayYears])].sort((a,b)=>a-b);
+    this.set({concentrationYears:years});
+    this.renderConcYear();
+  },
+
   examEntry(type,name){
     const c=this.st.examChart;
     if(!c)return null;
@@ -701,6 +718,7 @@ const app = {
       this.set({programs:[{code:'CS-BS',name:'B.S. Computer Science',catalog_year:2026}]});
     }
     this.renderProgramDropdowns();
+    this.loadConcentrationYears();
   },
 
   renderProgramDropdowns(){
@@ -716,12 +734,12 @@ const app = {
   },
 
   renderConcYear(){
-    const {programs,programCode,concentrationYear,concentration}=this.st;
+    const {concentrationYears,concentrationYear,concentration}=this.st;
     const wrap=el('conc-year-wrap');const sel=el('conc-year-sel');if(!wrap||!sel)return;
     const hasConcSelection = !!concentration;
     wrap.style.opacity = hasConcSelection ? '1' : '0.4';
     sel.disabled = !hasConcSelection;
-    const years=programs.filter(p=>p.code===programCode).map(p=>p.catalog_year);
+    const years=concentrationYears.length?concentrationYears:[concentrationYear];
     sel.innerHTML=years.map(y=>`<option value="${y}"${y===concentrationYear?' selected':''}>${y}–${y+1}</option>`).join('');
   },
 

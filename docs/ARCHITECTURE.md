@@ -113,6 +113,7 @@ py -3 scripts/gen_architecture.py                        # refresh module map be
 
 ### `src/na_planner/concentration_loader.py`
   - `load_overlay(program_code: str, catalog_year: int, directory: Path=CONCENTRATIONS_DIR) -> ConcentrationOverlay | None`
+  - `list_overlay_years(program_code: str, directory: Path=CONCENTRATIONS_DIR) -> list[int]`
   - `load_program_with_concentration(program_code: str, baseline_year: int, concentration_id: str | None, concentration_year: int | None, directory: Path=CONCENTRATIONS_DIR) -> Program`
 
 ### `src/na_planner/eligibility.py`

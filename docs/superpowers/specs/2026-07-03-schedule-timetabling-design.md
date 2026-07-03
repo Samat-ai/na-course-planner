@@ -100,18 +100,38 @@ never conflicts.
 ### Timetabler (`src/na_planner/timetabler.py`, pure)
 
 Inputs: ranked candidate courses (Phase 1), their `Section`s, the credit-load target, and the
-compact-week flag. Depth-first **branch-and-bound** over candidates in priority order. At each
-course: assign one of its non-conflicting sections (a branch per viable section) **or** skip it
-(substitution — move down the ranked bench). Stop when the load target is met. The candidate ×
-section space for a term is tiny (~5 courses × a few sections), so the bounded search is
-effectively exhaustive → optimal, with pruning for speed.
+compact-week flag. Depth-first **branch-and-bound**: walk the full ranked bench (typically
+10–20 eligible candidates); at each course either assign one of its non-conflicting sections
+(a branch per viable section) **or** skip it (substitution). Depth is load-bounded (~5 courses).
+With rank-lexicographic pruning — hardest to *seat* rank 1, skip only when forced — the search
+is fast and its result is deterministic under the total order defined above.
 
-**Objective — lexicographic:**
-1. Maximize summed academic priority (existing course scores) of *included* courses — only
-   substitute when a higher-priority course genuinely cannot fit; never drop an urgent course
-   to save a day.
-2. Minimize distinct campus days (compact week).
-3. Deterministic tie-break: lowest section number → stable output across runs.
+**Shared constraints (DRY).** The per-course guards `plan_term` already enforces — credit
+target, max load, hard-course cap, choice-slot-already-filled, pool-capacity — are extracted
+into a reusable `TermState` accumulator plus `can_place(state, code, …)` / `place(state, pc)` /
+`build_planned_course(…)` helpers. `plan_term` (all other terms) and the `timetabler` (next
+term) both call these, so the two paths can't diverge on constraint logic or on the
+`PlannedCourse` fields they emit (`is_choice_slot`, `slot_options`, `group_id`, `reasons`,
+`registered`). The search never mutates a live `TermPlan`; it snapshots/undoes `TermState` and
+builds the final `TermPlan` only from the winning path.
+
+**No-section courses are synthetic async sections.** A required course with no snapshot section
+(data gap, genuinely not offered, or a pinned/registered course absent from the sheet) is given
+a synthetic no-time section: it passes `can_place`, consumes budget, never conflicts, and the
+"confirm offering" flag is a pure display annotation — no special-case branch in the search.
+
+**Objective — rank-lexicographic** (chosen 2026-07-03; user was away, default per advisor —
+revisit if wrong). Rank candidates by the existing `score_course`. Prefer the timetable that
+includes the **rank-1** course whenever any conflict-free timetable can; among those, the one
+that includes rank-2; and so on down the bench. This *guarantees the single most-urgent course
+is never traded away* for a larger pile of lower-priority ones (the summed-score alternative
+could do that), and it mirrors `plan_term`'s existing greedy ranked fill.
+
+Tie-breaks, applied only among timetables with the **same inclusion vector** (same set of
+included courses by rank):
+1. Minimize distinct campus days (compact week).
+2. Earliest total start time, then lowest section numbers across the set — a full deterministic
+   order so tests can assert exact section picks and output is reproducible.
 
 **Output:** chosen `(course, section)` pairs plus human reasons, e.g. *"substituted Data
 Structures — its only section clashes with Calculus II"* and *"chose the Tue/Thu sections — 3

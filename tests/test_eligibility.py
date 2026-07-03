@@ -129,3 +129,35 @@ def test_eligible_courses_skips_discontinued():
     elig = eligible_courses(result, prog, prefs, passed={"COMP 3322": None}, credits_earned=60)
     assert "COMP 3326" not in elig    # discontinued old code never recommended
     assert "COMP 4326" in elig        # current equivalent IS recommendable
+
+
+def test_remaining_skips_match_only_forced_choice_options():
+    # COMP 4353 is reused: it meant "Data Mining" under the old numbering, but the
+    # current catalog assigns it to a *different* course (Network Security). It must
+    # still satisfy a completed transcript entry, but must never be surfaced as a
+    # recommendation for an unmet slot (a student registering today would enroll in
+    # the wrong course).
+    courses = {
+        "COMP 4353": Course(code="COMP 4353", credits=3, title="Network Security"),
+        "COMP 4373": Course(code="COMP 4373", credits=3, title="Data Mining"),
+    }
+    groups = [RequirementGroup(
+        id="conc", name="Concentration", kind="choose", min_count=1, courses=[],
+        forced_choices=[ForcedChoice(any_of=["COMP 4353", "COMP 4373"],
+                                     match_only=["COMP 4353"])],
+    )]
+    prog = Program(code="X", name="X", catalog_year=2026, total_credits_required=3,
+                   courses=courses, groups=groups)
+    prefs = StudentPreferences()
+
+    a = audit(StudentRecord(program_code="X", catalog_year=2026), prog)
+    rem = remaining_required_courses(a, prog, prefs)
+    assert "COMP 4373" in rem
+    assert "COMP 4353" not in rem     # match-only: never surfaced as a recommendation
+
+    # A completed COMP 4353 (old-catalog Data Mining) still satisfies the slot.
+    done = StudentRecord(program_code="X", catalog_year=2026,
+                         completed=[CompletedCourse(code="COMP 4353", credits=3,
+                                                    grade=Grade.A)])
+    rem2 = remaining_required_courses(audit(done, prog), prog, prefs)
+    assert "COMP 4373" not in rem2 and "COMP 4353" not in rem2

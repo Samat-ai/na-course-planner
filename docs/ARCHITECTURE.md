@@ -180,7 +180,7 @@ _Resolve a student's reported exams (AP/CLEP/IB/SAT Subject) into NA course cred
   - **class `Course`**
     - fields: `code`, `title`, `credits`, `prereq`, `coreqs`, `offering`, `difficulty`, `discontinued`
   - **class `ForcedChoice`**
-    - fields: `any_of`
+    - fields: `any_of`, `match_only`
   - **class `RequirementGroup`**
     - fields: `id`, `name`, `kind`, `courses`, `forced`, `forced_choices`, `min_count`, `min_credits`, `subgroups`, `choose_groups`, `course_filter`, `min_grade`
   - **class `Program`**

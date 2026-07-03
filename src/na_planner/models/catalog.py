@@ -44,6 +44,10 @@ class ForcedChoice(BaseModel):
     # A forced requirement satisfied by exactly one course from a named sub-list,
     # e.g. "one HIST course" or "one natural science". The student picks which.
     any_of: list[str] = []
+    # any_of codes that satisfy the slot (e.g. a completed transcript entry) but are
+    # never surfaced as a recommendation — for a reused course code whose current
+    # catalog meaning differs from what it meant under an older numbering.
+    match_only: list[str] = []
 
 
 class RequirementGroup(BaseModel):

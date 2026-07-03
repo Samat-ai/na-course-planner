@@ -75,12 +75,15 @@ def evaluate_group(
             max(0, group.min_count - len(pool_counting)) if group.min_count else 0
         )
         status = "satisfied" if satisfied else ("partial" if pool_counting else "unmet")
-        # Count-based groups (min_count, no min_credits) still need a credit target for display;
-        # NA choice pools are 3-credit courses, so min_count*3 is the required credits.
-        credits_required = (
-            group.min_credits if group.min_credits is not None
-            else (group.min_count * 3.0 if group.min_count else 0.0)
-        )
+        if group.min_credits is not None:
+            credits_required = group.min_credits
+        elif group.min_count:
+            pool_cr = sorted(
+                program.courses[c].credits for c in pool if c in program.courses
+            )
+            credits_required = float(sum(pool_cr[:group.min_count]))
+        else:
+            credits_required = 0.0
         return GroupStatus(
             group_id=group.id, name=group.name, status=status,
             credits_required=credits_required,

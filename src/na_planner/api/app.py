@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from na_planner.api.export import plan_to_json, plan_to_pdf
 from na_planner.api.schemas import AuditRequest, ParseTextRequest, RecommendRequest
 from na_planner.audit import audit
-from na_planner.concentration_loader import load_program_with_concentration
+from na_planner.concentration_loader import list_overlay_years, load_program_with_concentration
 from na_planner.exam_credit import merge_exam_credit, resolve_transcript_exam_credit
 from na_planner.exam_credit_loader import load_chart_for
 from na_planner.ingestion.build import to_student_record
@@ -48,6 +48,10 @@ def create_app() -> FastAPI:
             {"code": c.code, "title": c.title}
             for c in sorted(program.courses.values(), key=lambda c: c.code)
         ]
+
+    @app.get("/programs/{code}/concentration-years")
+    def concentration_years(code: str) -> list[int]:
+        return list_overlay_years(code)
 
     @app.get("/exam-chart", response_model=ExamCreditChart)
     def exam_chart(catalog_year: int = 2026) -> ExamCreditChart:

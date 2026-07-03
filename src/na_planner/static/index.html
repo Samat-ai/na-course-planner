@@ -77,7 +77,7 @@ body { background: #F2EEE6; font-family: 'Hanken Grotesk', system-ui, sans-serif
     <div style="display:flex;align-items:center;gap:12px;cursor:pointer;" onclick="app.goInput()">
       <div style="width:34px;height:34px;border-radius:9px;background:#1E3A5F;display:flex;align-items:center;justify-content:center;color:#F2EEE6;font-family:'Spectral',serif;font-weight:600;font-size:18px;">N</div>
       <div style="font-family:'Spectral',serif;font-weight:600;font-size:19px;color:#1A2733;letter-spacing:-.01em;">Course Planner</div>
-      <div class="sub-label" style="font-size:12px;color:#8A95A0;border-left:1px solid #D8D1C5;padding-left:12px;">Northvale Academy</div>
+      <div class="sub-label" style="font-size:12px;color:#8A95A0;border-left:1px solid #D8D1C5;padding-left:12px;">For NAU students</div>
     </div>
     <div id="stepper-desktop" class="step-desktop" style="align-items:center;gap:6px;"></div>
     <div id="stepper-mobile" class="step-mobile" style="align-items:center;gap:8px;background:#fff;border:1px solid #E7E1D6;border-radius:20px;padding:5px 6px 5px 12px;">
@@ -555,9 +555,13 @@ const app = {
       editedExams:(student.exams||[]).map(e=>({
         exam_type:e.exam_type||'AP',exam_name:e.exam_name||'',score:String(e.score??''),
       })),
+      // Loading a new transcript must clear all state derived from the previous one,
+      // or a stale exam-resolution / plan renders as a phantom on the Confirm step.
+      examResolution:null, auditResult:null, recommendation:null, completeView:false,
     });
     this.loadProgramCourses();
     this.loadConcentrationYears();
+    this.refreshExamResolution();
   },
 
   showErr(id,msg){const e=el(id);if(e){e.textContent=msg;e.style.display='';}},

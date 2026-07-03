@@ -17,7 +17,11 @@ concentrations:
       - any_of: [COMP 3326, COMP 4326]
       - any_of: [COMP 4342, COMP 4327]
       - any_of: [COMP 4339, COMP 4337]
+      # COMP 4353 was Data Mining under the 2024 numbering; the code was later reused
+      # for Network Security in the 2026 baseline, so it satisfies a completed
+      # transcript but must never be recommended (see concentration_networking below).
       - any_of: [COMP 4353, COMP 4373]
+        match_only: [COMP 4353]
       - any_of: [COMP 4356, COMP 4336]
       - any_of: [COMP 4393]
   concentration_networking:

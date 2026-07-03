@@ -3,8 +3,10 @@ from pathlib import Path
 import yaml
 
 from na_planner.audit import audit
+from na_planner.eligibility import eligible_courses
 from na_planner.grades import Grade
 from na_planner.models.concentration import ConcentrationOverlay
+from na_planner.models.preferences import StudentPreferences
 from na_planner.models.student import CompletedCourse, StudentRecord
 from na_planner.programs import load_program_by
 
@@ -189,3 +191,22 @@ def test_2025_se_student_concentration_satisfied_via_overlay():
         f"Baseline 2026 audit must NOT satisfy the SE concentration with 2025 codes "
         f"(student has only 4339+4393 of the 6 required), but got '{baseline_conc.status}'."
     )
+
+
+def test_2025_se_data_mining_slot_never_recommends_reused_code():
+    """COMP 4353 meant Data Mining in the 2025 catalog but is Network Security in the
+    2026 baseline (the code was reused, not retired). A 2025-SE student with the Data
+    Mining slot still open must be recommended COMP 4373 (current Data Mining), never
+    the reused COMP 4353 — registering for 4353 today enrolls them in Network Security.
+    """
+    prog_2025 = load_program_with_concentration(
+        "CS-BS", 2026, "concentration_software_engineering", 2025
+    )
+    student = StudentRecord(program_code="CS-BS", catalog_year=2026, completed=[])
+    result = audit(student, prog_2025, declared_concentration="concentration_software_engineering")
+    prefs = StudentPreferences(target_season="fall", target_year=2026,
+                               declared_concentration="concentration_software_engineering")
+    passed = {"MATH 1312": None, "COMP 3321": None}
+    elig = eligible_courses(result, prog_2025, prefs, passed=passed, credits_earned=90)
+    assert "COMP 4373" in elig
+    assert "COMP 4353" not in elig

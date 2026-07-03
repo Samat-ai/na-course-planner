@@ -17,7 +17,7 @@ def _subgroup_remaining(group: RequirementGroup, conc_id: str | None,
                 # satisfied_codes; off-track courses overflow to electives and never reach here.
                 if not any(opt in satisfied_codes for opt in choice.any_of):
                     for opt in choice.any_of:
-                        if opt not in out:
+                        if opt not in choice.match_only and opt not in out:
                             out.append(opt)
             return out
     return []
@@ -49,7 +49,7 @@ def remaining_required_courses(
                 for choice in group.forced_choices:
                     if not any(opt in satisfied_forced for opt in choice.any_of):
                         for opt in choice.any_of:
-                            if opt not in out:
+                            if opt not in choice.match_only and opt not in out:
                                 out.append(opt)
         elif group.kind == "choose_group":
             for c in _subgroup_remaining(group, prefs.declared_concentration,

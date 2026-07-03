@@ -9,7 +9,7 @@ from na_planner.term_state import (
     TermState, build_planned_course, can_place, choice_slots, place, pool_capacities,
 )
 
-_MAX_BENCH = 24
+_MAX_BENCH = 16
 _NO_DATA_NOTE = "no schedule data — confirm offering"
 
 
@@ -54,28 +54,35 @@ def timetable_term(
         anchor_sections.append(sec)
         pinned_built.append(built)
 
-    best: dict = {"key": None, "chosen": []}
+    n = len(ranked)
+    best: dict = {"key": None, "chosen": [], "incl": None}
 
-    def leaf_key(chosen: list[tuple[PlannedCourse, Section]]):
-        included = {pc.code for pc, _ in chosen}
-        incl_vector = tuple(1 if ranked[i] in included else 0 for i in range(len(ranked)))
+    def leaf_key(chosen, incl_bits):
         secs = anchor_sections + [s for _, s in chosen]
         days = campus_days(secs)
         total_start = sum(s.start_min or 0 for s in secs)
         sec_nums = tuple(sorted(int(s.section) if s.section.isdigit() else 0
                                 for _, s in chosen))
-        # maximize inclusion by rank; then fewer days, earlier start, lower section nums
-        return (incl_vector, -days, -total_start, tuple(-n for n in sec_nums))
+        # maximize inclusion by rank; then (if compact_week) fewer days, then earlier
+        # start, then lower section numbers
+        day_key = -days if prefs.compact_week else 0
+        return (incl_bits, day_key, -total_start, tuple(-n for n in sec_nums))
 
-    def record(chosen):
-        key = leaf_key(chosen)
+    def record(chosen, incl_bits):
+        key = leaf_key(chosen, incl_bits)
         if best["key"] is None or key > best["key"]:
             best["key"] = key
             best["chosen"] = list(chosen)
+            best["incl"] = incl_bits
 
-    def dfs(i, state, chosen, used_sections):
-        if i >= len(ranked):
-            record(chosen)
+    def dfs(i, state, chosen, used_sections, incl_bits):
+        if i >= n:
+            record(chosen, incl_bits)
+            return
+        # Branch-and-bound: the best inclusion vector still reachable from here keeps the
+        # bits decided so far and optimistically includes every remaining candidate. If
+        # even that can't beat the best inclusion found, prune the whole subtree.
+        if best["incl"] is not None and incl_bits + (1,) * (n - i) < best["incl"]:
             return
         code = ranked[i]
         if can_place(state, code, program, prefs, slots, pool_group):
@@ -86,10 +93,11 @@ def timetable_term(
                 built = build_planned_course(code, program, weights, slots)
                 built.section = _section_info(code, sec, sections_by_code)
                 place(nstate, built, program, slots, pool_group)
-                dfs(i + 1, nstate, chosen + [(built, sec)], used_sections + [sec])
-        dfs(i + 1, state, chosen, used_sections)  # skip branch (substitution)
+                dfs(i + 1, nstate, chosen + [(built, sec)],
+                    used_sections + [sec], incl_bits + (1,))
+        dfs(i + 1, state, chosen, used_sections, incl_bits + (0,))  # skip (substitution)
 
-    dfs(0, base, [], list(anchor_sections))
+    dfs(0, base, [], list(anchor_sections), ())
 
     label = f"{prefs.target_season.capitalize()} {prefs.target_year}"
     term = TermPlan(season=prefs.target_season, year=prefs.target_year, label=label)

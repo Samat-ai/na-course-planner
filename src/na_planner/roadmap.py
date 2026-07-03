@@ -6,7 +6,9 @@ from na_planner.models.preferences import StudentPreferences
 from na_planner.models.recommend import PlannedCourse, Recommendation, TermPlan
 from na_planner.models.student import CompletedCourse, StudentRecord
 from na_planner.planner import plan_term
+from na_planner.schedule_loader import default_schedule_path, load_sections
 from na_planner.scoring import DEFAULT_WEIGHTS
+from na_planner.timetabler import timetable_term
 
 MAX_TERMS = 16
 
@@ -21,6 +23,16 @@ def display_label(code: str) -> str:
 
 def _advance(season: str, year: int) -> tuple[str, int]:
     return ("spring", year + 1) if season == "fall" else ("fall", year)
+
+
+def _sections_for(prefs: StudentPreferences) -> dict:
+    """Real sections for the target term, or {} (graceful degrade) when the snapshot
+    is missing so recommend() falls back to the course-set plan."""
+    try:
+        return load_sections(default_schedule_path(prefs.target_year),
+                             prefs.target_season)
+    except FileNotFoundError:
+        return {}
 
 
 def _same_term(label: str | None, target: str) -> bool:
@@ -84,8 +96,16 @@ def recommend(
             elig = [code for code in elig if code not in pinned_codes]
         if not elig and not term_pinned:
             break
-        term = plan_term(elig, program, term_prefs, weights, audit_result=last_audit,
-                         pinned=term_pinned)
+        # Only the next term (i == 0) is timetabled against real sections, and only
+        # when a snapshot exists for the target season; every later term stays the
+        # heuristic course-set plan.
+        sections = _sections_for(term_prefs) if i == 0 else {}
+        if i == 0 and sections:
+            term = timetable_term(elig, program, term_prefs, sections, weights,
+                                  audit_result=last_audit, pinned=term_pinned)
+        else:
+            term = plan_term(elig, program, term_prefs, weights,
+                             audit_result=last_audit, pinned=term_pinned)
         if not term.courses:
             break
         terms.append(term)

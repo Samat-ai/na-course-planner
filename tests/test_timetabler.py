@@ -47,6 +47,19 @@ def test_prefers_compact_week_among_equal_inclusion():
     assert chosen.section == "2"             # 2 campus days beats 3
 
 
+def test_compact_week_off_skips_day_minimization():
+    # Same MWF vs TuTh sections, both start 600. With compact_week off, day count is
+    # ignored and the tiebreak falls to earliest start then lowest section -> section "1".
+    prog = _prog({"A 1300": 3})
+    prefs = StudentPreferences(target_credits=3.0, max_load=3.0, compact_week=False)
+    secs = {"A 1300": [
+        _sec("A 1300", "1", [Weekday.MON, Weekday.WED, Weekday.FRI], 600, 660),
+        _sec("A 1300", "2", [Weekday.TUE, Weekday.THU], 600, 660),
+    ]}
+    term = timetable_term(["A 1300"], prog, prefs, secs)
+    assert term.courses[0].section.section == "1"
+
+
 def test_course_with_no_section_is_kept_and_flagged():
     prog = _prog({"A 1300": 3})
     prefs = StudentPreferences(target_credits=3.0, max_load=3.0)

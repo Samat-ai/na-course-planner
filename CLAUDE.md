@@ -6,8 +6,13 @@ recommend a next-term course set + a tentative roadmap to graduation. v1 uses
 student-provided data and manual registration; automated registration is a v2 gated on
 official API access.
 
-**Status:** Design is complete; implementation has **not started**. Build the code by
-executing the plans in `docs/superpowers/plans/` in order.
+**Status:** Core implementation is **complete and green** (220 tests passing). All four
+original plans in `docs/superpowers/plans/` are built — engine (audit, planner, roadmap),
+ingestion (transcript/schedule parsing), and the FastAPI web API + minimal UI — plus later
+work: exam/transfer credit (PR #9), concentration grandfathering (PR #10), a credit-hours
+linter + 2026 schedule reference (PR #11), and conflict-free next-term timetabling (PR #12).
+Deployed via Vercel. Ongoing work is incremental fixes and features on top of a working base;
+the plans remain useful as design records rather than a from-scratch build order.
 
 ## ⚠️ Environment: use `py -3`, never `python`
 

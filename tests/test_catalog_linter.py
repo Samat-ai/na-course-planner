@@ -79,3 +79,25 @@ def test_credits_from_filter_requires_filter_and_credits():
     problems = lint_program(_program([g], {}))
     assert any("course_filter" in p for p in problems)
     assert any("min_credits" in p for p in problems)
+
+
+def test_credits_mismatch_with_code_second_digit_flagged():
+    # NA encodes credit hours in the 2nd digit of the course number:
+    # COMP 1412 -> 4 credits. A course whose `credits` disagrees is a data typo.
+    courses = {"COMP 1412": Course(code="COMP 1412", credits=3)}
+    groups = [RequirementGroup(id="c", name="Core", kind="all_of", courses=["COMP 1412"])]
+    problems = lint_program(_program(groups, courses))
+    assert any("COMP 1412" in p and "credit" in p.lower() for p in problems)
+
+
+def test_credits_matching_code_second_digit_not_flagged():
+    courses = {"COMP 1412": Course(code="COMP 1412", credits=4)}
+    groups = [RequirementGroup(id="c", name="Core", kind="all_of", courses=["COMP 1412"])]
+    assert lint_program(_program(groups, courses)) == []
+
+
+def test_nonstandard_code_credits_not_checked():
+    # Placeholder / transfer-style codes that don't match "SUBJ NNNN" are skipped.
+    courses = {"General elective": Course(code="General elective", credits=3)}
+    groups = [RequirementGroup(id="c", name="Core", kind="all_of", courses=["General elective"])]
+    assert lint_program(_program(groups, courses)) == []

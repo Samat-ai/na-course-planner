@@ -1,0 +1,7 @@
+pydantic>=2.6
+pyyaml>=6.0
+pdfplumber>=0.9
+fpdf2>=2.7
+fastapi>=0.110
+uvicorn[standard]>=0.29
+python-multipart>=0.0.9

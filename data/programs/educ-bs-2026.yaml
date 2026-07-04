@@ -659,24 +659,34 @@ courses:
     title: Seminar for PPR Exam
     credits: 1
     offering: every
+    # Prep for the end-of-program TExES PPR certification exam; gate on senior standing
+    # (90+ earned credit hours, catalog 5.2.4) so it isn't taken before the pedagogy core.
     prereq:
-      kind: none
+      kind: min_credits
+      credits: 90
 
   EDUC 4101:
     code: EDUC 4101
     title: Seminar for ESL Exam
     credits: 1
     offering: every
+    # Prep for the end-of-program TExES ESL Supplemental certification exam; gate on senior
+    # standing (90+ earned credit hours, catalog 5.2.4), same rationale as EDUC 3102.
     prereq:
-      kind: none
+      kind: min_credits
+      credits: 90
 
   EDUC 4133:
     code: EDUC 4133
     title: Capstone Project Presentation
     credits: 1
     offering: every
+    # Taken "during the final semester of their program" (catalog): a portfolio demonstrating
+    # success in every content-area course. Gate on senior standing (90+ earned credit hours,
+    # catalog 5.2.4) so it isn't front-loaded. Mirrors COMP 4393's capstone gate.
     prereq:
-      kind: none
+      kind: min_credits
+      credits: 90
 
 # ─────────────────────────────────────────────────────────────────────────────
 # REQUIREMENT GROUPS

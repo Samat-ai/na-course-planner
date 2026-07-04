@@ -508,8 +508,12 @@ courses:
     title: Senior Design Project
     credits: 3
     offering: every
+    # Capstone: "integrates knowledge and skills gained in various courses within the CS
+    # curriculum" (catalog description; formal prereq is instructor approval). Gate on
+    # senior standing (90+ earned credit hours, catalog 5.2.4) so it isn't front-loaded.
     prereq:
-      kind: none
+      kind: min_credits
+      credits: 90
 
   # ── Concentration: Cybersecurity ─────────────────────────────────────────
   COMP 4361:

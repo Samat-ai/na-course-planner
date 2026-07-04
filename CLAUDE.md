@@ -6,13 +6,17 @@ recommend a next-term course set + a tentative roadmap to graduation. v1 uses
 student-provided data and manual registration; automated registration is a v2 gated on
 official API access.
 
-**Status:** Core implementation is **complete and green** (220 tests passing). All four
+**Status:** Core implementation is **complete and green** (232 tests passing). All four
 original plans in `docs/superpowers/plans/` are built — engine (audit, planner, roadmap),
 ingestion (transcript/schedule parsing), and the FastAPI web API + minimal UI — plus later
 work: exam/transfer credit (PR #9), concentration grandfathering (PR #10), a credit-hours
-linter + 2026 schedule reference (PR #11), and conflict-free next-term timetabling (PR #12).
+linter + 2026 schedule reference (PR #11), conflict-free next-term timetabling (PR #12),
+roadmap schedule-realism (PR #13: timetable all snapshot-covered terms + soft season-filter so
+fall/spring-only courses aren't mis-scheduled in heuristic terms), and senior-standing gates on
+capstone / end-of-program courses (PR #14 COMP 4393; PR #15 EDUC 4133 + PPR/ESL seminars).
 Deployed via Vercel. Ongoing work is incremental fixes and features on top of a working base;
-the plans remain useful as design records rather than a from-scratch build order.
+the plans remain useful as design records rather than a from-scratch build order. Open/deferred
+items for triage live in the auto-memory (see the "open tasks" note).
 
 ## ⚠️ Environment: use `py -3`, never `python`
 

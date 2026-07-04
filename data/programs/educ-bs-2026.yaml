@@ -659,16 +659,22 @@ courses:
     title: Seminar for PPR Exam
     credits: 1
     offering: every
+    # Prep for the end-of-program TExES PPR certification exam; gate on senior standing
+    # (90+ earned credit hours, catalog 5.2.4) so it isn't taken before the pedagogy core.
     prereq:
-      kind: none
+      kind: min_credits
+      credits: 90
 
   EDUC 4101:
     code: EDUC 4101
     title: Seminar for ESL Exam
     credits: 1
     offering: every
+    # Prep for the end-of-program TExES ESL Supplemental certification exam; gate on senior
+    # standing (90+ earned credit hours, catalog 5.2.4), same rationale as EDUC 3102.
     prereq:
-      kind: none
+      kind: min_credits
+      credits: 90
 
   EDUC 4133:
     code: EDUC 4133

@@ -32,6 +32,20 @@ def test_educ_capstone_presentation_scheduled_in_final_semester():
     _assert_gated_by_senior_standing(recommend(student, prog, prefs), "EDUC 4133")
 
 
+def test_educ_certification_exam_seminars_gated_to_senior_standing():
+    # The TExES PPR (EDUC 3102) and ESL (EDUC 4101) exam-prep seminars are end-of-program
+    # certification prep, so they must not be front-loaded into the freshman/sophomore years.
+    prog = load_program("data/programs/educ-bs-2026.yaml")
+    student = StudentRecord(program_code=prog.code, catalog_year=2026)
+    prefs = StudentPreferences(
+        target_season="fall", target_year=2026,
+        declared_concentration="concentration_elementary_education",
+    )
+    rec = recommend(student, prog, prefs)
+    _assert_gated_by_senior_standing(rec, "EDUC 3102")
+    _assert_gated_by_senior_standing(rec, "EDUC 4101")
+
+
 def _assert_gated_by_senior_standing(rec, code: str) -> None:
     terms = [rec.next_term, *rec.roadmap]
     prior_credits = 0.0

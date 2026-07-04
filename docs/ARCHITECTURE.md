@@ -253,10 +253,13 @@ _Resolve a student's reported exams (AP/CLEP/IB/SAT Subject) into NA course cred
 
 ### `src/na_planner/roadmap.py`
   - `display_label(code: str) -> str`
-  - `recommend(student: StudentRecord, program: Program, prefs: StudentPreferences, weights: dict[str, float]=DEFAULT_WEIGHTS) -> Recommendation`
+  - `restrict_to_season(codes: list[str], season: str, seen_by_season: dict[str, set[str]]) -> list[str]`
+  - `recommend(student: StudentRecord, program: Program, prefs: StudentPreferences, weights: dict[str, float]=DEFAULT_WEIGHTS, offering_seasons: dict[str, set[str]] | None=None) -> Recommendation`
 
 ### `src/na_planner/schedule_loader.py`
   - `default_schedule_path(year: int=2026) -> Path`
+  - `latest_schedule_path() -> Path | None`
+  - `offered_codes_by_season(path: str | Path) -> dict[str, set[str]]`
   - `load_sections(path: str | Path, season: str) -> dict[str, list[Section]]`
 
 ### `src/na_planner/scoring.py`

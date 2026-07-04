@@ -6,7 +6,12 @@ from na_planner.models.preferences import StudentPreferences
 from na_planner.models.recommend import PlannedCourse, Recommendation, TermPlan
 from na_planner.models.student import CompletedCourse, StudentRecord
 from na_planner.planner import plan_term
-from na_planner.schedule_loader import default_schedule_path, load_sections
+from na_planner.schedule_loader import (
+    default_schedule_path,
+    latest_schedule_path,
+    load_sections,
+    offered_codes_by_season,
+)
 from na_planner.scoring import DEFAULT_WEIGHTS
 from na_planner.timetabler import timetable_term
 
@@ -35,6 +40,31 @@ def _sections_for(prefs: StudentPreferences) -> dict:
         return {}
 
 
+def _offering_signal() -> dict[str, set[str]]:
+    """Season -> offered-code sets from the newest available snapshot, or {} if none.
+    A soft seasonal signal for heuristically-planned terms the schedule doesn't cover."""
+    latest = latest_schedule_path()
+    if latest is None:
+        return {}
+    try:
+        return offered_codes_by_season(latest)
+    except FileNotFoundError:
+        return {}
+
+
+def restrict_to_season(codes: list[str], season: str,
+                       seen_by_season: dict[str, set[str]]) -> list[str]:
+    """Drop courses the snapshot shows are offered in a *different* season only. A code is
+    removed iff we have evidence for it (it appears in some band) but not in `season`'s band.
+    Courses in no band (no evidence) are kept, and a season with no band is a no-op -- we
+    never block a course without positive evidence it's off-season (Option 1)."""
+    if season not in seen_by_season:
+        return list(codes)
+    offered_now = seen_by_season[season]
+    seen_any: set[str] = set().union(*seen_by_season.values())
+    return [c for c in codes if c not in seen_any or c in offered_now]
+
+
 def _same_term(label: str | None, target: str) -> bool:
     return label is not None and label.strip().casefold() == target.strip().casefold()
 
@@ -53,6 +83,7 @@ def _state_record(program_code: str, year: int,
 def recommend(
     student: StudentRecord, program: Program, prefs: StudentPreferences,
     weights: dict[str, float] = DEFAULT_WEIGHTS,
+    offering_seasons: dict[str, set[str]] | None = None,
 ) -> Recommendation:
     passed: dict[str, Grade | None] = {}
     credits: dict[str, float] = {}
@@ -80,6 +111,7 @@ def recommend(
     credits_earned = sum(credits.values())
 
     season, year = prefs.target_season, prefs.target_year
+    seen_by_season = offering_seasons if offering_seasons is not None else _offering_signal()
     terms: list[TermPlan] = []
     last_audit = None
 
@@ -96,15 +128,26 @@ def recommend(
             elig = [code for code in elig if code not in pinned_codes]
         if not elig and not term_pinned:
             break
-        # Only the next term (i == 0) is timetabled against real sections, and only
-        # when a snapshot exists for the target season; every later term stays the
-        # heuristic course-set plan.
-        sections = _sections_for(term_prefs) if i == 0 else {}
-        if i == 0 and sections:
+        # Timetable any term the published snapshot actually covers (its file is keyed by
+        # target_year, its bands by season), not just the next term; terms with no snapshot
+        # gracefully degrade to the heuristic course-set plan. WIP early-registration pinning
+        # still applies to the immediate term only (handled by term_pinned above).
+        sections = _sections_for(term_prefs)
+        if sections:
             term = timetable_term(elig, program, term_prefs, sections, weights,
                                   audit_result=last_audit, pinned=term_pinned)
         else:
-            term = plan_term(elig, program, term_prefs, weights,
+            # Heuristic (uncovered) term: covered terms already exclude off-season courses
+            # via real sections, but here the offering gate is our only signal. Drop courses
+            # the snapshot shows are offered in another season only.
+            elig_season = restrict_to_season(elig, season, seen_by_season)
+            if not elig_season and not term_pinned:
+                # Requirements remain (we passed the `not elig` guard above) but none are
+                # offered this season -> defer to the next term rather than break (which
+                # would silently drop them) or schedule them off-season. Bounded by MAX_TERMS.
+                season, year = _advance(season, year)
+                continue
+            term = plan_term(elig_season, program, term_prefs, weights,
                              audit_result=last_audit, pinned=term_pinned)
         if not term.courses:
             break

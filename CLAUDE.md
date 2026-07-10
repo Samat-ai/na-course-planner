@@ -13,7 +13,10 @@ work: exam/transfer credit (PR #9), concentration grandfathering (PR #10), a cre
 linter + 2026 schedule reference (PR #11), conflict-free next-term timetabling (PR #12),
 roadmap schedule-realism (PR #13: timetable all snapshot-covered terms + soft season-filter so
 fall/spring-only courses aren't mis-scheduled in heuristic terms), and senior-standing gates on
-capstone / end-of-program courses (PR #14 COMP 4393; PR #15 EDUC 4133 + PPR/ESL seminars).
+capstone / end-of-program courses (PR #14 COMP 4393; PR #15 EDUC 4133 + PPR/ESL seminars), and
+basic SEO (meta/OG/Twitter tags, JSON-LD, robots.txt, sitemap.xml, generated OG image via
+`scripts/generate_og_image.py`; site verified and sitemap submitted in Google Search Console
+2026-07-10).
 Deployed via Vercel. Ongoing work is incremental fixes and features on top of a working base;
 the plans remain useful as design records rather than a from-scratch build order. Open/deferred
 items for triage live in the auto-memory (see the "open tasks" note).

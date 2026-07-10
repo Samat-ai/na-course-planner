@@ -157,6 +157,18 @@ def create_app() -> FastAPI:
     def index() -> str:
         return (static_dir / "index.html").read_text(encoding="utf-8")
 
+    @app.get("/robots.txt", response_class=Response)
+    def robots_txt() -> Response:
+        return Response(
+            (static_dir / "robots.txt").read_text(encoding="utf-8"), media_type="text/plain",
+        )
+
+    @app.get("/sitemap.xml", response_class=Response)
+    def sitemap_xml() -> Response:
+        return Response(
+            (static_dir / "sitemap.xml").read_text(encoding="utf-8"), media_type="application/xml",
+        )
+
     app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
     return app

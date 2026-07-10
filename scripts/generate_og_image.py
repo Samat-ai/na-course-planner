@@ -58,7 +58,8 @@ def main() -> None:
     url_font = load_font("arialbd.ttf", 26)
     draw.text((margin, HEIGHT - 90), "course-planner.dev", font=url_font, fill=ACCENT)
 
-    out_path = Path(__file__).resolve().parent.parent / "src" / "na_planner" / "static" / "og-image.png"
+    repo_root = Path(__file__).resolve().parent.parent
+    out_path = repo_root / "src" / "na_planner" / "static" / "og-image.png"
     img.save(out_path)
     print(f"Wrote {out_path}")
 

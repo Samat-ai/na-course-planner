@@ -58,6 +58,20 @@ def create_app() -> FastAPI:
     def concentration_years(code: str) -> list[int]:
         return list_overlay_years(code)
 
+    @app.get("/programs/{code}/concentrations")
+    def concentrations(code: str, catalog_year: int = 2026) -> list[dict]:
+        # Declarable concentrations come from the program's choose_group subgroups so
+        # the UI never hardcodes them per program.
+        try:
+            program = load_program_by(code, catalog_year)
+        except KeyError as e:
+            raise HTTPException(status_code=404, detail=str(e)) from e
+        return [
+            {"id": s.id, "name": s.name.removesuffix(" Concentration")}
+            for g in program.groups if g.kind == "choose_group"
+            for s in g.subgroups
+        ]
+
     @app.get("/exam-chart", response_model=ExamCreditChart)
     def exam_chart(catalog_year: int = 2026) -> ExamCreditChart:
         try:

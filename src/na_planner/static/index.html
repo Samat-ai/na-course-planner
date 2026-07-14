@@ -396,16 +396,6 @@ body { background: #F2EEE6; font-family: 'Hanken Grotesk', system-ui, sans-serif
 </div>
 
 <script>
-const CONCENTRATIONS = {
-  'CS-BS': [
-    {id:'',name:'Undeclared'},
-    {id:'concentration_networking',name:'Computer Networking'},
-    {id:'concentration_cybersecurity',name:'Cybersecurity'},
-    {id:'concentration_data_analytics',name:'Data Analytics'},
-    {id:'concentration_software_engineering',name:'Software Engineering'},
-    {id:'concentration_web_mobile',name:'Web & Mobile Development'},
-  ]
-};
 const TERMS = ['Fall 2026','Spring 2027','Fall 2027','Spring 2028','Fall 2028','Spring 2029'];
 const EXAM_SOURCES = new Set(['AP','CLEP','IB','SAT_SUBJECT']);
 const SC = {
@@ -431,7 +421,7 @@ const app = {
     prefs:{targetCredits:15, pace:'full', term:'Fall 2026', difficulty:'balanced'},
     student:null, parseWarnings:[], editedCourses:[], editedExternals:[], editedExams:[], examChart:null,
     examResolution:null, auditResult:null, recommendation:null, programCourses:[],
-    concentrationYears:[],
+    concentrationYears:[], concList:[], parsedConcName:null,
   },
   _ct:null, _rt:null,
 
@@ -562,9 +552,9 @@ const app = {
     }
   },
 
-  matchConcentration(programCode,name){
+  matchConcentration(name){
     if(!name)return this.st.concentration||'';
-    const list=CONCENTRATIONS[programCode]||[];
+    const list=this.st.concList;
     const n=name.trim().toLowerCase();
     const exact=list.find(c=>c.id&&c.name.toLowerCase()===n);
     if(exact)return exact.id;
@@ -583,7 +573,10 @@ const app = {
       programCode:pc,
       catalogYear:student.catalog_year||this.st.catalogYear,
       concentrationYear:student.catalog_year||this.st.catalogYear,
-      concentration:this.matchConcentration(pc,student.concentration),
+      // The concentration list is fetched per program; the transcript's declared
+      // concentration is matched once it arrives (see loadConcentrations).
+      parsedConcName:student.concentration||null,
+      concentration:this.matchConcentration(student.concentration),
       editedCourses:(student.completed||[]).map(c=>({
         code:c.code||'',title:c.title||'',
         credits:String(c.credits??''),grade:c.grade||'',term:c.term||'',
@@ -601,6 +594,7 @@ const app = {
     });
     this.loadProgramCourses();
     this.loadConcentrationYears();
+    this.loadConcentrations();
     this.refreshExamResolution();
   },
 
@@ -617,7 +611,7 @@ const app = {
   onProgramChange(v){
     const base=this.baselineYear(v);
     this.set({programCode:v,concentration:'',catalogYear:base,concentrationYear:base});
-    this.loadProgramCourses();this.loadConcentrationYears();
+    this.loadProgramCourses();this.loadConcentrationYears();this.loadConcentrations();
   },
   onConcChange(v){this.set({concentration:v});this.renderStartYear();},
   onStartYearChange(v){this.set({concentrationYear:parseInt(v,10)});this.renderStartYear();},
@@ -721,6 +715,22 @@ const app = {
     }catch{ /* chart unavailable — exam entry falls back to no live preview */ }
   },
 
+  // Declarable concentrations for the current program, from the program data (the
+  // UI hardcodes none). Once loaded, resolve the transcript's declared-concentration
+  // name against it — unless the student already picked one (e.g. a resumed plan).
+  async loadConcentrations(){
+    const forProgram=this.st.programCode;
+    try{
+      const r=await this.req(`/programs/${encodeURIComponent(forProgram)}/concentrations?catalog_year=${this.st.catalogYear}`);
+      const concList=await r.json();
+      if(this.st.programCode!==forProgram)return;   // stale response after a program switch
+      this.set({concList});
+      if(this.st.parsedConcName&&!this.st.concentration){
+        this.set({concentration:this.matchConcentration(this.st.parsedConcName)});
+      }
+    }catch{ this.set({concList:[]}); }
+  },
+
   // Catalog course codes for the transfer-credit dropdown (validated equivalencies).
   async loadProgramCourses(){
     try{
@@ -773,6 +783,7 @@ const app = {
     }
     this.renderProgramDropdowns();
     this.loadConcentrationYears();
+    this.loadConcentrations();
   },
 
   renderProgramDropdowns(){
@@ -804,9 +815,9 @@ const app = {
   },
 
   renderConcs(){
-    const {programCode,concentration}=this.st;
+    const {concList,concentration}=this.st;
     const concSel=el('conc-sel');if(!concSel)return;
-    const concs=CONCENTRATIONS[programCode]||[{id:'',name:'Not applicable'}];
+    const concs=[{id:'',name:'Undeclared'},...concList];
     concSel.innerHTML=concs.map(c=>`<option value="${esc(c.id)}"${c.id===concentration?' selected':''}>${esc(c.name)}</option>`).join('');
   },
 

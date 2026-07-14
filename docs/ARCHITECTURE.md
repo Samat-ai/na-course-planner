@@ -94,6 +94,8 @@ py -3 scripts/gen_architecture.py                        # refresh module map be
     - fields: `student`, `program_code`, `catalog_year`, `concentration_catalog_year`, `preferences`
   - **class `ParseTextRequest`**
     - fields: `text`, `program_code`, `catalog_year`
+  - **class `ParseResponse`**
+    - fields: `student`, `warnings`
 
 ### `src/na_planner/audit.py`
   - `course_matches_filter(code: str, filt: CourseFilter, program: Program) -> bool`
@@ -221,7 +223,7 @@ _Resolve a student's reported exams (AP/CLEP/IB/SAT Subject) into NA course cred
 ### `src/na_planner/models/schedule.py`
   - **class `Weekday`**
   - **class `Section`**
-    - fields: `course_code`, `section`, `term`, `days`, `start_min`, `end_min`, `room`, `professor`, `meeting_type`
+    - fields: `course_code`, `section`, `title`, `term`, `days`, `start_min`, `end_min`, `room`, `professor`, `meeting_type`
     - methods: is_async
   - **class `SectionInfo`**
     - fields: `section`, `days`, `start_min`, `end_min`, `room`, `professor`, `meeting_type`, `note`

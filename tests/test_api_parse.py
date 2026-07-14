@@ -12,13 +12,25 @@ Computer Science - Conc: Software Engineering
 """
 
 
-def test_parse_text_returns_student_record():
+def test_parse_text_returns_student_record_with_warnings():
     r = client.post("/parse/text", json={"text": SAMPLE, "program_code": "CS-BS",
                                           "catalog_year": 2024})
     assert r.status_code == 200
     data = r.json()
-    assert data["program_code"] == "CS-BS"
-    assert any(c["code"] == "COMP 1411" for c in data["completed"])
+    assert data["warnings"] == []
+    student = data["student"]
+    assert student["program_code"] == "CS-BS"
+    assert any(c["code"] == "COMP 1411" for c in student["completed"])
+
+
+def test_parse_text_unknown_grade_warns_instead_of_500():
+    text = SAMPLE + "MUSI 1311 Music Appreciation UG AU 3.00 3.00 0.00 0.00\n"
+    r = client.post("/parse/text", json={"text": text, "program_code": "CS-BS",
+                                          "catalog_year": 2024})
+    assert r.status_code == 200
+    data = r.json()
+    assert not any(c["code"] == "MUSI 1311" for c in data["student"]["completed"])
+    assert any("MUSI 1311" in w for w in data["warnings"])
 
 
 def test_parse_pdf_image_only_returns_422():

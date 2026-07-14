@@ -192,6 +192,7 @@ body { background: #F2EEE6; font-family: 'Hanken Grotesk', system-ui, sans-serif
 <div id="screen-confirm" class="screen" style="max-width:1000px;margin:0 auto;padding:36px 24px 0;">
   <h1 class="conf-h1" style="font-family:'Spectral',serif;font-weight:600;letter-spacing:-.02em;margin:0 0 8px;">Confirm what we found</h1>
   <p style="font-size:16px;color:#5C6B79;margin:0 0 28px;line-height:1.5;">Edit anything that looks off, add credits we couldn't see, then tell us your program. This becomes your record.</p>
+  <div id="parse-warnings" style="display:none;margin:-14px 0 22px;flex-direction:column;gap:8px;"></div>
   <div style="background:#fff;border:1px solid #E7E1D6;border-radius:14px;padding:22px;margin-bottom:22px;box-shadow:0 1px 3px rgba(26,39,51,.04);">
     <div style="font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#8A95A0;margin-bottom:16px;">Your program</div>
     <div class="prog-grid">
@@ -395,16 +396,6 @@ body { background: #F2EEE6; font-family: 'Hanken Grotesk', system-ui, sans-serif
 </div>
 
 <script>
-const CONCENTRATIONS = {
-  'CS-BS': [
-    {id:'',name:'Undeclared'},
-    {id:'concentration_networking',name:'Computer Networking'},
-    {id:'concentration_cybersecurity',name:'Cybersecurity'},
-    {id:'concentration_data_analytics',name:'Data Analytics'},
-    {id:'concentration_software_engineering',name:'Software Engineering'},
-    {id:'concentration_web_mobile',name:'Web & Mobile Development'},
-  ]
-};
 const TERMS = ['Fall 2026','Spring 2027','Fall 2027','Spring 2028','Fall 2028','Spring 2029'];
 const EXAM_SOURCES = new Set(['AP','CLEP','IB','SAT_SUBJECT']);
 const SC = {
@@ -428,9 +419,9 @@ const app = {
     planLoading:false, completeView:false, copied:false,
     programs:[], programCode:'CS-BS', catalogYear:2026, concentration:'', concentrationYear:2026,
     prefs:{targetCredits:15, pace:'full', term:'Fall 2026', difficulty:'balanced'},
-    student:null, editedCourses:[], editedExternals:[], editedExams:[], examChart:null,
+    student:null, parseWarnings:[], editedCourses:[], editedExternals:[], editedExams:[], examChart:null,
     examResolution:null, auditResult:null, recommendation:null, programCourses:[],
-    concentrationYears:[],
+    concentrationYears:[], concList:[], parsedConcName:null,
   },
   _ct:null, _rt:null,
 
@@ -509,7 +500,8 @@ const app = {
       fd.append('program_code',this.st.programCode);
       fd.append('catalog_year',String(this.st.catalogYear));
       const r=await this.req('/parse/pdf',{method:'POST',body:fd});
-      this.applyStudent(await r.json());
+      const parsed=await r.json();
+      this.applyStudent(parsed.student,parsed.warnings);
       this.set({screen:'confirm',parsing:false});scrollTo(0,0);
     }catch(err){
       if(err.message&&(err.message.includes('text layer')||err.message.includes('scan'))){
@@ -551,8 +543,8 @@ const app = {
     this.set({parsing:true});
     el('input-error').style.display='none';
     try{
-      const student=await this.post('/parse/text',{text,program_code:this.st.programCode,catalog_year:this.st.catalogYear});
-      this.applyStudent(student);
+      const parsed=await this.post('/parse/text',{text,program_code:this.st.programCode,catalog_year:this.st.catalogYear});
+      this.applyStudent(parsed.student,parsed.warnings);
       this.set({screen:'confirm',parsing:false});scrollTo(0,0);
     }catch(err){
       this.set({parsing:false});
@@ -560,9 +552,9 @@ const app = {
     }
   },
 
-  matchConcentration(programCode,name){
+  matchConcentration(name){
     if(!name)return this.st.concentration||'';
-    const list=CONCENTRATIONS[programCode]||[];
+    const list=this.st.concList;
     const n=name.trim().toLowerCase();
     const exact=list.find(c=>c.id&&c.name.toLowerCase()===n);
     if(exact)return exact.id;
@@ -573,14 +565,18 @@ const app = {
     return part?part.id:(this.st.concentration||'');
   },
 
-  applyStudent(student){
+  applyStudent(student,warnings){
     const pc=student.program_code||this.st.programCode;
     this.set({
       student,
+      parseWarnings:warnings||[],
       programCode:pc,
       catalogYear:student.catalog_year||this.st.catalogYear,
       concentrationYear:student.catalog_year||this.st.catalogYear,
-      concentration:this.matchConcentration(pc,student.concentration),
+      // The concentration list is fetched per program; the transcript's declared
+      // concentration is matched once it arrives (see loadConcentrations).
+      parsedConcName:student.concentration||null,
+      concentration:this.matchConcentration(student.concentration),
       editedCourses:(student.completed||[]).map(c=>({
         code:c.code||'',title:c.title||'',
         credits:String(c.credits??''),grade:c.grade||'',term:c.term||'',
@@ -598,6 +594,7 @@ const app = {
     });
     this.loadProgramCourses();
     this.loadConcentrationYears();
+    this.loadConcentrations();
     this.refreshExamResolution();
   },
 
@@ -614,7 +611,7 @@ const app = {
   onProgramChange(v){
     const base=this.baselineYear(v);
     this.set({programCode:v,concentration:'',catalogYear:base,concentrationYear:base});
-    this.loadProgramCourses();this.loadConcentrationYears();
+    this.loadProgramCourses();this.loadConcentrationYears();this.loadConcentrations();
   },
   onConcChange(v){this.set({concentration:v});this.renderStartYear();},
   onStartYearChange(v){this.set({concentrationYear:parseInt(v,10)});this.renderStartYear();},
@@ -718,6 +715,22 @@ const app = {
     }catch{ /* chart unavailable — exam entry falls back to no live preview */ }
   },
 
+  // Declarable concentrations for the current program, from the program data (the
+  // UI hardcodes none). Once loaded, resolve the transcript's declared-concentration
+  // name against it — unless the student already picked one (e.g. a resumed plan).
+  async loadConcentrations(){
+    const forProgram=this.st.programCode;
+    try{
+      const r=await this.req(`/programs/${encodeURIComponent(forProgram)}/concentrations?catalog_year=${this.st.catalogYear}`);
+      const concList=await r.json();
+      if(this.st.programCode!==forProgram)return;   // stale response after a program switch
+      this.set({concList});
+      if(this.st.parsedConcName&&!this.st.concentration){
+        this.set({concentration:this.matchConcentration(this.st.parsedConcName)});
+      }
+    }catch{ this.set({concList:[]}); }
+  },
+
   // Catalog course codes for the transfer-credit dropdown (validated equivalencies).
   async loadProgramCourses(){
     try{
@@ -770,6 +783,7 @@ const app = {
     }
     this.renderProgramDropdowns();
     this.loadConcentrationYears();
+    this.loadConcentrations();
   },
 
   renderProgramDropdowns(){
@@ -801,9 +815,9 @@ const app = {
   },
 
   renderConcs(){
-    const {programCode,concentration}=this.st;
+    const {concList,concentration}=this.st;
     const concSel=el('conc-sel');if(!concSel)return;
-    const concs=CONCENTRATIONS[programCode]||[{id:'',name:'Not applicable'}];
+    const concs=[{id:'',name:'Undeclared'},...concList];
     concSel.innerHTML=concs.map(c=>`<option value="${esc(c.id)}"${c.id===concentration?' selected':''}>${esc(c.name)}</option>`).join('');
   },
 
@@ -882,6 +896,14 @@ const app = {
 
   renderConfirm(){
     const s=this.st;
+    const pw=s.parseWarnings||[];
+    const pwBox=el('parse-warnings');
+    pwBox.style.display=pw.length?'flex':'none';
+    pwBox.innerHTML=pw.map(w=>`
+      <div style="display:flex;gap:10px;align-items:flex-start;background:#F6EEDB;border:1px solid #ECDFBE;border-radius:10px;padding:12px 14px;">
+        <span style="flex:none;width:18px;height:18px;border-radius:50%;background:#EAD9A8;color:#8A6512;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;font-family:'Spectral',serif;">!</span>
+        <div style="font-size:13px;color:#7A6428;line-height:1.45;">${esc(w)}</div>
+      </div>`).join('');
     const courses=s.editedCourses;
     const cr=courses.reduce((a,c)=>a+(c.remedial?0:(parseFloat(c.credits)||0)),0);
     el('course-count').textContent=`${courses.length} course${courses.length!==1?'s':''} parsed · ${cr} credits`;

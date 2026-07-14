@@ -25,3 +25,8 @@ class ParseTextRequest(BaseModel):
     text: str
     program_code: str
     catalog_year: int
+
+
+class ParseResponse(BaseModel):
+    student: StudentRecord
+    warnings: list[str] = []   # ingestion warnings (skipped rows, retake dedupe, ...)

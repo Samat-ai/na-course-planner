@@ -16,6 +16,7 @@ class Weekday(StrEnum):
 class Section(BaseModel):
     course_code: str
     section: str
+    title: str = ""                # course name as printed in the schedule
     term: str                      # "fall" | "spring"
     days: list[Weekday] = []
     start_min: int | None = None   # minutes since midnight; None = async

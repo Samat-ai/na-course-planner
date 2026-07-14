@@ -6,6 +6,20 @@ from na_planner.models.schedule import Section
 
 _DATA = Path(__file__).resolve().parent.parent.parent / "data" / "schedules"
 
+# The published schedule still uses pre-2026 course numbering for a couple of
+# courses. Remap to the current catalog code so the timetabler finds their sections.
+# Keyed on (old code, lowercased title) — the title gate keeps a future snapshot
+# that already uses the new numbering from being remapped incorrectly.
+_CODE_ALIASES: dict[tuple[str, str], str] = {
+    ("COMP 4350", "network security"): "COMP 4353",
+    ("COMP 4353", "data mining"): "COMP 4373",
+}
+
+
+def _canonical(s: Section) -> Section:
+    new_code = _CODE_ALIASES.get((s.course_code, s.title.strip().lower()))
+    return s.model_copy(update={"course_code": new_code}) if new_code else s
+
 
 def default_schedule_path(year: int = 2026) -> Path:
     return _DATA / f"{year}-undergrad.csv"
@@ -33,7 +47,7 @@ def offered_codes_by_season(path: str | Path) -> dict[str, set[str]]:
         raise FileNotFoundError(f"Schedule file not found: {p}")
     by_season: dict[str, set[str]] = defaultdict(set)
     for s in parse_schedule_csv(p.read_text(encoding="utf-8")):
-        by_season[s.term].add(s.course_code)
+        by_season[s.term].add(_canonical(s).course_code)
     return dict(by_season)
 
 
@@ -44,5 +58,6 @@ def load_sections(path: str | Path, season: str) -> dict[str, list[Section]]:
     grouped: dict[str, list[Section]] = defaultdict(list)
     for s in parse_schedule_csv(p.read_text(encoding="utf-8")):
         if s.term == season:
+            s = _canonical(s)
             grouped[s.course_code].append(s)
     return dict(grouped)

@@ -767,7 +767,10 @@ groups:
     forced:
       - ENGL 1311
       - ENGL 1312
-      - COMM 1311  # Catalog requires COMM 1311 or COMM 1313; forced field requires specific code (v1 limitation)
+    forced_choices:  # catalog footnote 6: COMM 1311 or COMM 1313
+      - any_of:
+          - COMM 1311
+          - COMM 1313
     courses:
       - COMM 1311
       - COMM 1313

@@ -30,3 +30,7 @@ Thumbs.db
 *.tmp
 .vercel
 .playwright-mcp/
+
+# Catalog source PDFs stay local-only (repo is public; the committed reference
+# is the extracted text in docs/reference/*.txt)
+docs/reference/*.pdf

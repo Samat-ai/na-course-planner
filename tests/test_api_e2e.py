@@ -19,7 +19,7 @@ def test_full_pipeline_parse_audit_recommend():
     pr = client.post("/parse/text", json={"text": SAMPLE, "program_code": "CS-BS",
                                           "catalog_year": 2026})
     assert pr.status_code == 200
-    student = pr.json()
+    student = pr.json()["student"]
     assert len(student["completed"]) == 2
 
     # 2. audit (client carries the StudentRecord)

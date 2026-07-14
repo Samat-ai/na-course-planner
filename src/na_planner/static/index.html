@@ -192,6 +192,7 @@ body { background: #F2EEE6; font-family: 'Hanken Grotesk', system-ui, sans-serif
 <div id="screen-confirm" class="screen" style="max-width:1000px;margin:0 auto;padding:36px 24px 0;">
   <h1 class="conf-h1" style="font-family:'Spectral',serif;font-weight:600;letter-spacing:-.02em;margin:0 0 8px;">Confirm what we found</h1>
   <p style="font-size:16px;color:#5C6B79;margin:0 0 28px;line-height:1.5;">Edit anything that looks off, add credits we couldn't see, then tell us your program. This becomes your record.</p>
+  <div id="parse-warnings" style="display:none;margin:-14px 0 22px;flex-direction:column;gap:8px;"></div>
   <div style="background:#fff;border:1px solid #E7E1D6;border-radius:14px;padding:22px;margin-bottom:22px;box-shadow:0 1px 3px rgba(26,39,51,.04);">
     <div style="font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#8A95A0;margin-bottom:16px;">Your program</div>
     <div class="prog-grid">
@@ -428,7 +429,7 @@ const app = {
     planLoading:false, completeView:false, copied:false,
     programs:[], programCode:'CS-BS', catalogYear:2026, concentration:'', concentrationYear:2026,
     prefs:{targetCredits:15, pace:'full', term:'Fall 2026', difficulty:'balanced'},
-    student:null, editedCourses:[], editedExternals:[], editedExams:[], examChart:null,
+    student:null, parseWarnings:[], editedCourses:[], editedExternals:[], editedExams:[], examChart:null,
     examResolution:null, auditResult:null, recommendation:null, programCourses:[],
     concentrationYears:[],
   },
@@ -509,7 +510,8 @@ const app = {
       fd.append('program_code',this.st.programCode);
       fd.append('catalog_year',String(this.st.catalogYear));
       const r=await this.req('/parse/pdf',{method:'POST',body:fd});
-      this.applyStudent(await r.json());
+      const parsed=await r.json();
+      this.applyStudent(parsed.student,parsed.warnings);
       this.set({screen:'confirm',parsing:false});scrollTo(0,0);
     }catch(err){
       if(err.message&&(err.message.includes('text layer')||err.message.includes('scan'))){
@@ -551,8 +553,8 @@ const app = {
     this.set({parsing:true});
     el('input-error').style.display='none';
     try{
-      const student=await this.post('/parse/text',{text,program_code:this.st.programCode,catalog_year:this.st.catalogYear});
-      this.applyStudent(student);
+      const parsed=await this.post('/parse/text',{text,program_code:this.st.programCode,catalog_year:this.st.catalogYear});
+      this.applyStudent(parsed.student,parsed.warnings);
       this.set({screen:'confirm',parsing:false});scrollTo(0,0);
     }catch(err){
       this.set({parsing:false});
@@ -573,10 +575,11 @@ const app = {
     return part?part.id:(this.st.concentration||'');
   },
 
-  applyStudent(student){
+  applyStudent(student,warnings){
     const pc=student.program_code||this.st.programCode;
     this.set({
       student,
+      parseWarnings:warnings||[],
       programCode:pc,
       catalogYear:student.catalog_year||this.st.catalogYear,
       concentrationYear:student.catalog_year||this.st.catalogYear,
@@ -882,6 +885,14 @@ const app = {
 
   renderConfirm(){
     const s=this.st;
+    const pw=s.parseWarnings||[];
+    const pwBox=el('parse-warnings');
+    pwBox.style.display=pw.length?'flex':'none';
+    pwBox.innerHTML=pw.map(w=>`
+      <div style="display:flex;gap:10px;align-items:flex-start;background:#F6EEDB;border:1px solid #ECDFBE;border-radius:10px;padding:12px 14px;">
+        <span style="flex:none;width:18px;height:18px;border-radius:50%;background:#EAD9A8;color:#8A6512;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;font-family:'Spectral',serif;">!</span>
+        <div style="font-size:13px;color:#7A6428;line-height:1.45;">${esc(w)}</div>
+      </div>`).join('');
     const courses=s.editedCourses;
     const cr=courses.reduce((a,c)=>a+(c.remedial?0:(parseFloat(c.credits)||0)),0);
     el('course-count').textContent=`${courses.length} course${courses.length!==1?'s':''} parsed · ${cr} credits`;

@@ -1,7 +1,25 @@
 from na_planner.grades import is_passing
 from na_planner.ingestion.grade_parse import parse_grade
-from na_planner.ingestion.models import ParsedCourse, ParsedTranscript
+from na_planner.ingestion.models import ParsedCourse, ParsedTranscript, UnknownGradeError
 from na_planner.models.student import CompletedCourse, ExternalCredit, StudentRecord
+
+
+def _drop_unknown_grades(
+    courses: list[ParsedCourse], warnings: list[str]
+) -> list[ParsedCourse]:
+    # Grade codes we don't model (AU audit, CR, WF, IP...) must not abort the whole
+    # parse; skip the row and tell the student what was dropped.
+    kept: list[ParsedCourse] = []
+    for c in courses:
+        try:
+            parse_grade(c.grade)
+        except UnknownGradeError:
+            warnings.append(
+                f"{c.code} ({c.term_label}) skipped — unrecognized grade {c.grade!r}."
+            )
+            continue
+        kept.append(c)
+    return kept
 
 
 def _dedupe_retakes(
@@ -32,7 +50,8 @@ def to_student_record(
 ) -> StudentRecord:
     # Ingestion warnings (retake dedupe, etc.) are appended to parsed.warnings so the
     # API can surface them alongside the built record.
-    courses = _dedupe_retakes(parsed.courses, parsed.warnings)
+    courses = _drop_unknown_grades(parsed.courses, parsed.warnings)
+    courses = _dedupe_retakes(courses, parsed.warnings)
     completed = [
         CompletedCourse(
             code=c.code, title=c.title, credits=c.credits,

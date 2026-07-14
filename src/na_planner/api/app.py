@@ -6,7 +6,12 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
 from na_planner.api.export import plan_to_json, plan_to_pdf
-from na_planner.api.schemas import AuditRequest, ParseTextRequest, RecommendRequest
+from na_planner.api.schemas import (
+    AuditRequest,
+    ParseResponse,
+    ParseTextRequest,
+    RecommendRequest,
+)
 from na_planner.audit import audit
 from na_planner.concentration_loader import list_overlay_years, load_program_with_concentration
 from na_planner.exam_credit import merge_exam_credit, resolve_transcript_exam_credit
@@ -117,25 +122,27 @@ def create_app() -> FastAPI:
             return student
         return resolve_transcript_exam_credit(student, chart)
 
-    @app.post("/parse/text", response_model=StudentRecord)
-    def parse_text(req: ParseTextRequest) -> StudentRecord:
+    @app.post("/parse/text", response_model=ParseResponse)
+    def parse_text(req: ParseTextRequest) -> ParseResponse:
         parsed = parse_transcript_text(req.text)
         student = to_student_record(parsed, req.program_code, req.catalog_year)
-        return _resolve_transfers(student, req.catalog_year)
+        return ParseResponse(student=_resolve_transfers(student, req.catalog_year),
+                             warnings=parsed.warnings)
 
-    @app.post("/parse/pdf", response_model=StudentRecord)
+    @app.post("/parse/pdf", response_model=ParseResponse)
     def parse_pdf(
         file: UploadFile = File(...),  # noqa: B008
         program_code: str = Form(...),  # noqa: B008
         catalog_year: int = Form(...),  # noqa: B008
-    ) -> StudentRecord:
+    ) -> ParseResponse:
         data = file.file.read()
         try:
             parsed = parse_transcript_pdf(data)
         except NoTextLayerError as e:
             raise HTTPException(status_code=422, detail=str(e)) from e
         student = to_student_record(parsed, program_code, catalog_year)
-        return _resolve_transfers(student, catalog_year)
+        return ParseResponse(student=_resolve_transfers(student, catalog_year),
+                             warnings=parsed.warnings)
 
     @app.post("/export/json")
     def export_json(rec: Recommendation) -> Response:

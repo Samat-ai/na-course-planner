@@ -94,6 +94,8 @@ py -3 scripts/gen_architecture.py                        # refresh module map be
     - fields: `student`, `program_code`, `catalog_year`, `concentration_catalog_year`, `preferences`
   - **class `ParseTextRequest`**
     - fields: `text`, `program_code`, `catalog_year`
+  - **class `ParseResponse`**
+    - fields: `student`, `warnings`
 
 ### `src/na_planner/audit.py`
   - `course_matches_filter(code: str, filt: CourseFilter, program: Program) -> bool`

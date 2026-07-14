@@ -76,6 +76,20 @@ def test_failed_attempt_before_pass_is_not_deduped():
     assert parsed.warnings == []
 
 
+def test_unknown_grade_row_skipped_with_warning():
+    # Grade codes we don't model (AU audit, CR credit, WF, IP...) must not abort the
+    # whole parse; skip the row and tell the student.
+    parsed = ParsedTranscript(courses=[
+        ParsedCourse(code="MUSI 1311", title="Music Appreciation", grade="AU",
+                     credits=3, term_label="Fall 2024"),
+        ParsedCourse(code="COMP 1411", title="Intro to CS I", grade="A",
+                     credits=4, term_label="Fall 2024"),
+    ])
+    rec = to_student_record(parsed, "CS-BS", 2026)
+    assert [c.code for c in rec.completed] == ["COMP 1411"]
+    assert any("MUSI 1311" in w and "AU" in w for w in parsed.warnings)
+
+
 def test_builds_external_credit_from_transfers():
     parsed = ParsedTranscript(
         courses=[],

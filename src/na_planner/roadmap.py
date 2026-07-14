@@ -69,6 +69,21 @@ def _same_term(label: str | None, target: str) -> bool:
     return label is not None and label.strip().casefold() == target.strip().casefold()
 
 
+def _unrestricted_remaining(audit_result, program: Program) -> float:
+    """Unrestricted-elective credits still owed per the audit (satisfied groups
+    and non-unrestricted filters excluded)."""
+    unrestricted_ids = {
+        g.id for g in program.groups
+        if g.kind == "credits_from_filter"
+        and g.course_filter is not None and g.course_filter.unrestricted
+    }
+    return max(0.0, sum(
+        s.credits_required - s.credits_applied
+        for s in audit_result.groups
+        if s.group_id in unrestricted_ids and s.status != "satisfied"
+    ))
+
+
 def _state_record(program_code: str, year: int,
                   passed: dict[str, Grade | None],
                   credits: dict[str, float]) -> StudentRecord:
@@ -114,6 +129,9 @@ def recommend(
     seen_by_season = offering_seasons if offering_seasons is not None else _offering_signal()
     terms: list[TermPlan] = []
     last_audit = None
+    group_kinds = {grp.id: grp.kind for grp in program.groups}
+    elective_seq = 0        # unique passed-dict keys for in-loop placeholders
+    placeholder_credits = 0.0  # elective credits scheduled in-loop (still to take)
 
     for i in range(MAX_TERMS):
         state = _state_record(program.code, program.catalog_year, passed, credits)
@@ -127,7 +145,37 @@ def recommend(
         if i == 0:
             elig = [code for code in elig if code not in pinned_codes]
         if not elig and not term_pinned:
-            break
+            # Deadlock case only: structured requirements REMAIN but none is
+            # eligible yet, and unrestricted-elective credit is still owed.
+            # Elective credits count toward min_credits gates, so scheduling
+            # them here is how a student legitimately reaches e.g. a 90-cr-
+            # gated final-semester seminar (EDUC Elementary) whose structured
+            # courses alone fall short. When structured work is already
+            # complete, break instead — the post-loop filler places the
+            # remaining electives (topping up under-target terms first).
+            structured_left = any(
+                s.status != "satisfied" for s in last_audit.groups
+                if group_kinds.get(s.group_id) != "credits_from_filter"
+            )
+            owed = _unrestricted_remaining(last_audit, program)
+            if not structured_left or owed <= 1e-6:
+                break
+            term = TermPlan(season=season, year=year,
+                            label=f"{season.capitalize()} {year}")
+            used = _fill_elective_slots(
+                term, max(prefs.target_credits, ELECTIVE_SLOT), owed)
+            if used <= 1e-6:
+                break
+            terms.append(term)
+            placeholder_credits += used
+            for pc in term.courses:
+                elective_seq += 1
+                key = f"{ELECTIVE_PLACEHOLDER} {elective_seq}"
+                passed[key] = Grade.A          # audit-visible: fills the
+                credits[key] = pc.credits      # unrestricted bucket + total
+                credits_earned += pc.credits
+            season, year = _advance(season, year)
+            continue
         # Timetable any term the published snapshot actually covers (its file is keyed by
         # target_year, its bands by season), not just the next term; terms with no snapshot
         # gracefully degrade to the heuristic course-set plan. WIP early-registration pinning
@@ -162,7 +210,6 @@ def recommend(
         last_audit = audit(student, program,
                            declared_concentration=prefs.declared_concentration)
 
-    group_kinds = {grp.id: grp.kind for grp in program.groups}
     elective_remaining = max(0.0, sum(
         (g.credits_required - g.credits_applied)
         for g in last_audit.groups
@@ -230,7 +277,9 @@ def recommend(
     return Recommendation(
         next_term=terms[0], roadmap=terms[1:],
         projected_graduation=projected,
-        elective_credits_remaining=elective_remaining,
+        # In-loop placeholders are already audit-counted; add them back so the
+        # field keeps meaning "elective credits the student still has to take".
+        elective_credits_remaining=elective_remaining + placeholder_credits,
     )
 
 

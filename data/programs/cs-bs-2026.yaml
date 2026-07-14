@@ -767,7 +767,10 @@ groups:
     forced:
       - ENGL 1311
       - ENGL 1312
-      - COMM 1311  # Catalog requires COMM 1311 or COMM 1313; forced field requires specific code (v1 limitation)
+    forced_choices:  # catalog footnote 6: COMM 1311 or COMM 1313
+      - any_of:
+          - COMM 1311
+          - COMM 1313
     courses:
       - COMM 1311
       - COMM 1313
@@ -807,8 +810,10 @@ groups:
     name: "Gen-Ed: Social and Behavioral Sciences"
     kind: choose
     min_count: 2
-    forced:
-      - GOVT 2311
+    forced_choices:  # catalog footnote 4: one GOVT course (2311 or 2312)
+      - any_of:
+          - GOVT 2311
+          - GOVT 2312
     courses:
       - ECON 2311
       - ECON 2312

@@ -30,6 +30,24 @@ def test_humanities_satisfied_by_any_hist_course():
     assert hum.status == "satisfied"
 
 
+def test_composition_satisfied_by_public_speaking():
+    # Catalog footnote 6 (2026-27 p.117): students take "COMM 1311 or COMM 1313",
+    # ENGL 1311, and ENGL 1312. Public Speaking alone must fill the COMM slot.
+    prog = load_program(CS)
+    result = audit(_student(["ENGL 1311", "ENGL 1312", "COMM 1313"]), prog)
+    comp = _group(result, "gen_ed_composition_comm")
+    assert comp.status == "satisfied"
+
+
+def test_social_satisfied_by_any_govt_course():
+    # Catalog footnote 4 (2026-27 p.117): "one GOVT course from this category" —
+    # GOVT 2312 must fill the GOVT slot just like GOVT 2311.
+    prog = load_program(CS)
+    result = audit(_student(["GOVT 2312", "PSYC 2311"]), prog)
+    soc = _group(result, "gen_ed_social")
+    assert soc.status == "satisfied"
+
+
 def test_natural_science_math_not_over_requiring():
     # Catalog for CS: MATH 1311 + MATH 1313 + one natural science = 3 courses (#4),
     # and core-owned MATH 2314 must never appear as a remaining nat-sci choice.

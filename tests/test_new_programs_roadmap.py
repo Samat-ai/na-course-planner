@@ -39,26 +39,32 @@ def test_roadmap_converges_and_respects_prereqs(filename, code, concentration):
     assert rec.projected_graduation is not None
     assert len(rec.next_term.courses) >= 1
 
-    # Drop synthetic elective-filler placeholders — they are not catalog courses.
     terms = [rec.next_term, *rec.roadmap]
-    for term in terms:
-        term.courses = [c for c in term.courses if c.code != ELECTIVE_PLACEHOLDER]
 
-    # Every recommended course is a real program course.
+    # Every recommended course is a real program course (elective-filler
+    # placeholders are synthetic, not catalog courses).
     for term in terms:
         for c in term.courses:
-            assert c.code in prog.courses, f"unknown course recommended: {c.code}"
+            if c.code != ELECTIVE_PLACEHOLDER:
+                assert c.code in prog.courses, f"unknown course recommended: {c.code}"
 
     # Walk the roadmap term by term: a course may only be scheduled once its
-    # prerequisites are satisfied by courses passed in *earlier* terms.
+    # prerequisites are satisfied by *earlier* terms. Placeholder electives are
+    # not prereq-checked, but their credits DO count toward min_credits gates —
+    # that is how EDUC Elementary reaches its 90-cr-gated seminars.
     passed: dict[str, None] = {}
     credits_earned = 0.0
     for term in terms:
         for c in term.courses:
+            if c.code == ELECTIVE_PLACEHOLDER:
+                continue
             prereq = prog.courses[c.code].prereq
             assert prereqs_satisfied(prereq, passed, credits_earned), (
                 f"{c.code} scheduled before its prereqs are met in {code}/{concentration}"
             )
         for c in term.courses:
-            passed[c.code] = None
-            credits_earned += prog.courses[c.code].credits
+            if c.code == ELECTIVE_PLACEHOLDER:
+                credits_earned += c.credits
+            else:
+                passed[c.code] = None
+                credits_earned += prog.courses[c.code].credits

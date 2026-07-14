@@ -533,12 +533,8 @@ courses:
 # REQUIREMENT GROUPS
 # ─────────────────────────────────────────────────────────────────────────────
 groups:
-  # ── 1. Freshman Seminar ───────────────────────────────────────────────────
-  - id: freshman_seminar
-    name: Freshman Seminar
-    kind: all_of
-    courses:
-      - FRSH 1311
+  # FRSH 1311 is "a required elective, part of the Elective hours" (catalog p.117),
+  # not a standalone requirement group — it counts inside unrestricted_electives.
 
   # ── 2. Gen-Ed: Composition, Communications, and Foreign Languages ─────────
   - id: gen_ed_composition_comm
@@ -621,6 +617,33 @@ groups:
           - GEOG 2312
           - GEOL 1311
     courses: []
+
+  # ── 5b. Gen-Ed: Additional (9 cr from any gen-ed category) ────────────────
+  # Catalog requires 36 gen-ed credits; the four category minimums total 27,
+  # leaving 9 cr of "additional general education" from any category.
+  # Specificity 1 (subject-filtered) so it claims leftover gen-ed courses
+  # before the unrestricted electives.
+  - id: gen_ed_additional
+    name: "Gen-Ed: Additional (any category)"
+    kind: credits_from_filter
+    min_credits: 9
+    course_filter:
+      subjects:
+        - ARTS
+        - COMM
+        - ENGL
+        - HIST
+        - MUSI
+        - PHIL
+        - ECON
+        - GOVT
+        - PSYC
+        - SOCI
+        - SPAN
+        - BIOL
+        - GEOG
+        - GEOL
+        - MATH
 
   # ── 6. Criminal Justice Core (42 credits) ─────────────────────────────────
   - id: criminal_justice_core

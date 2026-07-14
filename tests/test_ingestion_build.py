@@ -45,6 +45,37 @@ def test_remedial_course_flagged_on_completed():
     assert by["COMP 1411"].remedial is False
 
 
+def test_retake_keeps_only_last_passing_attempt():
+    # NA grade replacement: a retaken course earns credit once (Rpt Hrs). Duplicate
+    # passing rows must not double-count credits in the audit.
+    parsed = ParsedTranscript(courses=[
+        ParsedCourse(code="COMP 1411", title="Intro to CS I", grade="D",
+                     credits=4, term_label="Fall 2024"),
+        ParsedCourse(code="COMP 1411", title="Intro to CS I", grade="B",
+                     credits=4, term_label="Spring 2025"),
+    ])
+    rec = to_student_record(parsed, "CS-BS", 2026)
+    rows = [c for c in rec.completed if c.code == "COMP 1411"]
+    assert len(rows) == 1
+    assert rows[0].grade == Grade.B
+    assert rows[0].term == "Spring 2025"
+    assert any("COMP 1411" in w for w in parsed.warnings)
+
+
+def test_failed_attempt_before_pass_is_not_deduped():
+    # An F earns no credit, so it can't double-count; keep it as history.
+    parsed = ParsedTranscript(courses=[
+        ParsedCourse(code="COMP 1411", title="Intro to CS I", grade="F",
+                     credits=4, term_label="Fall 2024"),
+        ParsedCourse(code="COMP 1411", title="Intro to CS I", grade="B",
+                     credits=4, term_label="Spring 2025"),
+    ])
+    rec = to_student_record(parsed, "CS-BS", 2026)
+    rows = [c for c in rec.completed if c.code == "COMP 1411"]
+    assert {r.grade for r in rows} == {Grade.F, Grade.B}
+    assert parsed.warnings == []
+
+
 def test_builds_external_credit_from_transfers():
     parsed = ParsedTranscript(
         courses=[],

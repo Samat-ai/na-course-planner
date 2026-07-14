@@ -60,6 +60,42 @@ def test_roadmap_advances_calendar_years_correctly():
     ]
 
 
+def test_electives_scheduled_to_reach_credit_gated_requirement():
+    # A required course gated on min_credits that the structured courses alone can
+    # never reach (real case: EDUC Elementary's 1-cr seminars are gated at 90 cr
+    # while the structured groups top out at 87). The roadmap must schedule the
+    # still-owed unrestricted-elective credit first — elective credits count toward
+    # credit gates — then the gated course, instead of dead-ending unprojected.
+    courses = {
+        "A 1000": Course(code="A 1000", credits=3),
+        "B 4000": Course(code="B 4000", credits=3,
+                         prereq=PrereqExpr(kind="min_credits", credits=6)),
+    }
+    groups = [
+        RequirementGroup(id="core", name="Core", kind="all_of",
+                         courses=["A 1000", "B 4000"]),
+        RequirementGroup(id="elec", name="Electives", kind="credits_from_filter",
+                         min_credits=6, course_filter=CourseFilter(unrestricted=True)),
+    ]
+    prog = Program(code="X", name="X", catalog_year=2026, total_credits_required=12,
+                   courses=courses, groups=groups)
+    student = StudentRecord(program_code="X", catalog_year=2026)
+    prefs = StudentPreferences(target_credits=6, target_season="fall", target_year=2026)
+    rec = recommend(student, prog, prefs)
+    terms = [rec.next_term, *rec.roadmap]
+    prior = 0.0
+    placed_term = None
+    for t in terms:
+        if any(c.code == "B 4000" for c in t.courses):
+            placed_term = t
+            break
+        prior += t.total_credits
+    assert placed_term is not None, "credit-gated required course never scheduled"
+    assert prior >= 6, f"B 4000 scheduled with only {prior} prior credits"
+    assert rec.projected_graduation is not None
+    assert sum(t.total_credits for t in terms) == 12
+
+
 def test_projects_graduation_through_free_elective_bucket():
     # One 3-credit structured course + a 6-credit unrestricted-elective bucket. The
     # elective bucket is never auto-filled (by design), so completion must be projected:

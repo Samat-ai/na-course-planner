@@ -103,6 +103,7 @@ py -3 scripts/gen_architecture.py                        # refresh module map be
   - `audit(student: StudentRecord, program: Program, declared_concentration: str | None=None, target_term: str | None=None) -> AuditResult`
 
 ### `src/na_planner/catalog_linter.py`
+  - `lint_credit_totals(program: Program) -> list[str]`
   - `lint_program(program: Program) -> list[str]`
 
 ### `src/na_planner/catalog_loader.py`

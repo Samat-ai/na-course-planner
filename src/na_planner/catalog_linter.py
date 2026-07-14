@@ -58,6 +58,48 @@ def _lint_group(group: RequirementGroup, known: set[str]) -> list[str]:
     return problems
 
 
+def _group_min_credits(group: RequirementGroup, program: Program) -> float:
+    """Lower bound of credits a student must earn in `group` (cheapest way to satisfy).
+    Mirrors evaluate_group's credits_required estimates so the linter and the audit
+    agree on what a group minimally demands."""
+    def credits_of(code: str) -> float:
+        course = program.courses.get(code)
+        return course.credits if course is not None else 0.0
+
+    if group.kind == "all_of":
+        return sum(credits_of(c) for c in group.courses)
+    if group.kind == "choose":
+        if group.min_credits is not None:
+            return group.min_credits
+        if group.min_count:
+            pool = set(group.courses) | set(group.forced)
+            for fc in group.forced_choices:
+                pool |= set(fc.any_of)
+            pool_credits = sorted(credits_of(c) for c in pool)
+            return sum(pool_credits[: group.min_count])
+        return 0.0
+    if group.kind == "credits_from_filter":
+        return group.min_credits or 0.0
+    if group.kind == "choose_group":
+        sub_minimums = sorted(_group_min_credits(s, program) for s in group.subgroups)
+        return sum(sub_minimums[: group.choose_groups])
+    return 0.0
+
+
+def lint_credit_totals(program: Program) -> list[str]:
+    """Flag programs whose group minimums cannot sum to total_credits_required.
+    NA degree plans partition the total exactly (e.g. 36 gen-ed + 51 core + 18
+    concentration + 15 electives = 120), so any gap means under- or over-encoded
+    requirements (the "114 vs 120" class of data bug)."""
+    total = sum(_group_min_credits(g, program) for g in program.groups)
+    if abs(total - program.total_credits_required) > 1e-6:
+        return [
+            f"group minimums sum to {total:g} but total_credits_required is "
+            f"{program.total_credits_required:g}"
+        ]
+    return []
+
+
 def lint_program(program: Program) -> list[str]:
     known = set(program.courses.keys())
     problems: list[str] = []

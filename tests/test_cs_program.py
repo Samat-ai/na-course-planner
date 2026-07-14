@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from na_planner.audit import audit
-from na_planner.catalog_linter import lint_program
+from na_planner.catalog_linter import lint_credit_totals, lint_program
 from na_planner.catalog_loader import load_program
 from na_planner.cli import main
 from na_planner.grades import Grade
@@ -16,6 +16,7 @@ def test_cs_program_loads_and_lints_clean():
     assert prog.code
     assert prog.total_credits_required == 120
     assert lint_program(prog) == []
+    assert lint_credit_totals(prog) == []  # 36 gen-ed + 51 core + 18 conc + 15 elec
 
 
 def test_fresh_student_is_far_from_complete():

@@ -1,6 +1,7 @@
-from na_planner.catalog_linter import lint_program
+from na_planner.catalog_linter import lint_credit_totals, lint_program
 from na_planner.models.catalog import (
     Course,
+    CourseFilter,
     ForcedChoice,
     PrereqExpr,
     Program,
@@ -94,6 +95,54 @@ def test_credits_matching_code_second_digit_not_flagged():
     courses = {"COMP 1412": Course(code="COMP 1412", credits=4)}
     groups = [RequirementGroup(id="c", name="Core", kind="all_of", courses=["COMP 1412"])]
     assert lint_program(_program(groups, courses)) == []
+
+
+def test_group_minimums_summing_to_total_is_clean():
+    # 4-cr all_of course + 8-cr elective bucket = exactly the 12-cr total.
+    courses = {"COMP 1411": Course(code="COMP 1411", credits=4)}
+    groups = [
+        RequirementGroup(id="c", name="Core", kind="all_of", courses=["COMP 1411"]),
+        RequirementGroup(
+            id="e", name="Electives", kind="credits_from_filter", min_credits=8,
+            course_filter=CourseFilter(unrestricted=True),
+        ),
+    ]
+    assert lint_credit_totals(_program(groups, courses)) == []
+
+
+def test_group_minimums_not_reaching_total_flagged():
+    # A lone 4-cr core cannot reach the 12-cr total: the requirements are
+    # under-encoded (the cs-bs "117 vs 120" / busa "114 vs 120" class of bug).
+    courses = {"COMP 1411": Course(code="COMP 1411", credits=4)}
+    groups = [RequirementGroup(id="c", name="Core", kind="all_of", courses=["COMP 1411"])]
+    problems = lint_credit_totals(_program(groups, courses))
+    assert any("total_credits_required" in p for p in problems)
+
+
+def test_choose_and_choose_group_minimums_counted():
+    # choose min_count=1 over {3 cr, 4 cr} counts its cheapest pick (3);
+    # choose_group counts its cheapest track (4); filter adds 5 -> 3+4+5 = 12.
+    courses = {
+        "HIST 1311": Course(code="HIST 1311", credits=3),
+        "COMP 1411": Course(code="COMP 1411", credits=4),
+        "COMP 2411": Course(code="COMP 2411", credits=4),
+        "MATH 1311": Course(code="MATH 1311", credits=3),
+        "MATH 1312": Course(code="MATH 1312", credits=3),
+    }
+    groups = [
+        RequirementGroup(id="h", name="H", kind="choose", min_count=1,
+                         courses=["HIST 1311", "COMP 1411"]),
+        RequirementGroup(id="conc", name="Conc", kind="choose_group", choose_groups=1,
+                         subgroups=[
+                             RequirementGroup(id="a", name="A", kind="all_of",
+                                              courses=["COMP 2411"]),
+                             RequirementGroup(id="b", name="B", kind="all_of",
+                                              courses=["MATH 1311", "MATH 1312"]),
+                         ]),
+        RequirementGroup(id="e", name="E", kind="credits_from_filter", min_credits=5,
+                         course_filter=CourseFilter(unrestricted=True)),
+    ]
+    assert lint_credit_totals(_program(groups, courses)) == []
 
 
 def test_nonstandard_code_credits_not_checked():

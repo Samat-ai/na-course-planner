@@ -6,7 +6,7 @@ recommend a next-term course set + a tentative roadmap to graduation. v1 uses
 student-provided data and manual registration; automated registration is a v2 gated on
 official API access.
 
-**Status:** Core implementation is **complete and green** (232 tests passing). All four
+**Status:** Core implementation is **complete and green** (238 tests passing). All four
 original plans in `docs/superpowers/plans/` are built — engine (audit, planner, roadmap),
 ingestion (transcript/schedule parsing), and the FastAPI web API + minimal UI — plus later
 work: exam/transfer credit (PR #9), concentration grandfathering (PR #10), a credit-hours
@@ -16,10 +16,13 @@ fall/spring-only courses aren't mis-scheduled in heuristic terms), and senior-st
 capstone / end-of-program courses (PR #14 COMP 4393; PR #15 EDUC 4133 + PPR/ESL seminars), and
 basic SEO (meta/OG/Twitter tags, JSON-LD, robots.txt, sitemap.xml, generated OG image via
 `scripts/generate_og_image.py`; site verified and sitemap submitted in Google Search Console
-2026-07-10).
+2026-07-10), and accuracy-audit fixes (PR #16: BUSA/CRJS/EDUC gen-ed encoded to the full 36 cr
+so all programs sum to 120, CS COMM/GOVT forced-choices, a `lint_credit_totals` linter check,
+roadmap scheduling of owed electives to reach credit-gated courses, and a single "Started at
+NA" catalog-year selector in the UI).
 Deployed via Vercel. Ongoing work is incremental fixes and features on top of a working base;
 the plans remain useful as design records rather than a from-scratch build order. Open/deferred
-items for triage live in the auto-memory (see the "open tasks" note).
+items for triage live in the auto-memory (see the "accuracy audit" note).
 
 ## ⚠️ Environment: use `py -3`, never `python`
 

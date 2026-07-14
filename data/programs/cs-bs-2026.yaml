@@ -810,8 +810,10 @@ groups:
     name: "Gen-Ed: Social and Behavioral Sciences"
     kind: choose
     min_count: 2
-    forced:
-      - GOVT 2311
+    forced_choices:  # catalog footnote 4: one GOVT course (2311 or 2312)
+      - any_of:
+          - GOVT 2311
+          - GOVT 2312
     courses:
       - ECON 2311
       - ECON 2312

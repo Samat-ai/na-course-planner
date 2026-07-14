@@ -39,6 +39,15 @@ def test_composition_satisfied_by_public_speaking():
     assert comp.status == "satisfied"
 
 
+def test_social_satisfied_by_any_govt_course():
+    # Catalog footnote 4 (2026-27 p.117): "one GOVT course from this category" —
+    # GOVT 2312 must fill the GOVT slot just like GOVT 2311.
+    prog = load_program(CS)
+    result = audit(_student(["GOVT 2312", "PSYC 2311"]), prog)
+    soc = _group(result, "gen_ed_social")
+    assert soc.status == "satisfied"
+
+
 def test_natural_science_math_not_over_requiring():
     # Catalog for CS: MATH 1311 + MATH 1313 + one natural science = 3 courses (#4),
     # and core-owned MATH 2314 must never appear as a remaining nat-sci choice.

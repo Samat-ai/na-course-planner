@@ -62,10 +62,11 @@ def parse_schedule_csv(text: str) -> list[Section]:
         if not m or not term:
             continue  # header, banner, legend, or pre-band row
         cols = (row + [""] * 8)[:8]
-        _, _, professor, start, end, days, room, mtype = cols
+        _, title, professor, start, end, days, room, mtype = cols
         sections.append(Section(
             course_code=m.group(1),
             section=m.group(2) or "1",
+            title=title.strip(),
             term=term,
             days=parse_days(days),
             start_min=parse_time(start),

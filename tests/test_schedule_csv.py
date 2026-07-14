@@ -38,3 +38,5 @@ def test_parse_schedule_bands_and_codes():
     assert by_code["PHIL 1312"].is_async is True
     # legend/header rows skipped (only 4 real course rows)
     assert len(sections) == 4
+    # course title carried onto the section (needed for code-alias checks)
+    assert by_code["COMP 1411"].title == "Intro to CS"

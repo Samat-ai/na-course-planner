@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from na_planner.audit import audit
-from na_planner.catalog_linter import lint_program
+from na_planner.catalog_linter import lint_credit_totals, lint_program
 from na_planner.catalog_loader import load_program
 from na_planner.grades import Grade
 from na_planner.models.student import CompletedCourse, StudentRecord
@@ -27,6 +27,8 @@ def test_educ_program_loads_and_lints_clean():
     assert prog.code == "EDUC-BS"
     assert prog.total_credits_required == 120
     assert lint_program(prog) == []
+    # Catalog p.123: 36 gen-ed + 36 core + 24 concentration + 24 electives = 120.
+    assert lint_credit_totals(prog) == []
 
 
 def test_fresh_student_is_far_from_complete():
@@ -84,9 +86,11 @@ def test_full_distribution_audits_complete():
         # english language arts concentration (8)
         "ENGL 2315", "ENGL 2316", "ENGL 2317", "ENGL 2318", "ENGL 2319",
         "ENGL 3320", "ENGL 3322", "ENGL 3325",
-        # unrestricted electives: 10 x 3 cr = 30 (>= 24 min); brings total to 120
+        # additional gen-ed flex (9 cr from any gen-ed category; catalog gen-ed = 36)
+        "SOCI 2311", "ECON 2311", "HIST 1312",
+        # unrestricted electives (24): FRSH 1311 above + 7 x 3 cr
         "ELEC 1301", "ELEC 1302", "ELEC 1303", "ELEC 1304", "ELEC 1305",
-        "ELEC 1306", "ELEC 1307", "ELEC 1308", "ELEC 1309", "ELEC 1310",
+        "ELEC 1306", "ELEC 1307",
     ]
     result = audit(_student(specs), prog)
     unmet = [g.group_id for g in result.groups if g.status != "satisfied"]

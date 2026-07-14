@@ -6,7 +6,7 @@ recommend a next-term course set + a tentative roadmap to graduation. v1 uses
 student-provided data and manual registration; automated registration is a v2 gated on
 official API access.
 
-**Status:** Core implementation is **complete and green** (238 tests passing). All four
+**Status:** Core implementation is **complete and green** (247 tests passing). All four
 original plans in `docs/superpowers/plans/` are built — engine (audit, planner, roadmap),
 ingestion (transcript/schedule parsing), and the FastAPI web API + minimal UI — plus later
 work: exam/transfer credit (PR #9), concentration grandfathering (PR #10), a credit-hours
@@ -19,7 +19,11 @@ basic SEO (meta/OG/Twitter tags, JSON-LD, robots.txt, sitemap.xml, generated OG 
 2026-07-10), and accuracy-audit fixes (PR #16: BUSA/CRJS/EDUC gen-ed encoded to the full 36 cr
 so all programs sum to 120, CS COMM/GOVT forced-choices, a `lint_credit_totals` linter check,
 roadmap scheduling of owed electives to reach credit-gated courses, and a single "Started at
-NA" catalog-year selector in the UI).
+NA" catalog-year selector in the UI), and audit follow-ups (PR #17: retake dedupe at
+ingestion, unknown-grade rows warn per-row instead of 500ing — `/parse/*` now return
+`{student, warnings}` — concentrations served per program from
+`GET /programs/{code}/concentrations`, and title-gated old→new schedule code aliases in
+`schedule_loader`).
 Deployed via Vercel. Ongoing work is incremental fixes and features on top of a working base;
 the plans remain useful as design records rather than a from-scratch build order. Open/deferred
 items for triage live in the auto-memory (see the "accuracy audit" note).

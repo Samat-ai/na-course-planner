@@ -85,3 +85,13 @@ def test_program_group_credits_sum_to_120(cs_program):
     from na_planner.audit import evaluate_group
     total = sum(evaluate_group(g, [], cs_program).credits_required for g in cs_program.groups)
     assert total == cs_program.total_credits_required == 120
+
+
+def test_catalog_elective_courses_present():
+    # Catalog p.122 "Electives" list — not group members, but present so the
+    # transfer dropdown and elective slots can name real courses.
+    prog = load_program(CS)
+    assert prog.courses["COMP 4198"].credits == 1
+    assert prog.courses["COMP 4394"].credits == 3
+    assert prog.courses["COMP 4398"].credits == 3
+    assert prog.courses["COMP 4399"].credits == 3

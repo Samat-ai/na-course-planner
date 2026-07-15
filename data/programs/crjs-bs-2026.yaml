@@ -313,7 +313,7 @@ courses:
 
   CRJS 2302:
     code: CRJS 2302
-    title: Police Systems and Practices in America
+    title: "Police Systems & Practices"
     credits: 3
     offering: every
     prereq:
@@ -339,7 +339,7 @@ courses:
 
   CRJS 2305:
     code: CRJS 2305
-    title: Criminal Trial and the Court
+    title: Criminal Trial and Courts
     credits: 3
     offering: every
     prereq:
@@ -374,7 +374,7 @@ courses:
 
   CRJS 3308:
     code: CRJS 3308
-    title: Criminal Procedure and Evidence
+    title: Evidence and Procedures
     credits: 3
     offering: every
     prereq:
@@ -389,22 +389,22 @@ courses:
 
   CRJS 3309:
     code: CRJS 3309
-    title: Technical Writing
+    title: Technique Writing for Criminal Justice
     credits: 3
     offering: every
-    prereq:  # catalog: ENGL 1311 and ENGL 1312 (as prereq or coreq) + 30 credit hours
-      kind: all_of
-      children:
-        - kind: course
-          course: ENGL 1311
-        - kind: course
-          course: ENGL 1312
-        - kind: min_credits
-          credits: 30
+    # Catalog: "Prerequisites or Corequisites: ENGL 1311 and ENGL 1312" — may be
+    # taken concurrently, so they are coreqs (not prior-term prereqs). Only the
+    # 30-credit gate is a hard prereq.
+    coreqs:
+      - ENGL 1311
+      - ENGL 1312
+    prereq:
+      kind: min_credits
+      credits: 30
 
   CRJS 3310:
     code: CRJS 3310
-    title: Criminal Investigations
+    title: Criminal Investigation
     credits: 3
     offering: every
     prereq:
@@ -417,16 +417,16 @@ courses:
 
   CRJS 3311:
     code: CRJS 3311
-    title: Criminal Justice Research
+    title: Research Methods In Criminal Justice
     credits: 3
     offering: every
+    # Catalog: "Prerequisites or Corequisites: CRJS 1301" — may be taken
+    # concurrently, so it is a coreq. Only the 30-credit gate is a hard prereq.
+    coreqs:
+      - CRJS 1301
     prereq:
-      kind: all_of
-      children:
-        - kind: course
-          course: CRJS 1301
-        - kind: min_credits
-          credits: 30
+      kind: min_credits
+      credits: 30
 
   CRJS 3312:
     code: CRJS 3312
@@ -445,7 +445,7 @@ courses:
 
   CRJS 3313:
     code: CRJS 3313
-    title: Diversity and Multiculturalism
+    title: Diversity and Multiculturalism in Criminal Justice
     credits: 3
     offering: every
     prereq:
@@ -472,7 +472,7 @@ courses:
 
   FORS 3330:
     code: FORS 3330
-    title: Forensic Investigations
+    title: Introduction to Forensic Investigations
     credits: 3
     offering: every
     prereq:
@@ -513,7 +513,7 @@ courses:
 
   FORS 4333:
     code: FORS 4333
-    title: Digital Forensic
+    title: Digital Forensics
     credits: 3
     offering: every
     prereq:

@@ -97,3 +97,17 @@ def test_full_distribution_audits_complete():
     assert unmet == [], f"unsatisfied groups: {unmet}"
     assert result.is_complete is True
     assert result.credits_remaining == 0
+
+
+def test_titles_match_catalog_descriptions():
+    prog = load_program(EDUC)
+    expected = {
+        "EDUC 3316": "Integrating Technology into the Curriculum",
+        "ENGL 3322": "Studies in Linguistics and History of the English Language",
+        "PHED 2312": "The concepts of Health, Fitness and Wellness",
+        "MATH 3328": "Teaching Elementary School Mathematics I",
+        "MATH 3329": "Teaching Elementary School Mathematics II",
+        "EDUC 3331": "Introduction to Early Childhood Education",
+    }
+    for code, title in expected.items():
+        assert prog.courses[code].title == title, code

@@ -288,7 +288,7 @@ courses:
 
   EDUC 3316:
     code: EDUC 3316
-    title: Integrating Technology into Curriculum
+    title: Integrating Technology into the Curriculum
     credits: 3
     offering: every
     prereq:
@@ -419,7 +419,7 @@ courses:
 
   ENGL 3322:
     code: ENGL 3322
-    title: Studies in Linguistics and History of English Language
+    title: Studies in Linguistics and History of the English Language
     credits: 3
     offering: every
     prereq:
@@ -540,7 +540,7 @@ courses:
 
   PHED 2312:
     code: PHED 2312
-    title: "Concepts of Health, Fitness and Wellness"
+    title: "The concepts of Health, Fitness and Wellness"
     credits: 3
     offering: every
     prereq:
@@ -616,7 +616,7 @@ courses:
 
   MATH 3328:
     code: MATH 3328
-    title: Teaching Elementary Mathematics 1
+    title: Teaching Elementary School Mathematics I
     credits: 3
     offering: every
     prereq:
@@ -624,7 +624,7 @@ courses:
 
   MATH 3329:
     code: MATH 3329
-    title: Teaching Elementary Mathematics 2
+    title: Teaching Elementary School Mathematics II
     credits: 3
     offering: every
     prereq:
@@ -632,7 +632,7 @@ courses:
 
   EDUC 3331:
     code: EDUC 3331
-    title: Intro to Early Childhood Education
+    title: Introduction to Early Childhood Education
     credits: 3
     offering: every
     prereq:

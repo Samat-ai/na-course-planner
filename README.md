@@ -35,16 +35,19 @@ A stateless web tool for North American University (NA) students. Nothing is sto
 ## Screenshots
 
 **1 — Drop in your transcript** (parsed locally, discarded after parsing):
-
+<kbd>
 ![Upload screen](docs/screenshots/upload.png)
+</kbd>
 
 **2 — Confirm what was parsed**, pick your program, start year, and concentration:
-
+<kbd>
 ![Confirm screen](docs/screenshots/confirm.png)
+</kbd>
 
 **3 — Get your plan**: audit status, next-term recommendation with sections, and a roadmap to graduation:
-
+<kbd>
 ![Plan screen](docs/screenshots/plan.png)
+</kbd>
 
 ## How the engine thinks
 

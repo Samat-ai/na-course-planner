@@ -4,8 +4,8 @@ from na_planner.grades import Grade
 from na_planner.models.catalog import Program
 from na_planner.models.preferences import StudentPreferences
 from na_planner.models.recommend import PlannedCourse, Recommendation, TermPlan
-from na_planner.models.student import CompletedCourse, StudentRecord
 from na_planner.models.schedule import Section, SectionInfo
+from na_planner.models.student import CompletedCourse, StudentRecord
 from na_planner.planner import plan_term
 from na_planner.prereqs import prereqs_satisfied
 from na_planner.schedule_loader import (

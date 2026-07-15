@@ -691,6 +691,7 @@ groups:
   - id: gen_ed_composition_comm
     name: "Gen-Ed: Composition, Communications, and Foreign Languages"
     kind: choose
+    member_difficulty: easy
     min_count: 3
     forced:
       - ENGL 1311
@@ -710,6 +711,7 @@ groups:
   - id: gen_ed_humanities
     name: "Gen-Ed: Humanities and Fine Arts"
     kind: choose
+    member_difficulty: easy
     min_count: 2
     forced_choices:  # catalog: all undergraduates take one HIST course from this category
       - any_of:
@@ -740,6 +742,7 @@ groups:
   - id: gen_ed_social
     name: "Gen-Ed: Social and Behavioral Sciences"
     kind: choose
+    member_difficulty: easy
     min_count: 2
     forced:
       - ECON 2311
@@ -758,6 +761,7 @@ groups:
   - id: gen_ed_natural_science_math
     name: "Gen-Ed: Natural Sciences and Mathematics"
     kind: choose
+    member_difficulty: easy
     min_count: 2
     forced_choices:
       - any_of:
@@ -780,6 +784,7 @@ groups:
   - id: gen_ed_additional
     name: "Gen-Ed: Additional (any category)"
     kind: credits_from_filter
+    member_difficulty: easy
     min_credits: 9
     course_filter:
       subjects:
@@ -803,6 +808,7 @@ groups:
   - id: business_core
     name: Business Core
     kind: all_of
+    member_difficulty: hard
     courses:
       - ACCT 2311
       - ACCT 2312
@@ -823,6 +829,7 @@ groups:
   - id: concentration
     name: Concentration (choose one)
     kind: choose_group
+    member_difficulty: hard
     choose_groups: 1
     subgroups:
       - id: concentration_finance
@@ -864,6 +871,7 @@ groups:
   - id: unrestricted_electives
     name: Unrestricted Electives
     kind: credits_from_filter
+    member_difficulty: easy
     min_credits: 24
     forced:
       - FRSH 1311

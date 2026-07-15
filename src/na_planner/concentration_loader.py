@@ -2,6 +2,7 @@ from pathlib import Path
 
 import yaml
 
+from na_planner.difficulty import derive_course_difficulty
 from na_planner.models.catalog import Program
 from na_planner.models.concentration import ConcentrationOverlay
 from na_planner.programs import load_program_by
@@ -49,11 +50,12 @@ def load_program_with_concentration(
         or concentration_year == baseline_year
     ):
         # Concentration-variant group edits (e.g. EDUC Elementary) apply whenever a
-        # concentration is DECLARED, grandfathered or not.
-        return specialize_program(program, concentration_id)
+        # concentration is DECLARED, grandfathered or not. Re-derive difficulty after
+        # specialization so variant-added groups tag their courses too.
+        return derive_course_difficulty(specialize_program(program, concentration_id))
     overlay = load_overlay(program_code, concentration_year, directory)
     if overlay is None or concentration_id not in overlay.concentrations:
-        return specialize_program(program, concentration_id)
+        return derive_course_difficulty(specialize_program(program, concentration_id))
     merged_courses = {**program.courses, **overlay.courses}
     new_groups = []
     for g in program.groups:
@@ -65,4 +67,4 @@ def load_program_with_concentration(
             g = g.model_copy(update={"subgroups": new_subs})
         new_groups.append(g)
     merged = program.model_copy(update={"courses": merged_courses, "groups": new_groups})
-    return specialize_program(merged, concentration_id)
+    return derive_course_difficulty(specialize_program(merged, concentration_id))

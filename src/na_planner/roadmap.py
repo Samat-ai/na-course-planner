@@ -4,15 +4,18 @@ from na_planner.grades import Grade
 from na_planner.models.catalog import Program
 from na_planner.models.preferences import StudentPreferences
 from na_planner.models.recommend import PlannedCourse, Recommendation, TermPlan
+from na_planner.models.schedule import Section, SectionInfo
 from na_planner.models.student import CompletedCourse, StudentRecord
 from na_planner.planner import plan_term
+from na_planner.prereqs import prereqs_satisfied
 from na_planner.schedule_loader import (
     default_schedule_path,
     latest_schedule_path,
     load_sections,
     offered_codes_by_season,
 )
-from na_planner.scoring import DEFAULT_WEIGHTS
+from na_planner.scoring import DEFAULT_WEIGHTS, difficulty, direct_dependents
+from na_planner.section_conflict import sections_conflict
 from na_planner.timetabler import timetable_term
 
 MAX_TERMS = 16
@@ -141,6 +144,9 @@ def recommend(
             passed[c.code] = Grade.A
             credits[c.code] = c.credits
     credits_earned = sum(credits.values())
+    # Pre-plan snapshot for the rebalancing post-pass (the loop mutates passed/credits).
+    base_passed: dict[str, Grade | None] = dict(passed)
+    base_credits: dict[str, float] = dict(credits)
 
     season, year = prefs.target_season, prefs.target_year
     seen_by_season = offering_seasons if offering_seasons is not None else _offering_signal()
@@ -156,7 +162,12 @@ def recommend(
                            declared_concentration=prefs.declared_concentration)
         if last_audit.is_complete:
             break
-        term_prefs = prefs.model_copy(update={"target_season": season, "target_year": year})
+        term_prefs = prefs.model_copy(update={
+            "target_season": season, "target_year": year,
+            # Difficulty tolerance must not change WHAT terms exist or when
+            # graduation lands — the cap is applied by the rebalancing post-pass.
+            "max_hard_courses": 10**6,
+        })
         elig = eligible_courses(last_audit, program, term_prefs, passed, credits_earned)
         term_pinned = pinned_courses if i == 0 else []
         if i == 0:
@@ -319,6 +330,8 @@ def recommend(
                 terms.pop()
 
     _relocate_final_term_courses(terms, program)
+    _rebalance_difficulty(terms, program, prefs, seen_by_season,
+                          base_passed, base_credits, _sections_for(prefs))
 
     if not terms:
         empty = TermPlan(season=prefs.target_season, year=prefs.target_year,
@@ -396,3 +409,141 @@ def _relocate_final_term_courses(terms: list[TermPlan], program: Program) -> Non
                     moved += p.credits
             last.courses.append(c.model_copy(update={"section": None}))
             last.total_credits += c.credits
+
+
+def _season_ok(code: str, season: str, seen_by_season: dict[str, set[str]]) -> bool:
+    return code in restrict_to_season([code], season, seen_by_season)
+
+
+def _difficulty_of(code: str, program: Program) -> int:
+    if code in _PLACEHOLDER_LABELS:
+        return 1                     # filler slots are easy by definition
+    return difficulty(code, program)
+
+
+def _as_section(info: SectionInfo) -> Section:
+    """Minimal Section for conflict math (sections_conflict takes Sections)."""
+    return Section(course_code="", section=info.section, term="",
+                   days=info.days, start_min=info.start_min, end_min=info.end_min)
+
+
+def _pick_section(code: str, term: TermPlan,
+                  sections: dict[str, list[Section]]) -> SectionInfo | None:
+    """First snapshot section for `code` that doesn't clash with the sections already
+    chosen in `term`, or None when the course has no workable section."""
+    chosen = [_as_section(c.section) for c in term.courses if c.section is not None]
+    for sec in sections.get(code, []):
+        if not any(sections_conflict(sec, s) for s in chosen):
+            return SectionInfo.from_section(sec)
+    return None
+
+
+def _rebalance_difficulty(
+    terms: list[TermPlan], program: Program, prefs: StudentPreferences,
+    seen_by_season: dict[str, set[str]],
+    base_passed: dict[str, Grade | None], base_credits: dict[str, float],
+    term0_sections: dict[str, list[Section]],
+) -> None:
+    """Best-effort reallocation enforcing prefs.max_hard_courses per term WITHOUT
+    changing the term set (so graduation is untouched): swap a hard course from an
+    over-cap term with an equal-credit easy course/placeholder from a later term.
+    Legal swaps only — H not pinned/final_term/coreq'd, no dependent of H at or
+    before its destination, E's prereqs satisfied before its new (earlier) term,
+    seasons admit both, and term-0 arrivals get a conflict-free section."""
+    cap = prefs.max_hard_courses
+    if cap >= 10**6 or len(terms) < 2:
+        return
+
+    dependents: dict[str, set[str]] = {}   # lazy cache: code -> dependent codes
+
+    def deps(code: str) -> set[str]:
+        if code not in dependents:
+            dependents[code] = set(direct_dependents(code, program))
+        return dependents[code]
+
+    def scheduled_between(codes: set[str], lo: int, hi: int) -> bool:
+        return any(c.code in codes
+                   for k in range(lo, hi + 1) for c in terms[k].courses)
+
+    def credits_before(i: int) -> float:
+        return sum(base_credits.values()) + sum(
+            c.credits for k in range(i) for c in terms[k].courses)
+
+    def passed_before(i: int) -> dict[str, Grade | None]:
+        out: dict[str, Grade | None] = dict(base_passed)
+        for k in range(i):
+            for c in terms[k].courses:
+                out[c.code] = Grade.A
+        return out
+
+    def hard_in(t: TermPlan) -> list[PlannedCourse]:
+        return [c for c in t.courses if _difficulty_of(c.code, program) == 3]
+
+    def coreq_in_term(code: str, t: TermPlan) -> bool:
+        course = program.courses.get(code)
+        if course is None:
+            return False
+        here = {c.code for c in t.courses}
+        return any(cq in here for cq in course.coreqs)
+
+    def movable(pc: PlannedCourse, a: int, b: int) -> PlannedCourse | None:
+        """The course as it would appear after moving from term a to term b, or None
+        when the move is illegal. Moving LATER needs no prereq re-check but must not
+        land beside/after a dependent; moving EARLIER needs prereqs satisfied before
+        the new term but can never break dependents. Placeholders always move."""
+        if pc.registered:
+            return None
+        course = program.courses.get(pc.code)
+        if course is not None:
+            if course.final_term:
+                return None
+            if coreq_in_term(pc.code, terms[a]):
+                return None
+            if not _season_ok(pc.code, terms[b].season, seen_by_season):
+                return None
+            if b > a and scheduled_between(deps(pc.code), a + 1, b):
+                return None
+            if b < a and not prereqs_satisfied(course.prereq, passed_before(b),
+                                               credits_before(b)):
+                return None
+        if b == 0 and course is not None:
+            info = _pick_section(pc.code, terms[0], term0_sections)
+            if info is None and term0_sections.get(pc.code):
+                return None               # sections exist but all clash
+            return pc.model_copy(update={"section": info})
+        if pc.section is not None:
+            return pc.model_copy(update={"section": None})
+        return pc
+
+    for i, term in enumerate(terms):
+        while len(hard_in(term)) > cap:
+            swapped = False
+            # push hard courses later first (keeps early terms light), then earlier
+            candidates = list(range(i + 1, len(terms))) + list(range(i - 1, -1, -1))
+            for h in hard_in(term):
+                for j in candidates:
+                    if len(hard_in(terms[j])) >= cap:
+                        continue
+                    new_h = movable(h, i, j)
+                    if new_h is None:
+                        continue
+                    for e in terms[j].courses:
+                        if _difficulty_of(e.code, program) == 3:
+                            continue
+                        if abs(e.credits - h.credits) > 1e-6:
+                            continue
+                        new_e = movable(e, j, i)
+                        if new_e is None:
+                            continue
+                        term.courses.remove(h)
+                        terms[j].courses.remove(e)
+                        term.courses.append(new_e)
+                        terms[j].courses.append(new_h)
+                        swapped = True
+                        break
+                    if swapped:
+                        break
+                if swapped:
+                    break
+            if not swapped:
+                break                # over cap but no legal partner — best effort

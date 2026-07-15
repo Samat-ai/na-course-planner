@@ -84,3 +84,12 @@ def test_full_distribution_audits_complete():
     assert unmet == [], f"unsatisfied groups: {unmet}"
     assert result.is_complete is True
     assert result.credits_remaining == 0
+
+
+def test_frsh_and_comp_1314_are_required_electives():
+    # Catalog: FRSH 1311 (all programs) and COMP 1314 (Computer Literacy, BUSA
+    # specified elective) are named members of the elective hours.
+    prog = load_program(BUSA)
+    elec = next(g for g in prog.groups if g.id == "unrestricted_electives")
+    assert "FRSH 1311" in elec.forced
+    assert "COMP 1314" in elec.forced

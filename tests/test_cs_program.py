@@ -85,3 +85,10 @@ def test_program_group_credits_sum_to_120(cs_program):
     from na_planner.audit import evaluate_group
     total = sum(evaluate_group(g, [], cs_program).credits_required for g in cs_program.groups)
     assert total == cs_program.total_credits_required == 120
+
+
+def test_frsh_1311_is_a_required_elective():
+    # Catalog p.117: FRSH 1311 is "a required elective, part of the Elective hours".
+    prog = load_program(CS)
+    elec = next(g for g in prog.groups if g.id == "unrestricted_electives")
+    assert "FRSH 1311" in elec.forced

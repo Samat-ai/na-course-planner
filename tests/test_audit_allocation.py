@@ -189,3 +189,52 @@ def test_is_complete_requires_total_credits():
     student = StudentRecord(program_code="X", catalog_year=2026, completed=[])
     result = audit(student, prog)
     assert result.is_complete is False   # no groups => all() is True, but 0 < 120 credits
+
+
+def test_forced_elective_reserved_from_other_groups():
+    # ENGL 3323 is a forced member of the electives bucket ("must be taken as an
+    # elective"); the subject-filtered gen-ed additional group (higher specificity,
+    # allocated first) must not absorb it.
+    courses = {
+        "ENGL 3323": Course(code="ENGL 3323", credits=3),
+        "HIST 1311": Course(code="HIST 1311", credits=3),
+    }
+    groups = [
+        RequirementGroup(id="gen_ed_additional", name="Gen-Ed Additional",
+                         kind="credits_from_filter", min_credits=3,
+                         course_filter=CourseFilter(subjects=["ENGL", "HIST"])),
+        RequirementGroup(id="electives", name="Electives", kind="credits_from_filter",
+                         min_credits=6, forced=["ENGL 3323"],
+                         course_filter=CourseFilter(unrestricted=True)),
+    ]
+    prog = Program(code="X", name="X", catalog_year=2026,
+                   total_credits_required=9, courses=courses, groups=groups)
+    earned = [EarnedCourse(code="ENGL 3323", credits=3, grade=Grade.A),
+              EarnedCourse(code="HIST 1311", credits=3, grade=Grade.A)]
+    alloc = allocate(earned, prog)
+    assert {c.code for c in alloc.get("electives", [])} == {"ENGL 3323"}
+    assert {c.code for c in alloc.get("gen_ed_additional", [])} == {"HIST 1311"}
+
+
+def test_forced_elective_not_taken_by_choose_pool_fill():
+    # A choose pool's *optional* fill must skip a course forced in another group;
+    # its own forced/forced-choice members are unaffected.
+    courses = {
+        "ARTS 1311": Course(code="ARTS 1311", credits=3),
+        "MUSI 1306": Course(code="MUSI 1306", credits=3),
+        "FRSH 1311": Course(code="FRSH 1311", credits=3),
+    }
+    groups = [
+        RequirementGroup(id="hum", name="Hum", kind="choose", min_count=1,
+                         courses=["ARTS 1311", "MUSI 1306", "FRSH 1311"]),
+        RequirementGroup(id="electives", name="Electives", kind="credits_from_filter",
+                         min_credits=3, forced=["FRSH 1311"],
+                         course_filter=CourseFilter(unrestricted=True)),
+    ]
+    prog = Program(code="X", name="X", catalog_year=2026,
+                   total_credits_required=6, courses=courses, groups=groups)
+    earned = [EarnedCourse(code="FRSH 1311", credits=3, grade=Grade.A),
+              EarnedCourse(code="ARTS 1311", credits=3, grade=Grade.A)]
+    alloc = allocate(earned, prog)
+    assert {c.code for c in alloc.get("hum", [])} == {"ARTS 1311"}
+    assert {c.code for c in alloc.get("electives", [])} == {"FRSH 1311"}

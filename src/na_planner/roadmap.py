@@ -69,9 +69,15 @@ def _same_term(label: str | None, target: str) -> bool:
     return label is not None and label.strip().casefold() == target.strip().casefold()
 
 
+def _forced_credits(codes: list[str], program: Program) -> float:
+    return sum(program.courses[c].credits for c in codes if c in program.courses)
+
+
 def _unrestricted_remaining(audit_result, program: Program) -> float:
-    """Unrestricted-elective credits still owed per the audit (satisfied groups
-    and non-unrestricted filters excluded)."""
+    """FREE unrestricted-elective credits still owed per the audit (satisfied groups
+    and non-unrestricted filters excluded). Unmet forced members (required electives,
+    surfaced in remaining_choices) are real named courses the planner schedules
+    itself, so their credits are not part of the placeholder-fillable amount."""
     unrestricted_ids = {
         g.id for g in program.groups
         if g.kind == "credits_from_filter"
@@ -79,6 +85,7 @@ def _unrestricted_remaining(audit_result, program: Program) -> float:
     }
     return max(0.0, sum(
         s.credits_required - s.credits_applied
+        - _forced_credits(s.remaining_choices, program)
         for s in audit_result.groups
         if s.group_id in unrestricted_ids and s.status != "satisfied"
     ))
@@ -153,9 +160,13 @@ def recommend(
             # courses alone fall short. When structured work is already
             # complete, break instead — the post-loop filler places the
             # remaining electives (topping up under-target terms first).
+            # A filter group with unmet FORCED members (required electives) still
+            # counts as structured work: those are named courses to schedule.
             structured_left = any(
-                s.status != "satisfied" for s in last_audit.groups
-                if group_kinds.get(s.group_id) != "credits_from_filter"
+                s.status != "satisfied"
+                and (group_kinds.get(s.group_id) != "credits_from_filter"
+                     or s.remaining_choices)
+                for s in last_audit.groups
             )
             owed = _unrestricted_remaining(last_audit, program)
             if not structured_left or owed <= 1e-6:
@@ -211,14 +222,16 @@ def recommend(
                            declared_concentration=prefs.declared_concentration)
 
     elective_remaining = max(0.0, sum(
-        (g.credits_required - g.credits_applied)
+        (g.credits_required - g.credits_applied
+         - _forced_credits(g.remaining_choices, program))
         for g in last_audit.groups
         if g.status != "satisfied" and group_kinds.get(g.group_id) == "credits_from_filter"
     ))
     structured_complete = all(
         s.status == "satisfied"
+        or (group_kinds.get(s.group_id) == "credits_from_filter"
+            and not s.remaining_choices)
         for s in last_audit.groups
-        if group_kinds.get(s.group_id) != "credits_from_filter"
     )
 
     # Once every structured group is satisfied, only the free elective-credit bucket may

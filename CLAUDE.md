@@ -6,7 +6,7 @@ recommend a next-term course set + a tentative roadmap to graduation. v1 uses
 student-provided data and manual registration; automated registration is a v2 gated on
 official API access.
 
-**Status:** Core implementation is **complete and green** (247 tests passing). All four
+**Status:** Core implementation is **complete and green** (281 tests passing). All four
 original plans in `docs/superpowers/plans/` are built — engine (audit, planner, roadmap),
 ingestion (transcript/schedule parsing), and the FastAPI web API + minimal UI — plus later
 work: exam/transfer credit (PR #9), concentration grandfathering (PR #10), a credit-hours
@@ -23,7 +23,14 @@ NA" catalog-year selector in the UI), and audit follow-ups (PR #17: retake dedup
 ingestion, unknown-grade rows warn per-row instead of 500ing — `/parse/*` now return
 `{student, warnings}` — concentrations served per program from
 `GET /programs/{code}/concentrations`, and title-gated old→new schedule code aliases in
-`schedule_loader`).
+`schedule_loader`), and the EDUC deep rework (PR #18: `concentration_variants` +
+`specialize_program` for concentration-dependent groups — Elementary's fixed gen-ed, core
+substitutions, required electives — plus `forced` members on elective buckets enforcing
+FRSH 1311 everywhere and COMP 1314 for BUSA; **best-effort catalog reading, advisor
+confirmation pending** on guesses flagged in `educ-bs-2026.yaml` comments), and smaller
+audit items (PR #19: 16 title fixes, CRJS 3309/3311 prereq-or-coreq, CS catalog electives,
+parser row-drop/term-header warnings, parsed major honored, 10 MB PDF cap, blank grades
+warn instead of becoming F).
 Deployed via Vercel. Ongoing work is incremental fixes and features on top of a working base;
 the plans remain useful as design records rather than a from-scratch build order. Open/deferred
 items for triage live in the auto-memory (see the "accuracy audit" note).

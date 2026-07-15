@@ -464,11 +464,11 @@ const app = {
   buildPrefs(){
     const {prefs,concentration}=this.st;
     const [season,year]=this.parseTerm(prefs.term);
-    const dm={light:1,balanced:2,challenge:3};
+    const dm={light:3,balanced:4,challenge:99};
     const part=prefs.pace==='part';
     return {
-      target_credits:part?Math.min(prefs.targetCredits,13):prefs.targetCredits,
-      max_hard_courses:dm[prefs.difficulty]||2,
+      target_credits:prefs.targetCredits,  // slider already pace-bounded
+      max_hard_courses:dm[prefs.difficulty]||4,
       target_season:season, target_year:year,
       declared_concentration:concentration||null,
       max_load:part?13:19,
@@ -664,7 +664,13 @@ const app = {
 
   // ---- Plan ----
   setPref(k,v){
-    this.set(s=>({prefs:{...s.prefs,[k]:v}}));
+    this.set(s=>{
+      const prefs={...s.prefs,[k]:v};
+      if(k==='pace')prefs.targetCredits=v==='part'
+        ?Math.min(prefs.targetCredits,13)
+        :Math.max(prefs.targetCredits,12);
+      return{prefs};
+    });
     clearTimeout(this._rt);
     this._rt=setTimeout(()=>this.refetch(),450);
   },
@@ -1073,8 +1079,12 @@ const app = {
 
     this.renderGroups(audit,comp);
 
-    el('cred-range').value=s.prefs.targetCredits;
-    el('cred-val').textContent=s.prefs.targetCredits;
+    {// pace visibly bounds the slider: part-time 9-13, full-time 12-19
+      const r=el('cred-range'),part=s.prefs.pace==='part';
+      r.min=part?9:12;r.max=part?13:19;
+      r.value=s.prefs.targetCredits;
+      el('cred-val').textContent=s.prefs.targetCredits;
+    }
     el('diff-sel').value=s.prefs.difficulty;
     this.renderPace();this.renderTermSel();
     el('pref-loading').style.display=s.planLoading?'flex':'none';

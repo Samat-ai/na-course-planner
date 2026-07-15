@@ -31,7 +31,7 @@
 - Consumes: `Program`, `RequirementGroup` (fields `courses`, `forced`, `forced_choices[].any_of`, `subgroups`), `Course.difficulty`.
 - Produces: `RequirementGroup.member_difficulty: Literal["easy","medium","hard"] | None = None`; `derive_course_difficulty(program: Program) -> Program` (returns a copy; original untouched).
 
-- [ ] **Step 1: Write the failing tests** (`tests/test_difficulty.py`):
+- [x] **Step 1: Write the failing tests** (`tests/test_difficulty.py`):
 
 ```python
 from na_planner.difficulty import derive_course_difficulty
@@ -104,12 +104,12 @@ def test_untagged_groups_change_nothing():
     assert out.courses["A 1000"].difficulty is None
 ```
 
-- [ ] **Step 2: Run to verify failure**
+- [x] **Step 2: Run to verify failure**
 
 Run: `py -3 -m pytest tests/test_difficulty.py -q`
 Expected: FAIL — `ModuleNotFoundError: na_planner.difficulty` (and/or Pydantic rejects `member_difficulty`).
 
-- [ ] **Step 3: Minimal implementation**
+- [x] **Step 3: Minimal implementation**
 
 `src/na_planner/models/catalog.py` — add to `RequirementGroup` after `min_grade`:
 
@@ -164,9 +164,9 @@ def derive_course_difficulty(program: Program) -> Program:
     return program.model_copy(update={"courses": courses})
 ```
 
-- [ ] **Step 4: Run tests** — `py -3 -m pytest tests/test_difficulty.py -q` → all pass; `py -3 -m pytest -q` → no regressions.
+- [x] **Step 4: Run tests** — `py -3 -m pytest tests/test_difficulty.py -q` → all pass; `py -3 -m pytest -q` → no regressions.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/na_planner/models/catalog.py src/na_planner/difficulty.py tests/test_difficulty.py
@@ -187,7 +187,7 @@ git commit -m "feat(engine): member_difficulty group tag + course-difficulty der
 - Consumes: `derive_course_difficulty` (Task 1).
 - Produces: loaded programs whose courses carry derived difficulty tags.
 
-- [ ] **Step 1: Failing tests** (append to `tests/test_difficulty.py`):
+- [x] **Step 1: Failing tests** (append to `tests/test_difficulty.py`):
 
 ```python
 def test_cs_bs_2026_data_rates_core_hard_and_gened_easy():
@@ -210,13 +210,13 @@ def test_overlay_concentration_courses_rate_hard():
     assert prog.courses["COMP 4356"].difficulty == "hard"    # overlay-only course
 ```
 
-- [ ] **Step 2: Run to verify failure** — `py -3 -m pytest tests/test_difficulty.py -q` → the two new tests FAIL (tags are None).
+- [x] **Step 2: Run to verify failure** — `py -3 -m pytest tests/test_difficulty.py -q` → the two new tests FAIL (tags are None).
 
-- [ ] **Step 3: Implement.** In `catalog_loader.py`, wrap the built Program: `return derive_course_difficulty(program)` (import from `na_planner.difficulty`). Same one-line wrap for the return values of `load_program_with_concentration` in `concentration_loader.py` (all return paths). Then edit the four YAMLs: add `member_difficulty: hard` to the core group (`cs_core`, and the equivalent BUSA/CRJS/EDUC core groups) and the concentration `choose_group`; add `member_difficulty: easy` to every `Gen-Ed:*` group, `gen_ed_additional`, `unrestricted_electives`, and EDUC's variant replacement groups (`Electives (ELA required + free)` etc. easy; variant core-substitution groups hard — match the group's role, judged by what it replaces).
+- [x] **Step 3: Implement.** In `catalog_loader.py`, wrap the built Program: `return derive_course_difficulty(program)` (import from `na_planner.difficulty`). Same one-line wrap for the return values of `load_program_with_concentration` in `concentration_loader.py` (all return paths). Then edit the four YAMLs: add `member_difficulty: hard` to the core group (`cs_core`, and the equivalent BUSA/CRJS/EDUC core groups) and the concentration `choose_group`; add `member_difficulty: easy` to every `Gen-Ed:*` group, `gen_ed_additional`, `unrestricted_electives`, and EDUC's variant replacement groups (`Electives (ELA required + free)` etc. easy; variant core-substitution groups hard — match the group's role, judged by what it replaces).
 
-- [ ] **Step 4: Run** — `py -3 -m pytest -q` → all pass (catalog linter included).
+- [x] **Step 4: Run** — `py -3 -m pytest -q` → all pass (catalog linter included).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add data/programs src/na_planner/catalog_loader.py src/na_planner/concentration_loader.py tests/test_difficulty.py
@@ -235,7 +235,7 @@ git commit -m "feat(data): tag group difficulty (core/conc hard, gen-ed/elective
 - Consumes: existing `recommend`; `term_prefs = prefs.model_copy(update={...})` inside the loop.
 - Produces: internal planning ignores `prefs.max_hard_courses` (sentinel `10**6`); the field is consumed only by Task 4's post-pass.
 
-- [ ] **Step 1: Failing test** (append to `tests/test_roadmap.py`):
+- [x] **Step 1: Failing test** (append to `tests/test_roadmap.py`):
 
 ```python
 def test_max_hard_courses_never_changes_graduation():
@@ -261,9 +261,9 @@ def test_max_hard_courses_never_changes_graduation():
     assert len(grads) == 1, grads
 ```
 
-- [ ] **Step 2: Run to verify failure** — with hard tags now real, `cap=1` throttles terms to 1 hard course → later graduation → `len(grads) > 1`. Run: `py -3 -m pytest tests/test_roadmap.py::test_max_hard_courses_never_changes_graduation -q` → FAIL.
+- [x] **Step 2: Run to verify failure** — with hard tags now real, `cap=1` throttles terms to 1 hard course → later graduation → `len(grads) > 1`. Run: `py -3 -m pytest tests/test_roadmap.py::test_max_hard_courses_never_changes_graduation -q` → FAIL.
 
-- [ ] **Step 3: Implement.** In `recommend`, the loop's prefs copy becomes:
+- [x] **Step 3: Implement.** In `recommend`, the loop's prefs copy becomes:
 
 ```python
         term_prefs = prefs.model_copy(update={
@@ -274,9 +274,9 @@ def test_max_hard_courses_never_changes_graduation():
         })
 ```
 
-- [ ] **Step 4: Run** — the new test passes; full suite `py -3 -m pytest -q` green.
+- [x] **Step 4: Run** — the new test passes; full suite `py -3 -m pytest -q` green.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/na_planner/roadmap.py tests/test_roadmap.py
@@ -295,7 +295,7 @@ git commit -m "feat(roadmap): plan difficulty-neutral; cap deferred to rebalance
 - Consumes: `scoring.difficulty`, `scoring.direct_dependents`, `prereqs.prereqs_satisfied`, `restrict_to_season`, `section_conflict.sections_conflict`, `SectionInfo.from_section`, `_sections_for`, `_PLACEHOLDER_LABELS`.
 - Produces: `_rebalance_difficulty(terms, program, prefs, seen_by_season, base_passed, base_credits, term0_sections) -> None` (in-place).
 
-- [ ] **Step 1: Failing tests** (append to `tests/test_roadmap.py`):
+- [x] **Step 1: Failing tests** (append to `tests/test_roadmap.py`):
 
 ```python
 def test_rebalance_moves_hard_course_for_easy_one_without_moving_graduation():
@@ -390,9 +390,9 @@ def test_lighter_load_caps_hard_courses_without_moving_graduation():
             assert c.section is not None, c.code
 ```
 
-- [ ] **Step 2: Run to verify failure** — `py -3 -m pytest tests/test_roadmap.py::test_rebalance_moves_hard_course_for_easy_one_without_moving_graduation tests/test_recommend_cs.py::test_lighter_load_caps_hard_courses_without_moving_graduation -q` → both FAIL (over-cap terms).
+- [x] **Step 2: Run to verify failure** — `py -3 -m pytest tests/test_roadmap.py::test_rebalance_moves_hard_course_for_easy_one_without_moving_graduation tests/test_recommend_cs.py::test_lighter_load_caps_hard_courses_without_moving_graduation -q` → both FAIL (over-cap terms).
 
-- [ ] **Step 3: Implement** in `roadmap.py`. Capture baselines right after the WIP block in `recommend`:
+- [x] **Step 3: Implement** in `roadmap.py`. Capture baselines right after the WIP block in `recommend`:
 
 ```python
     base_passed: dict[str, Grade | None] = dict(passed)
@@ -529,9 +529,9 @@ def _rebalance_difficulty(
 
 Imports to extend at the top of `roadmap.py`: `from na_planner.prereqs import prereqs_satisfied`, `from na_planner.scoring import DEFAULT_WEIGHTS, difficulty, direct_dependents`, `from na_planner.models.schedule import SectionInfo`, `from na_planner.section_conflict import sections_conflict`. (`total_credits` needs no update — equal-credit swaps.)
 
-- [ ] **Step 4: Run** — the three new tests pass; full suite `py -3 -m pytest -q` green. If `sections_conflict`'s signature takes `Section` rather than `SectionInfo`, adapt `_pick_section` to compare on the raw `Section`s before converting (read `src/na_planner/section_conflict.py` first).
+- [x] **Step 4: Run** — the three new tests pass; full suite `py -3 -m pytest -q` green. If `sections_conflict`'s signature takes `Section` rather than `SectionInfo`, adapt `_pick_section` to compare on the raw `Section`s before converting (read `src/na_planner/section_conflict.py` first).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/na_planner/roadmap.py tests/test_roadmap.py tests/test_recommend_cs.py
@@ -549,11 +549,11 @@ git commit -m "feat(roadmap): difficulty rebalancing post-pass (cap tough course
 - Consumes: existing `app.setPref`, `renderPace`, `buildPrefs`.
 - Produces: `dm={light:3,balanced:4,challenge:99}`; slider range 9–13 (part) / 12–19 (full) with value clamped on toggle.
 
-- [ ] **Step 1: Implement.** In `buildPrefs`: `const dm={light:3,balanced:4,challenge:99};` and `max_hard_courses:dm[prefs.difficulty]||4,`; drop the `Math.min(prefs.targetCredits,13)` clamp in favor of the slider constraint (keep `max_load:part?13:19`). In `setPref`, when `k==='pace'`, clamp `targetCredits` into the new range before storing (`v==='part'?Math.min(s.prefs.targetCredits,13):Math.max(s.prefs.targetCredits,12)`). In the render path that sets `cred-range`/`cred-val` (search `cred-range`), set `min`/`max` from `prefs.pace` (part: 9–13, full: 12–19) and the value.
+- [x] **Step 1: Implement.** In `buildPrefs`: `const dm={light:3,balanced:4,challenge:99};` and `max_hard_courses:dm[prefs.difficulty]||4,`; drop the `Math.min(prefs.targetCredits,13)` clamp in favor of the slider constraint (keep `max_load:part?13:19`). In `setPref`, when `k==='pace'`, clamp `targetCredits` into the new range before storing (`v==='part'?Math.min(s.prefs.targetCredits,13):Math.max(s.prefs.targetCredits,12)`). In the render path that sets `cred-range`/`cred-val` (search `cred-range`), set `min`/`max` from `prefs.pace` (part: 9–13, full: 12–19) and the value.
 
-- [ ] **Step 2: Verify.** `py -3 -m pytest -q` (API serves the static file; no JS tests exist). Manual smoke: `py -3 -m uvicorn na_planner.api.app:app` → toggle pace (slider range + plan both change), set Lighter (COMP-heavy terms thin out) — or exercise via Playwright if available.
+- [x] **Step 2: Verify.** `py -3 -m pytest -q` (API serves the static file; no JS tests exist). Manual smoke: `py -3 -m uvicorn na_planner.api.app:app` → toggle pace (slider range + plan both change), set Lighter (COMP-heavy terms thin out) — or exercise via Playwright if available.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/na_planner/static/index.html

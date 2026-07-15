@@ -442,9 +442,11 @@ const app = {
     const s=this.st;
     return {
       program_code:s.programCode, catalog_year:s.catalogYear,
-      completed:s.editedCourses.filter(c=>c.code&&c.credits).map(c=>({
+      // Rows without a grade are excluded (renderConfirm warns about them) —
+      // a blank grade must never silently become an F.
+      completed:s.editedCourses.filter(c=>c.code&&c.credits&&(c.grade||'').trim()).map(c=>({
         code:c.code.trim(),title:(c.title||'').trim(),
-        credits:parseFloat(c.credits)||0,grade:(c.grade||'F').trim(),
+        credits:parseFloat(c.credits)||0,grade:c.grade.trim(),
         term:c.term?c.term.trim():null,remedial:!!c.remedial,
       })),
       external:s.editedExternals.filter(e=>e.credits).map(e=>({
@@ -896,7 +898,9 @@ const app = {
 
   renderConfirm(){
     const s=this.st;
-    const pw=s.parseWarnings||[];
+    const noGrade=(s.editedCourses||[]).filter(c=>c.code&&c.credits&&!(c.grade||'').trim());
+    const pw=[...(s.parseWarnings||[]),
+      ...noGrade.map(c=>`${c.code} has no grade — it will be ignored until you enter one.`)];
     const pwBox=el('parse-warnings');
     pwBox.style.display=pw.length?'flex':'none';
     pwBox.innerHTML=pw.map(w=>`

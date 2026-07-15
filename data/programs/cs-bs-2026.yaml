@@ -510,7 +510,10 @@ courses:
     offering: every
     # Capstone: "integrates knowledge and skills gained in various courses within the CS
     # curriculum" (catalog description; formal prereq is instructor approval). Gate on
-    # senior standing (90+ earned credit hours, catalog 5.2.4) so it isn't front-loaded.
+    # senior standing (90+ earned credit hours, catalog 5.2.4) so it isn't front-loaded,
+    # and final_term so the roadmap schedules it in the graduation semester
+    # (advisor rule: Senior Design is taken in the final semester).
+    final_term: true
     prereq:
       kind: min_credits
       credits: 90

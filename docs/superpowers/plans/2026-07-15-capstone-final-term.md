@@ -32,7 +32,7 @@
 - Consumes: `_PLACEHOLDER_LABELS` (dict of placeholder codes → labels, defined at the top of `roadmap.py`), `TermPlan.courses`/`total_credits`, `PlannedCourse.registered`/`section`.
 - Produces: `Course.final_term: bool = False`; `_relocate_final_term_courses(terms: list[TermPlan], program: Program) -> None` (in-place).
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Append to `tests/test_roadmap.py` (reuses the file's existing imports: `Course`, `Program`, `RequirementGroup`, `StudentPreferences`, `StudentRecord`, `recommend`):
 
@@ -94,12 +94,12 @@ def test_final_term_course_already_registered_stays_put():
 
 Note: the second test needs `CompletedCourse` — already imported in `tests/test_roadmap.py`. If `grade=None` is rejected by the model, use the pattern other WIP tests in the repo use (`rg "in_progress=True" tests/` and copy it).
 
-- [ ] **Step 2: Run tests to verify the first fails**
+- [x] **Step 2: Run tests to verify the first fails**
 
 Run: `py -3 -m pytest tests/test_roadmap.py -q -k final_term`
 Expected: `test_final_term_course_relocated_to_graduation_term` FAILS — either Pydantic rejects the unknown `final_term` field (strict) or, after the model change, the capstone stays in term 1. `test_final_term_course_already_registered_stays_put` may already pass (pinning is existing behavior); that's fine — it's the regression guard.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 In `src/na_planner/models/catalog.py`, add one field to `Course` after `discontinued`:
 
@@ -160,7 +160,7 @@ In `recommend`, call it right before the `if not terms:` block:
     if not terms:
 ```
 
-- [ ] **Step 4: Run tests to verify they pass, then the full suite**
+- [x] **Step 4: Run tests to verify they pass, then the full suite**
 
 Run: `py -3 -m pytest tests/test_roadmap.py -q`
 Expected: all pass.
@@ -168,7 +168,7 @@ Expected: all pass.
 Run: `py -3 -m pytest -q`
 Expected: zero failures (283 tests on this branch + 2 new).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/na_planner/models/catalog.py src/na_planner/roadmap.py tests/test_roadmap.py
@@ -187,7 +187,7 @@ git commit -m "feat(engine): final_term flag relocates capstones to the graduati
 - Consumes: `Course.final_term` (Task 1); `load_program_with_concentration("CS-BS", 2026, "concentration_software_engineering", 2024)`; `parse_transcript_text` + `to_student_record` ingestion helpers; reference transcript `docs/reference/transcript-format-sample-REDACTED.txt`.
 - Produces: COMP 4393 carries `final_term: true` in the 2026 CS catalog data.
 
-- [ ] **Step 1: Write the failing regression test**
+- [x] **Step 1: Write the failing regression test**
 
 Append to `tests/test_recommend_cs.py` (check the file's existing imports first; the imports below are written inline so the test is self-contained):
 
@@ -224,12 +224,12 @@ def test_comp_4393_scheduled_in_final_semester_for_reference_transcript():
         [(t.label, t.total_credits) for t in terms]      # loads preserved
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `py -3 -m pytest tests/test_recommend_cs.py::test_comp_4393_scheduled_in_final_semester_for_reference_transcript -q`
 Expected: FAIL — `cap_terms == ['Fall 2027']` (flag not yet in the YAML).
 
-- [ ] **Step 3: Flag the course in the catalog YAML**
+- [x] **Step 3: Flag the course in the catalog YAML**
 
 In `data/programs/cs-bs-2026.yaml`, the COMP 4393 entry currently reads (lines 506-516):
 
@@ -266,7 +266,7 @@ Add the flag (keep the 90-cr prereq as a floor):
       credits: 90
 ```
 
-- [ ] **Step 4: Run the test to verify it passes, then the full suite**
+- [x] **Step 4: Run the test to verify it passes, then the full suite**
 
 Run: `py -3 -m pytest tests/test_recommend_cs.py::test_comp_4393_scheduled_in_final_semester_for_reference_transcript -q`
 Expected: PASS.
@@ -274,7 +274,7 @@ Expected: PASS.
 Run: `py -3 -m pytest -q`
 Expected: zero failures. If another test fails, read it before touching anything — a test asserting 4393's old placement should be updated to the new rule only if it is about placement, not eligibility (e.g. `tests/test_new_programs_roadmap.py` walks prereqs term-by-term; relocation keeps that invariant, so it should stay green).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add data/programs/cs-bs-2026.yaml tests/test_recommend_cs.py

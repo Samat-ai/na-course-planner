@@ -197,6 +197,16 @@ def create_app() -> FastAPI:
             (static_dir / "sitemap.xml").read_text(encoding="utf-8"), media_type="application/xml",
         )
 
+    @app.get("/favicon.ico", response_class=Response)
+    def favicon() -> Response:
+        return Response((static_dir / "favicon.ico").read_bytes(),
+                        media_type="image/x-icon")
+
+    @app.get("/apple-touch-icon.png", response_class=Response)
+    def apple_touch_icon() -> Response:
+        return Response((static_dir / "apple-touch-icon.png").read_bytes(),
+                        media_type="image/png")
+
     app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
     return app

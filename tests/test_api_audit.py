@@ -39,3 +39,20 @@ def test_audit_unknown_program_404():
             "program_code": "X", "catalog_year": 2026}
     r = client.post("/audit", json=body)
     assert r.status_code == 404
+
+
+def test_audit_endpoint_applies_elementary_variant():
+    # Declaring EDUC Elementary reshapes the requirement groups server-side:
+    # fixed gen-ed list + required electives replace the generic buckets.
+    body = {
+        "student": {"program_code": "EDUC-BS", "catalog_year": 2026,
+                    "completed": [], "external": []},
+        "program_code": "EDUC-BS", "catalog_year": 2026,
+        "declared_concentration": "concentration_elementary_education",
+    }
+    r = client.post("/audit", json=body)
+    assert r.status_code == 200
+    ids = {g["group_id"] for g in r.json()["groups"]}
+    assert "gen_ed_elementary" in ids
+    assert "required_electives" in ids
+    assert "unrestricted_electives" not in ids

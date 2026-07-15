@@ -64,6 +64,9 @@ class RequirementGroup(BaseModel):
     choose_groups: int = 1                # choose_group: pick N subgroups
     course_filter: CourseFilter | None = None  # for credits_from_filter
     min_grade: Grade | None = None
+    # Propagated to member courses without an explicit per-course difficulty tag
+    # (see na_planner.difficulty.derive_course_difficulty).
+    member_difficulty: Literal["easy", "medium", "hard"] | None = None
 
 
 class ConcentrationVariant(BaseModel):

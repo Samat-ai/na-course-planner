@@ -1,6 +1,7 @@
 import re
 
 from na_planner.models.catalog import PrereqExpr, Program, RequirementGroup
+from na_planner.specialize import specialize_program
 
 # NA encodes credit hours in the 2nd digit of the course number (COMP 1412 -> 4 cr).
 _STANDARD_CODE = re.compile(r"^[A-Z]+ \d{4}$")
@@ -91,13 +92,23 @@ def lint_credit_totals(program: Program) -> list[str]:
     NA degree plans partition the total exactly (e.g. 36 gen-ed + 51 core + 18
     concentration + 15 electives = 120), so any gap means under- or over-encoded
     requirements (the "114 vs 120" class of data bug)."""
+    problems: list[str] = []
     total = sum(_group_min_credits(g, program) for g in program.groups)
     if abs(total - program.total_credits_required) > 1e-6:
-        return [
+        problems.append(
             f"group minimums sum to {total:g} but total_credits_required is "
             f"{program.total_credits_required:g}"
-        ]
-    return []
+        )
+    # Each concentration variant must also partition the total exactly.
+    for conc_id in program.concentration_variants:
+        variant = specialize_program(program, conc_id)
+        v_total = sum(_group_min_credits(g, variant) for g in variant.groups)
+        if abs(v_total - program.total_credits_required) > 1e-6:
+            problems.append(
+                f"variant '{conc_id}' group minimums sum to {v_total:g} but "
+                f"total_credits_required is {program.total_credits_required:g}"
+            )
+    return problems
 
 
 def lint_program(program: Program) -> list[str]:
@@ -119,4 +130,7 @@ def lint_program(program: Program) -> list[str]:
                 problems.append(f"course {course.code} coreq references unknown course {code}")
     for group in program.groups:
         problems.extend(_lint_group(group, known))
+    for variant in program.concentration_variants.values():
+        for group in variant.groups:
+            problems.extend(_lint_group(group, known))
     return problems

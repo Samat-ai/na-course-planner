@@ -56,7 +56,10 @@ def remaining_required_courses(
                                          satisfied_codes):
                 if c not in out:
                     out.append(c)
-        # credits_from_filter: free bucket, not enumerated
+        elif group.kind == "credits_from_filter":
+            # The free-credit part of the bucket isn't enumerable, but its unmet
+            # forced members (required electives) are real named requirements.
+            out.extend(c for c in status.remaining_choices if c not in out)
     _ = status_by_id  # reserved for future weighting
     return out
 

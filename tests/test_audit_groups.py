@@ -180,3 +180,30 @@ def test_choose_group_undeclared_unmet_shows_zero_applied():
     g = evaluate_group(group, [], prog)
     assert g.status == "unmet"
     assert g.credits_applied == 0
+
+
+def test_filter_group_forced_course_required():
+    # A credits_from_filter group with forced members (e.g. FRSH 1311 is "a required
+    # elective, part of the Elective hours") is not satisfied by credits alone.
+    prog = _program({
+        "FRSH 1311": Course(code="FRSH 1311", credits=3),
+        "COMP 3317": Course(code="COMP 3317", credits=3),
+        "ARTS 1311": Course(code="ARTS 1311", credits=3),
+    })
+    group = RequirementGroup(
+        id="elec", name="Electives", kind="credits_from_filter",
+        course_filter=CourseFilter(unrestricted=True), min_credits=6,
+        forced=["FRSH 1311"],
+    )
+    # 6 credits but no FRSH 1311 -> partial, and FRSH 1311 surfaces as remaining
+    applied = [EarnedCourse(code="COMP 3317", credits=3, grade=Grade.A),
+               EarnedCourse(code="ARTS 1311", credits=3, grade=Grade.A)]
+    s = evaluate_group(group, applied, _program({}))
+    assert s.status != "satisfied"
+    assert s.remaining_choices == ["FRSH 1311"]
+    # Forced present and credits met -> satisfied
+    applied2 = [EarnedCourse(code="FRSH 1311", credits=3, grade=Grade.A),
+                EarnedCourse(code="COMP 3317", credits=3, grade=Grade.A)]
+    s2 = evaluate_group(group, applied2, prog)
+    assert s2.status == "satisfied"
+    assert s2.remaining_choices == []

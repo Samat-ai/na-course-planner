@@ -468,3 +468,38 @@ def test_in_progress_course_not_rerecommended_and_unlocks_next():
     next_codes = [c.code for c in rec.next_term.courses]
     assert "A 1000" not in next_codes      # currently in progress — don't re-recommend
     assert "B 1000" in next_codes          # in-progress A unlocks B's prereq
+
+
+def test_credit_gated_forced_elective_is_scheduled_not_replaced_by_placeholders():
+    # A forced member of the elective bucket behind a min_credits gate (e.g. ENGL 4324
+    # "must be taken as an elective", 60-cr gate) must end up scheduled as a real
+    # course: the roadmap places free-elective credit to reach the gate, then the
+    # course itself — it must NOT paper over it with generic elective placeholders.
+    from na_planner.models.catalog import CourseFilter, PrereqExpr
+
+    courses = {
+        "CORE 1311": Course(code="CORE 1311", credits=3),
+        "GATED 1311": Course(code="GATED 1311", credits=3,
+                             prereq=PrereqExpr(kind="min_credits", credits=9)),
+    }
+    groups = [
+        RequirementGroup(id="core", name="Core", kind="all_of", courses=["CORE 1311"]),
+        RequirementGroup(id="electives", name="Electives", kind="credits_from_filter",
+                         min_credits=9, forced=["GATED 1311"],
+                         course_filter=CourseFilter(unrestricted=True)),
+    ]
+    prog = Program(code="X", name="X", catalog_year=2026, total_credits_required=12,
+                   courses=courses, groups=groups)
+    student = StudentRecord(program_code="X", catalog_year=2026, completed=[
+        CompletedCourse(code="CORE 1311", credits=3, grade=Grade.A)])
+    rec = recommend(student, prog, StudentPreferences(target_season="fall",
+                                                      target_year=2026),
+                    offering_seasons={})
+    all_terms = [rec.next_term] + rec.roadmap
+    planned = [c.code for t in all_terms for c in t.courses]
+    assert "GATED 1311" in planned
+    assert rec.projected_graduation is not None
+    # placeholders cover only the FREE 6 credits, not the forced course's 3
+    placeholder_credits = sum(c.credits for t in all_terms for c in t.courses
+                              if c.code == "ELECTIVE")
+    assert placeholder_credits == 6.0

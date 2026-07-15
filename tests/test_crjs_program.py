@@ -115,3 +115,9 @@ def test_crjs_3309_and_3311_coreq_not_hard_prereq():
     assert prereqs_satisfied(c3309.prereq, {}, 30.0)
     assert prereqs_satisfied(c3311.prereq, {}, 30.0)
     assert not prereqs_satisfied(c3309.prereq, {}, 15.0)
+
+
+def test_frsh_1311_is_a_required_elective():
+    prog = load_program(CRJS)
+    elec = next(g for g in prog.groups if g.id == "unrestricted_electives")
+    assert "FRSH 1311" in elec.forced

@@ -95,3 +95,10 @@ def test_catalog_elective_courses_present():
     assert prog.courses["COMP 4394"].credits == 3
     assert prog.courses["COMP 4398"].credits == 3
     assert prog.courses["COMP 4399"].credits == 3
+
+
+def test_frsh_1311_is_a_required_elective():
+    # Catalog p.117: FRSH 1311 is "a required elective, part of the Elective hours".
+    prog = load_program(CS)
+    elec = next(g for g in prog.groups if g.id == "unrestricted_electives")
+    assert "FRSH 1311" in elec.forced

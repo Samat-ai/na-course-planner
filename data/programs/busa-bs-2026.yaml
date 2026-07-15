@@ -859,10 +859,14 @@ groups:
           - MNGT 4320
 
   # ── 8. Unrestricted Electives (24 credits) ────────────────────────────────
-  # Catalog: specified elective COMP 1314 (Computer Literacy) plus free electives.
+  # Catalog: specified electives FRSH 1311 (all programs, p.117) and COMP 1314
+  # (Computer Literacy) plus free electives.
   - id: unrestricted_electives
     name: Unrestricted Electives
     kind: credits_from_filter
     min_credits: 24
+    forced:
+      - FRSH 1311
+      - COMP 1314
     course_filter:
       unrestricted: true

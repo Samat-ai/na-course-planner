@@ -97,16 +97,20 @@ def evaluate_group(
         if group.course_filter is None:
             raise ValueError(f"credits_from_filter group '{group.id}' has no course_filter")
         matching = [c for c in counting
-                    if course_matches_filter(c.code, group.course_filter, program)]
+                    if c.code in group.forced
+                    or course_matches_filter(c.code, group.course_filter, program)]
         matched_credits = sum(c.credits for c in matching)
         required = group.min_credits or 0
-        satisfied = matched_credits >= required
+        # Forced members (e.g. FRSH 1311 as a required elective) must be present,
+        # not just any courses summing to the credit target.
+        unmet_forced = [code for code in group.forced if code not in applied_codes]
+        satisfied = matched_credits >= required and not unmet_forced
         status = "satisfied" if satisfied else ("partial" if matching else "unmet")
         return GroupStatus(
             group_id=group.id, name=group.name, status=status,
             credits_required=required, credits_applied=matched_credits,
             courses_required=None, courses_applied=len(matching),
-            satisfied_by=[c.code for c in matching], remaining_choices=[],
+            satisfied_by=[c.code for c in matching], remaining_choices=unmet_forced,
             choose_remaining=0,
         )
 
@@ -219,13 +223,32 @@ def _accepts(group: RequirementGroup, course: EarnedCourse, program: Program) ->
     return course.code in _group_member_codes(group)
 
 
+def _reserved_codes(program: Program) -> dict[str, str]:
+    """code -> group id, for every code listed in some group's `forced`. Optional
+    fills in OTHER groups skip these so a required elective (e.g. FRSH 1311) is
+    never absorbed by a less specific bucket allocated earlier."""
+    out: dict[str, str] = {}
+
+    def walk(group: RequirementGroup, owner: str) -> None:
+        for code in group.forced:
+            out.setdefault(code, owner)
+        for sub in group.subgroups:
+            walk(sub, owner)
+
+    for g in program.groups:
+        walk(g, g.id)
+    return out
+
+
 def _group_capacity_take(
     group: RequirementGroup, available: list[EarnedCourse], program: Program,
-    declared: str | None,
+    declared: str | None, reserved_elsewhere: set[str] | None = None,
 ) -> list[EarnedCourse]:
     """The subset of `available` this group should claim, capped at its need.
-    Mandatory members first (all_of courses; choose forced + forced_choice slots),
-    then optional pool members up to the group's count/credit target."""
+    Mandatory members first (all_of courses; choose/filter forced + forced_choice
+    slots), then optional pool members up to the group's count/credit target,
+    skipping courses forced in a different group (`reserved_elsewhere`)."""
+    reserved = reserved_elsewhere or set()
     min_grade = _effective_min_grade(group, program)
     counting = [c for c in available if _counts(c, min_grade)]
 
@@ -252,7 +275,7 @@ def _group_capacity_take(
                     break
         pool = set(group.courses)                            # 3) optional fill to the target
         for c in counting:
-            if c.code not in pool or c.code in taken_codes:
+            if c.code not in pool or c.code in taken_codes or c.code in reserved:
                 continue
             if group.min_count is not None and len(taken) >= group.min_count:
                 break
@@ -268,9 +291,16 @@ def _group_capacity_take(
             return []
         target = group.min_credits or 0.0
         taken, total = [], 0.0
-        for c in counting:
+        forced = set(group.forced)
+        for c in counting:                                   # forced members always claimed
+            if c.code in forced:
+                taken.append(c)
+                total += c.credits
+        for c in counting:                                   # optional fill to the target
             if total >= target:
                 break
+            if c.code in forced or c.code in reserved:
+                continue
             if course_matches_filter(c.code, group.course_filter, program):
                 taken.append(c)
                 total += c.credits
@@ -279,7 +309,8 @@ def _group_capacity_take(
     if group.kind == "choose_group":
         sub = next((s for s in group.subgroups if s.id == declared), None)
         if sub is not None:
-            return _group_capacity_take(sub, available, program, declared)
+            return _group_capacity_take(sub, available, program, declared,
+                                        reserved_elsewhere=reserved)
         # Undeclared: preserve auto-detect — claim every course any subgroup accepts so
         # evaluate_group can still recognize a fully-taken track as satisfied. (The off-track
         # overflow only applies once a concentration is DECLARED, via the branch above.)
@@ -295,10 +326,15 @@ def allocate(
     ordered = sorted(
         enumerate(program.groups), key=lambda iv: (-_specificity(iv[1]), iv[0])
     )
+    reserved_by = _reserved_codes(program)
     available = list(earned)
     result: dict[str, list[EarnedCourse]] = {}
     for _, group in ordered:
-        taken = _group_capacity_take(group, available, program, declared)
+        reserved_elsewhere = {
+            code for code, owner in reserved_by.items() if owner != group.id
+        }
+        taken = _group_capacity_take(group, available, program, declared,
+                                     reserved_elsewhere=reserved_elsewhere)
         if taken:
             result[group.id] = taken
             taken_ids = {id(c) for c in taken}

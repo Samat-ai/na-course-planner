@@ -191,8 +191,10 @@ _Resolve a student's reported exams (AP/CLEP/IB/SAT Subject) into NA course cred
     - fields: `any_of`, `match_only`
   - **class `RequirementGroup`**
     - fields: `id`, `name`, `kind`, `courses`, `forced`, `forced_choices`, `min_count`, `min_credits`, `subgroups`, `choose_groups`, `course_filter`, `min_grade`
+  - **class `ConcentrationVariant`**
+    - fields: `removes`, `groups`
   - **class `Program`**
-    - fields: `code`, `name`, `catalog_year`, `total_credits_required`, `default_min_grade`, `courses`, `groups`
+    - fields: `code`, `name`, `catalog_year`, `total_credits_required`, `default_min_grade`, `courses`, `groups`, `concentration_variants`
 
 ### `src/na_planner/models/concentration.py`
   - **class `ConcentrationOverlay`**
@@ -275,6 +277,9 @@ _Resolve a student's reported exams (AP/CLEP/IB/SAT Subject) into NA course cred
 ### `src/na_planner/section_conflict.py`
   - `sections_conflict(a: Section, b: Section) -> bool`
   - `campus_days(sections: list[Section]) -> int`
+
+### `src/na_planner/specialize.py`
+  - `specialize_program(program: Program, declared: str | None) -> Program`
 
 ### `src/na_planner/term_state.py`
   - **class `TermState`**

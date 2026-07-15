@@ -161,3 +161,30 @@ def test_remaining_skips_match_only_forced_choice_options():
                                                     grade=Grade.A)])
     rem2 = remaining_required_courses(audit(done, prog), prog, prefs)
     assert "COMP 4373" not in rem2 and "COMP 4353" not in rem2
+
+
+def test_remaining_required_surfaces_filter_group_forced():
+    # FRSH 1311 is a forced member of the elective bucket: it must surface as a
+    # remaining required course (the free-credit part of the bucket still doesn't).
+    from na_planner.models.catalog import CourseFilter
+
+    courses = {
+        "CORE 1311": Course(code="CORE 1311", credits=3),
+        "FRSH 1311": Course(code="FRSH 1311", credits=3),
+    }
+    groups = [
+        RequirementGroup(id="core", name="Core", kind="all_of", courses=["CORE 1311"]),
+        RequirementGroup(id="electives", name="Electives", kind="credits_from_filter",
+                         min_credits=9, forced=["FRSH 1311"],
+                         course_filter=CourseFilter(unrestricted=True)),
+    ]
+    prog = Program(code="X", name="X", catalog_year=2026, total_credits_required=12,
+                   courses=courses, groups=groups)
+    student = StudentRecord(program_code="X", catalog_year=2026, completed=[
+        CompletedCourse(code="CORE 1311", credits=3, grade=Grade.A)])
+    a = audit(student, prog)
+    remaining = remaining_required_courses(a, prog, StudentPreferences())
+    assert "FRSH 1311" in remaining
+    # eligible too (no prereq, offered every term)
+    elig = eligible_courses(a, prog, StudentPreferences(), {"CORE 1311": Grade.A}, 3)
+    assert "FRSH 1311" in elig

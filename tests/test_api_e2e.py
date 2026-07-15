@@ -42,3 +42,10 @@ def test_root_serves_ui():
     r = client.get("/")
     assert r.status_code == 200
     assert "NA Course Planner" in r.text
+
+
+def test_root_answers_head_requests():
+    # Uptime checkers (e.g. the README's shields.io badge) probe with HEAD;
+    # a GET-only route 405s and reports the site as down.
+    r = client.head("/")
+    assert r.status_code == 200

@@ -181,7 +181,8 @@ def create_app() -> FastAPI:
 
     static_dir = Path(__file__).parent.parent / "static"
 
-    @app.get("/", response_class=HTMLResponse)
+    # HEAD included so uptime checkers (e.g. the README badge) don't see a 405.
+    @app.api_route("/", methods=["GET", "HEAD"], response_class=HTMLResponse)
     def index() -> str:
         return (static_dir / "index.html").read_text(encoding="utf-8")
 

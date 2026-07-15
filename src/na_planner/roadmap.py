@@ -17,13 +17,19 @@ from na_planner.timetabler import timetable_term
 
 MAX_TERMS = 16
 
-# Synthetic course code for elective-filler roadmap terms (not a real catalog course).
+# Synthetic course codes for filler roadmap terms (not real catalog courses).
+# ELECTIVE fills the unrestricted-elective bucket (any course counts); GENED fills
+# subject-restricted filter buckets ("Gen-Ed: Additional") whose credits must come
+# from gen-ed subjects — the two must never be conflated in what the student sees.
 ELECTIVE_PLACEHOLDER = "ELECTIVE"
+GENED_PLACEHOLDER = "GENED"
+
+_PLACEHOLDER_LABELS = {ELECTIVE_PLACEHOLDER: "Elective", GENED_PLACEHOLDER: "Gen-Ed elective"}
 
 
 def display_label(code: str) -> str:
-    """Human-facing label for a planned course code (relabels the elective placeholder)."""
-    return "Elective" if code == ELECTIVE_PLACEHOLDER else code
+    """Human-facing label for a planned course code (relabels the filler placeholders)."""
+    return _PLACEHOLDER_LABELS.get(code, code)
 
 
 def _advance(season: str, year: int) -> tuple[str, int]:
@@ -73,16 +79,20 @@ def _forced_credits(codes: list[str], program: Program) -> float:
     return sum(program.courses[c].credits for c in codes if c in program.courses)
 
 
+def _unrestricted_group_ids(program: Program) -> set[str]:
+    return {
+        g.id for g in program.groups
+        if g.kind == "credits_from_filter"
+        and g.course_filter is not None and g.course_filter.unrestricted
+    }
+
+
 def _unrestricted_remaining(audit_result, program: Program) -> float:
     """FREE unrestricted-elective credits still owed per the audit (satisfied groups
     and non-unrestricted filters excluded). Unmet forced members (required electives,
     surfaced in remaining_choices) are real named courses the planner schedules
     itself, so their credits are not part of the placeholder-fillable amount."""
-    unrestricted_ids = {
-        g.id for g in program.groups
-        if g.kind == "credits_from_filter"
-        and g.course_filter is not None and g.course_filter.unrestricted
-    }
+    unrestricted_ids = _unrestricted_group_ids(program)
     return max(0.0, sum(
         s.credits_required - s.credits_applied
         - _forced_credits(s.remaining_choices, program)
@@ -221,12 +231,24 @@ def recommend(
         last_audit = audit(student, program,
                            declared_concentration=prefs.declared_concentration)
 
-    elective_remaining = max(0.0, sum(
-        (g.credits_required - g.credits_applied
-         - _forced_credits(g.remaining_choices, program))
-        for g in last_audit.groups
-        if g.status != "satisfied" and group_kinds.get(g.group_id) == "credits_from_filter"
-    ))
+    # Filter-bucket credits still owed, split by kind: unrestricted (free electives —
+    # any course counts) vs subject-restricted ("Gen-Ed: Additional" — must come from
+    # gen-ed subjects). They get distinct placeholders and distinct remaining counters.
+    unrestricted_ids = _unrestricted_group_ids(program)
+
+    def _owed(want_unrestricted: bool) -> float:
+        return max(0.0, sum(
+            (g.credits_required - g.credits_applied
+             - _forced_credits(g.remaining_choices, program))
+            for g in last_audit.groups
+            if g.status != "satisfied"
+            and group_kinds.get(g.group_id) == "credits_from_filter"
+            and (g.group_id in unrestricted_ids) == want_unrestricted
+        ))
+
+    free_remaining = _owed(True)
+    gened_remaining = _owed(False)
+    elective_remaining = free_remaining + gened_remaining
     structured_complete = all(
         s.status == "satisfied"
         or (group_kinds.get(s.group_id) == "credits_from_filter"
@@ -240,21 +262,39 @@ def recommend(
     # credit target (earliest first), then overflowing into new terms up to graduation.
     # `season, year` already points one term past the last planned term.
     if not last_audit.is_complete and structured_complete and elective_remaining > 0:
-        remaining = elective_remaining
+        # Fill order: gen-ed additional first (more constrained — schedule it earlier),
+        # then free electives. Each bucket keeps its own placeholder code and reason.
+        buckets = [
+            [GENED_PLACEHOLDER, "Additional gen-ed credit (any gen-ed category)",
+             gened_remaining],
+            [ELECTIVE_PLACEHOLDER, "Free elective credit", free_remaining],
+        ]
+
+        def _fill_from_buckets(term: TermPlan, capacity: float) -> float:
+            used = 0.0
+            for b in buckets:
+                if capacity - used <= 1e-6:
+                    break
+                got = _fill_elective_slots(term, capacity - used, b[2],
+                                           code=b[0], reason=b[1])
+                b[2] -= got
+                used += got
+            return used
+
         # Per-term capacity for new elective terms. Floor at one elective course so a whole
         # 3-cr slot always fits (a sub-3 target would otherwise make no progress).
         per_term = max(prefs.target_credits, ELECTIVE_SLOT)
         for term in terms:                            # top up under-target planned terms
             cap = prefs.target_credits - term.total_credits
             if cap > 1e-6:
-                remaining -= _fill_elective_slots(term, cap, remaining)
-            if remaining <= 1e-6:
+                _fill_from_buckets(term, cap)
+            if sum(b[2] for b in buckets) <= 1e-6:
                 break
         guard = 0
-        while remaining > 1e-6 and guard < MAX_TERMS:  # overflow into new terms
+        while sum(b[2] for b in buckets) > 1e-6 and guard < MAX_TERMS:  # overflow terms
             term = TermPlan(season=season, year=year,
                             label=f"{season.capitalize()} {year}")
-            remaining -= _fill_elective_slots(term, per_term, remaining)
+            _fill_from_buckets(term, per_term)
             if not term.courses:                      # safety: no progress -> stop
                 break
             terms.append(term)
@@ -267,7 +307,7 @@ def recommend(
         if len(terms) >= 2:
             last_t = terms[-1]
             prev_t = terms[-2]
-            is_elec_only = all(c.code == ELECTIVE_PLACEHOLDER for c in last_t.courses)
+            is_elec_only = all(c.code in _PLACEHOLDER_LABELS for c in last_t.courses)
             is_whole_slots = all(c.credits >= ELECTIVE_SLOT - 1e-6 for c in last_t.courses)
             is_sparse = last_t.total_credits < prefs.target_credits - 1e-6
             room = prefs.max_load - prev_t.total_credits
@@ -282,7 +322,8 @@ def recommend(
         empty = TermPlan(season=prefs.target_season, year=prefs.target_year,
                          label=f"{prefs.target_season.capitalize()} {prefs.target_year}")
         return Recommendation(next_term=empty, roadmap=[], projected_graduation=None,
-                              elective_credits_remaining=elective_remaining)
+                              elective_credits_remaining=free_remaining,
+                              gen_ed_credits_remaining=gened_remaining)
 
     # Graduation requires every structured group satisfied; with the elective tail now
     # appended, the last term in the list is the projected graduation term.
@@ -292,14 +333,19 @@ def recommend(
         projected_graduation=projected,
         # In-loop placeholders are already audit-counted; add them back so the
         # field keeps meaning "elective credits the student still has to take".
-        elective_credits_remaining=elective_remaining + placeholder_credits,
+        # (In-loop placeholders fill the unrestricted bucket only, so they belong
+        # to the free-elective counter, not the gen-ed one.)
+        elective_credits_remaining=free_remaining + placeholder_credits,
+        gen_ed_credits_remaining=gened_remaining,
     )
 
 
 ELECTIVE_SLOT = 3.0  # the catalog's elective unit (ELEC 1 = one 3-credit elective course)
 
 
-def _fill_elective_slots(term: TermPlan, capacity: float, remaining: float) -> float:
+def _fill_elective_slots(term: TermPlan, capacity: float, remaining: float,
+                         code: str = ELECTIVE_PLACEHOLDER,
+                         reason: str = "Free elective credit") -> float:
     """Add whole-course elective placeholder rows to `term` (one per course), bounded by
     `capacity` (spare credits) and `remaining` (electives still to place). Electives are
     3-credit courses, so a slot is only placed when a full 3 credits fit — we never add a
@@ -311,8 +357,7 @@ def _fill_elective_slots(term: TermPlan, capacity: float, remaining: float) -> f
         if capacity - used + 1e-6 < slot:
             break  # not enough room for a whole elective course
         term.courses.append(PlannedCourse(
-            code=ELECTIVE_PLACEHOLDER, credits=slot,
-            reasons=["Free elective credit"], provisional=True))
+            code=code, credits=slot, reasons=[reason], provisional=True))
         term.total_credits += slot
         used += slot
     return used

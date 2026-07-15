@@ -8,7 +8,7 @@ from na_planner.models.catalog import (
 )
 from na_planner.models.preferences import StudentPreferences
 from na_planner.models.student import CompletedCourse, StudentRecord
-from na_planner.roadmap import recommend
+from na_planner.roadmap import display_label, recommend
 
 
 def _chain_prog():
@@ -503,3 +503,38 @@ def test_credit_gated_forced_elective_is_scheduled_not_replaced_by_placeholders(
     placeholder_credits = sum(c.credits for t in all_terms for c in t.courses
                               if c.code == "ELECTIVE")
     assert placeholder_credits == 6.0
+
+
+def test_gen_ed_filter_credits_get_distinct_placeholder():
+    # A subject-restricted "Gen-Ed: Additional" filter bucket must NOT be labeled a
+    # free elective — those credits can only come from gen-ed subjects. It gets its
+    # own GENED placeholder rows (filled before the free electives) and its own
+    # remaining counter, so the UI never claims "any course counts" for them.
+    courses = {"A 1000": Course(code="A 1000", credits=3)}
+    groups = [
+        RequirementGroup(id="core", name="Core", kind="all_of", courses=["A 1000"]),
+        RequirementGroup(id="gen_ed_additional",
+                         name="Gen-Ed: Additional (any category)",
+                         kind="credits_from_filter", min_credits=6,
+                         course_filter=CourseFilter(subjects=["ARTS", "HIST"])),
+        RequirementGroup(id="elec", name="Unrestricted Electives",
+                         kind="credits_from_filter", min_credits=6,
+                         course_filter=CourseFilter(unrestricted=True)),
+    ]
+    prog = Program(code="X", name="X", catalog_year=2026, total_credits_required=15,
+                   courses=courses, groups=groups)
+    student = StudentRecord(program_code="X", catalog_year=2026)
+    prefs = StudentPreferences(target_credits=6, target_season="fall", target_year=2026)
+    rec = recommend(student, prog, prefs, offering_seasons={})
+    terms = [rec.next_term, *rec.roadmap]
+    placed = [c.code for t in terms for c in t.courses]
+    assert placed.count("GENED") == 2      # 6 gen-ed credits as two 3-cr slots
+    assert placed.count("ELECTIVE") == 2   # 6 free-elective credits
+    assert placed.index("GENED") < placed.index("ELECTIVE")  # constrained slots first
+    assert rec.gen_ed_credits_remaining == 6
+    assert rec.elective_credits_remaining == 6
+    gened_reasons = [r for t in terms for c in t.courses if c.code == "GENED"
+                     for r in c.reasons]
+    assert gened_reasons and all("gen-ed" in r.lower() for r in gened_reasons)
+    assert display_label("GENED") == "Gen-Ed elective"
+    assert rec.projected_graduation is not None

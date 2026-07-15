@@ -46,6 +46,8 @@ def _print_recommend(program_path: str, student_path: str) -> int:
             print(f"  {t.label}: {', '.join(display_label(c.code) for c in t.courses)}")
     print(f"Projected graduation: {rec.projected_graduation or 'not yet projected'}")
     print(f"Elective credits remaining: {rec.elective_credits_remaining:.0f}")
+    if rec.gen_ed_credits_remaining > 0:
+        print(f"Additional gen-ed credits remaining: {rec.gen_ed_credits_remaining:.0f}")
     return 0
 
 

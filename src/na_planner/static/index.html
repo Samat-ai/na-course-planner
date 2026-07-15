@@ -411,6 +411,7 @@ const ICON_STYLES = [
 ];
 
 function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function codeLabel(code){return code==='ELECTIVE'?'Elective':code==='GENED'?'Gen-Ed elective':code;}
 function el(id){return document.getElementById(id);}
 
 const app = {
@@ -1094,9 +1095,12 @@ const app = {
     }
 
     el('term-sub').textContent=`${rec.next_term.label} · ${rec.next_term.total_credits} credits`;
-    el('electives-note').textContent=rec.elective_credits_remaining>0
-      ?`Not a guarantee — courses and offerings shift. ${rec.elective_credits_remaining} free-elective credits remain — any course counts.`
-      :'Not a guarantee — courses and offerings shift.';
+    {
+      const bits=['Not a guarantee — courses and offerings shift.'];
+      if(rec.elective_credits_remaining>0)bits.push(`${rec.elective_credits_remaining} free-elective credits remain — any course counts.`);
+      if(rec.gen_ed_credits_remaining>0)bits.push(`${rec.gen_ed_credits_remaining} additional gen-ed credits remain — pick courses from any gen-ed category.`);
+      el('electives-note').textContent=bits.join(' ');
+    }
     el('copy-label').textContent=s.copied?'Copied!':'Copy course list';
   },
 
@@ -1170,7 +1174,7 @@ const app = {
         </div>
         <div style="flex:1;min-width:0;">
           <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;">
-            <span style="font-family:ui-monospace,monospace;font-size:13px;font-weight:600;color:#1E3A5F;">${esc(c.code==='ELECTIVE'?'Elective':c.code)}</span>
+            <span style="font-family:ui-monospace,monospace;font-size:13px;font-weight:600;color:#1E3A5F;">${esc(codeLabel(c.code))}</span>
             ${c.registered?`<span style="font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#1E7A52;background:#E4F2EA;border:1px solid #C3E2D1;padding:2px 7px;border-radius:20px;">Registered</span>`:''}
           </div>
           ${meetingHtml(c.section)}
@@ -1193,7 +1197,7 @@ const app = {
     e.innerHTML=roadmap.map((t,ti)=>{
       const first=ti===0;
       const courses=(t.courses||[]).map(c=>{
-        const label=c.code==='ELECTIVE'?'Elective':c.code;
+        const label=codeLabel(c.code);
         return `
         <div style="display:flex;align-items:baseline;gap:7px;">
           <span style="flex:none;width:5px;height:5px;border-radius:50%;background:#1E3A5F;margin-top:6px;"></span>

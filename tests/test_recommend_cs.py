@@ -267,3 +267,37 @@ def test_comp_4393_scheduled_in_final_semester_for_reference_transcript():
     assert cap_terms == ["Spring 2028"], f"COMP 4393 in {cap_terms}"
     assert all(t.total_credits == 15 for t in terms), \
         [(t.label, t.total_credits) for t in terms]      # loads preserved
+
+
+def test_lighter_load_caps_hard_courses_without_moving_graduation():
+    # Lighter (cap 3): every term has at most 3 core/concentration courses
+    # (pinned WIP included), loads stay 15, graduation stays Spring 2028.
+    from pathlib import Path
+
+    from na_planner.concentration_loader import load_program_with_concentration
+    from na_planner.ingestion.build import to_student_record
+    from na_planner.ingestion.transcript_text import parse_transcript_text
+    from na_planner.models.preferences import StudentPreferences
+    from na_planner.roadmap import recommend
+    from na_planner.scoring import difficulty
+
+    ref = Path(__file__).parent.parent / "docs" / "reference" / \
+        "transcript-format-sample-REDACTED.txt"
+    parsed = parse_transcript_text(ref.read_text(encoding="utf-8"))
+    student = to_student_record(parsed, "CS-BS", 2026)
+    program = load_program_with_concentration(
+        "CS-BS", 2026, "concentration_software_engineering", 2024)
+    prefs = StudentPreferences(
+        declared_concentration="concentration_software_engineering",
+        target_season="fall", target_year=2026, max_hard_courses=3)
+    rec = recommend(student, program, prefs)
+    terms = [rec.next_term, *rec.roadmap]
+    assert rec.projected_graduation == "Spring 2028"
+    for t in terms:
+        hard = [c.code for c in t.courses if difficulty(c.code, program) == 3]
+        assert len(hard) <= 3, (t.label, hard)
+        assert t.total_credits == 15
+    # a real course swapped into the timetabled next term must carry a section
+    for c in rec.next_term.courses:
+        if c.code in program.courses:
+            assert c.section is not None, c.code

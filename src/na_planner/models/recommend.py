@@ -29,5 +29,6 @@ class Recommendation(BaseModel):
     next_term: TermPlan
     roadmap: list[TermPlan] = []          # tentative terms after next_term
     projected_graduation: str | None = None
-    elective_credits_remaining: float = 0.0
+    elective_credits_remaining: float = 0.0   # unrestricted (any course counts)
+    gen_ed_credits_remaining: float = 0.0     # "Gen-Ed: Additional" (gen-ed subjects only)
     is_tentative: bool = True

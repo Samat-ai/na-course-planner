@@ -34,6 +34,10 @@ def plan_to_pdf(rec: Recommendation) -> bytes:
              new_x="LMARGIN", new_y="NEXT")
     pdf.cell(0, 6, f"Elective credits remaining: {rec.elective_credits_remaining:.0f}",
              new_x="LMARGIN", new_y="NEXT")
+    if rec.gen_ed_credits_remaining > 0:
+        pdf.cell(0, 6, "Additional gen-ed credits remaining: "
+                 f"{rec.gen_ed_credits_remaining:.0f}",
+                 new_x="LMARGIN", new_y="NEXT")
     pdf.cell(0, 6, "Advisory only - verify with your advisor and the registrar.",
              new_x="LMARGIN", new_y="NEXT")
     return bytes(pdf.output())

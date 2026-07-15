@@ -220,7 +220,7 @@ _Resolve a student's reported exams (AP/CLEP/IB/SAT Subject) into NA course cred
   - **class `TermPlan`**
     - fields: `season`, `year`, `label`, `courses`, `total_credits`, `warnings`
   - **class `Recommendation`**
-    - fields: `next_term`, `roadmap`, `projected_graduation`, `elective_credits_remaining`, `is_tentative`
+    - fields: `next_term`, `roadmap`, `projected_graduation`, `elective_credits_remaining`, `gen_ed_credits_remaining`, `is_tentative`
 
 ### `src/na_planner/models/schedule.py`
   - **class `Weekday`**

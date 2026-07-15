@@ -97,3 +97,38 @@ def test_parses_transfer_credit_section():
         "CLEP", "CLEP COLL.AL", "College Algebra", 3.0)
     assert (t1.source, t1.code, t1.title, t1.credits) == (
         "CLEP", "CLEP PRE-", "Pre-calculus", 3.0)
+
+
+MALFORMED_ROW_SAMPLE = """
+2024-2025 Academic Year : Fall
+Subterm : Fall Full Term
+COMP 1411 Introduction to CS I UG A 4.00 4.00 4.00 16.00
+BIOL 1111 Biology Lab UGA 1.00 1.00 1.00 4.00
+"""
+
+BAD_TERM_HEADER_SAMPLE = """
+2024-2025 Academic Yr Fall
+Subterm : Fall Full Term
+COMP 1411 Introduction to CS I UG A 4.00 4.00 4.00 16.00
+"""
+
+
+def test_course_like_row_that_fails_to_parse_warns():
+    # A merged-column lab row must not vanish silently: the student should be
+    # told the row was dropped so they can add it manually.
+    parsed = parse_transcript_text(MALFORMED_ROW_SAMPLE)
+    assert [c.code for c in parsed.courses] == ["COMP 1411"]
+    assert any("BIOL 1111" in w for w in parsed.warnings)
+
+
+def test_unrecognized_term_header_warns():
+    # Term stays "Unknown" (breaks WIP-boundary detection) — warn about it.
+    parsed = parse_transcript_text(BAD_TERM_HEADER_SAMPLE)
+    assert [c.code for c in parsed.courses] == ["COMP 1411"]
+    assert parsed.courses[0].term_label == "Unknown"
+    assert any("term" in w.lower() for w in parsed.warnings)
+
+
+def test_clean_sample_has_no_row_warnings():
+    parsed = parse_transcript_text(SAMPLE)
+    assert parsed.warnings == []

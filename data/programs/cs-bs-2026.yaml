@@ -959,9 +959,12 @@ groups:
           - COMP 4393
 
   # ── 8. Unrestricted Electives (15 credits) ────────────────────────────────
+  # FRSH 1311 is "a required elective, part of the Elective hours" (catalog p.117).
   - id: unrestricted_electives
     name: Unrestricted Electives
     kind: credits_from_filter
     min_credits: 15
+    forced:
+      - FRSH 1311
     course_filter:
       unrestricted: true

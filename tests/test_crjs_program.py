@@ -81,3 +81,9 @@ def test_full_distribution_audits_complete():
     assert unmet == [], f"unsatisfied groups: {unmet}"
     assert result.is_complete is True
     assert result.credits_remaining == 0
+
+
+def test_frsh_1311_is_a_required_elective():
+    prog = load_program(CRJS)
+    elec = next(g for g in prog.groups if g.id == "unrestricted_electives")
+    assert "FRSH 1311" in elec.forced

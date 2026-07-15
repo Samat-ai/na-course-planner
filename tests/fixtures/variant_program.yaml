@@ -1,0 +1,45 @@
+code: VAR-BS
+name: Variant Fixture
+catalog_year: 2026
+total_credits_required: 12
+courses:
+  GEN 1311:
+    code: GEN 1311
+    credits: 3
+  CORE 1311:
+    code: CORE 1311
+    credits: 3
+  SUB 1311:
+    code: SUB 1311
+    credits: 3
+  REQ 1311:
+    code: REQ 1311
+    credits: 3
+groups:
+  - id: gen_ed
+    name: Gen-Ed
+    kind: choose
+    min_count: 1
+    courses: [GEN 1311]
+  - id: core
+    name: Core
+    kind: all_of
+    courses: [CORE 1311]
+  - id: electives
+    name: Electives
+    kind: credits_from_filter
+    min_credits: 6
+    course_filter:
+      unrestricted: true
+concentration_variants:
+  conc_special:
+    removes: [gen_ed]
+    groups:
+      - id: core
+        name: Core (special)
+        kind: all_of
+        courses: [SUB 1311]
+      - id: required_electives
+        name: Required Electives
+        kind: all_of
+        courses: [REQ 1311]

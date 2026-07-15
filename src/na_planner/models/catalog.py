@@ -65,6 +65,14 @@ class RequirementGroup(BaseModel):
     min_grade: Grade | None = None
 
 
+class ConcentrationVariant(BaseModel):
+    # Requirement-group edits that apply once a specific concentration is DECLARED
+    # (keyed by the concentration subgroup id). Expresses catalog rules like EDUC
+    # Elementary's fixed gen-ed list, core substitutions, and required electives.
+    removes: list[str] = []               # group ids dropped from the base program
+    groups: list[RequirementGroup] = []   # same id: replaces in place; new id: appended
+
+
 class Program(BaseModel):
     code: str
     name: str
@@ -73,6 +81,7 @@ class Program(BaseModel):
     default_min_grade: Grade | None = None
     courses: dict[str, Course] = {}
     groups: list[RequirementGroup] = []
+    concentration_variants: dict[str, ConcentrationVariant] = {}
 
 
 PrereqExpr.model_rebuild()

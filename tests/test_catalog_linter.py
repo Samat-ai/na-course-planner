@@ -150,3 +150,44 @@ def test_nonstandard_code_credits_not_checked():
     courses = {"General elective": Course(code="General elective", credits=3)}
     groups = [RequirementGroup(id="c", name="Core", kind="all_of", courses=["General elective"])]
     assert lint_program(_program(groups, courses)) == []
+
+
+def _variant_program(variant_groups, removes=(), total=12):
+    from na_planner.models.catalog import ConcentrationVariant
+
+    courses = {
+        "CORE 1311": Course(code="CORE 1311", credits=3),
+        "ALT 1311": Course(code="ALT 1311", credits=3),
+    }
+    groups = [
+        RequirementGroup(id="core", name="Core", kind="all_of", courses=["CORE 1311"]),
+        RequirementGroup(id="electives", name="Electives", kind="credits_from_filter",
+                         min_credits=9, course_filter=CourseFilter(unrestricted=True)),
+    ]
+    prog = Program(code="X", name="X", catalog_year=2026, total_credits_required=total,
+                   courses=courses, groups=groups)
+    return prog.model_copy(update={"concentration_variants": {
+        "conc_a": ConcentrationVariant(removes=list(removes), groups=variant_groups),
+    }})
+
+
+def test_variant_unknown_course_reference_flagged():
+    prog = _variant_program([RequirementGroup(id="core", name="Core", kind="all_of",
+                                              courses=["NOPE 9999"])])
+    problems = lint_program(prog)
+    assert any("NOPE 9999" in p for p in problems)
+
+
+def test_variant_credit_total_mismatch_flagged():
+    # Variant replaces the 3-cr core with a 6-cr core: 6 + 9 = 15 != 12.
+    prog = _variant_program([RequirementGroup(
+        id="core", name="Core", kind="all_of", courses=["CORE 1311", "ALT 1311"])])
+    problems = lint_credit_totals(prog)
+    assert any("conc_a" in p for p in problems)
+
+
+def test_variant_credit_total_match_passes():
+    # Variant swaps core for an equal-credit alternative: totals still 12.
+    prog = _variant_program([RequirementGroup(
+        id="core", name="Core", kind="all_of", courses=["ALT 1311"])])
+    assert lint_credit_totals(prog) == []

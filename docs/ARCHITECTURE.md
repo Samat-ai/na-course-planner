@@ -119,6 +119,9 @@ py -3 scripts/gen_architecture.py                        # refresh module map be
   - `list_overlay_years(program_code: str, directory: Path=CONCENTRATIONS_DIR) -> list[int]`
   - `load_program_with_concentration(program_code: str, baseline_year: int, concentration_id: str | None, concentration_year: int | None, directory: Path=CONCENTRATIONS_DIR) -> Program`
 
+### `src/na_planner/difficulty.py`
+  - `derive_course_difficulty(program: Program) -> Program`
+
 ### `src/na_planner/eligibility.py`
   - `remaining_required_courses(audit: AuditResult, program: Program, prefs: StudentPreferences) -> list[str]`
   - `is_offered(course: Course, season: str) -> bool`
@@ -186,11 +189,11 @@ _Resolve a student's reported exams (AP/CLEP/IB/SAT Subject) into NA course cred
   - **class `CourseFilter`**
     - fields: `min_level`, `subjects`, `unrestricted`
   - **class `Course`**
-    - fields: `code`, `title`, `credits`, `prereq`, `coreqs`, `offering`, `difficulty`, `discontinued`
+    - fields: `code`, `title`, `credits`, `prereq`, `coreqs`, `offering`, `difficulty`, `discontinued`, `final_term`
   - **class `ForcedChoice`**
     - fields: `any_of`, `match_only`
   - **class `RequirementGroup`**
-    - fields: `id`, `name`, `kind`, `courses`, `forced`, `forced_choices`, `min_count`, `min_credits`, `subgroups`, `choose_groups`, `course_filter`, `min_grade`
+    - fields: `id`, `name`, `kind`, `courses`, `forced`, `forced_choices`, `min_count`, `min_credits`, `subgroups`, `choose_groups`, `course_filter`, `min_grade`, `member_difficulty`
   - **class `ConcentrationVariant`**
     - fields: `removes`, `groups`
   - **class `Program`**

@@ -66,3 +66,23 @@ def test_untagged_groups_change_nothing():
                                courses=["A 1000"])]
     out = derive_course_difficulty(_prog(groups, courses))
     assert out.courses["A 1000"].difficulty is None
+
+
+def test_cs_bs_2026_data_rates_core_hard_and_gened_easy():
+    from na_planner.programs import load_program_by
+
+    prog = load_program_by("CS-BS", 2026)
+    assert prog.courses["COMP 3317"].difficulty == "hard"    # CS core
+    assert prog.courses["COMP 4337"].difficulty == "hard"    # concentration subgroup
+    assert prog.courses["ECON 2311"].difficulty == "easy"    # gen-ed
+    assert prog.courses["FRSH 1311"].difficulty == "easy"    # forced elective
+
+
+def test_overlay_concentration_courses_rate_hard():
+    from na_planner.concentration_loader import load_program_with_concentration
+
+    prog = load_program_with_concentration(
+        "CS-BS", 2026, "concentration_software_engineering", 2024)
+    # overlay-replaced subgroup inherits the parent choose_group's hard tag
+    assert prog.courses["COMP 4373"].difficulty == "hard"
+    assert prog.courses["COMP 4356"].difficulty == "hard"    # overlay-only course

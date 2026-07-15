@@ -156,7 +156,12 @@ def recommend(
                            declared_concentration=prefs.declared_concentration)
         if last_audit.is_complete:
             break
-        term_prefs = prefs.model_copy(update={"target_season": season, "target_year": year})
+        term_prefs = prefs.model_copy(update={
+            "target_season": season, "target_year": year,
+            # Difficulty tolerance must not change WHAT terms exist or when
+            # graduation lands — the cap is applied by the rebalancing post-pass.
+            "max_hard_courses": 10**6,
+        })
         elig = eligible_courses(last_audit, program, term_prefs, passed, credits_earned)
         term_pinned = pinned_courses if i == 0 else []
         if i == 0:

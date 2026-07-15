@@ -45,6 +45,27 @@ def _dedupe_retakes(
     return kept
 
 
+# Transcript major names → program codes. Longest match wins so a major like
+# "Interdisciplinary Studies in Education" is never eclipsed by a shorter key.
+_MAJOR_TO_PROGRAM = {
+    "computer science": "CS-BS",
+    "business administration": "BUSA-BS",
+    "criminal justice": "CRJS-BS",
+    "interdisciplinary studies in education": "EDUC-BS",
+    "interdisciplinary studies": "EDUC-BS",
+}
+
+
+def _program_from_major(major: str | None) -> str | None:
+    if not major:
+        return None
+    m = major.casefold()
+    for key in sorted(_MAJOR_TO_PROGRAM, key=len, reverse=True):
+        if key in m:
+            return _MAJOR_TO_PROGRAM[key]
+    return None
+
+
 def to_student_record(
     parsed: ParsedTranscript, program_code: str, catalog_year: int
 ) -> StudentRecord:
@@ -67,6 +88,15 @@ def to_student_record(
         ExternalCredit(source=t.source, equivalent_code=t.title, credits=t.credits)
         for t in parsed.transfers
     ]
+    # The transcript's own major beats the requested program_code (a UI default,
+    # historically always CS-BS). Unrecognized majors fall back to the request.
+    from_major = _program_from_major(parsed.major)
+    if from_major is not None and from_major != program_code:
+        parsed.warnings.append(
+            f"Transcript major {parsed.major!r} recognized as {from_major}; "
+            f"using it instead of the selected {program_code}."
+        )
+        program_code = from_major
     return StudentRecord(
         program_code=program_code, catalog_year=catalog_year,
         concentration=parsed.concentration,

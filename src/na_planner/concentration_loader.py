@@ -5,6 +5,7 @@ import yaml
 from na_planner.models.catalog import Program
 from na_planner.models.concentration import ConcentrationOverlay
 from na_planner.programs import load_program_by
+from na_planner.specialize import specialize_program
 
 CONCENTRATIONS_DIR = Path(__file__).parents[2] / "data" / "concentrations"
 
@@ -47,10 +48,12 @@ def load_program_with_concentration(
         or concentration_year is None
         or concentration_year == baseline_year
     ):
-        return program
+        # Concentration-variant group edits (e.g. EDUC Elementary) apply whenever a
+        # concentration is DECLARED, grandfathered or not.
+        return specialize_program(program, concentration_id)
     overlay = load_overlay(program_code, concentration_year, directory)
     if overlay is None or concentration_id not in overlay.concentrations:
-        return program  # no overlay for this year/concentration: fall back to baseline
+        return specialize_program(program, concentration_id)
     merged_courses = {**program.courses, **overlay.courses}
     new_groups = []
     for g in program.groups:
@@ -61,4 +64,5 @@ def load_program_with_concentration(
             ]
             g = g.model_copy(update={"subgroups": new_subs})
         new_groups.append(g)
-    return program.model_copy(update={"courses": merged_courses, "groups": new_groups})
+    merged = program.model_copy(update={"courses": merged_courses, "groups": new_groups})
+    return specialize_program(merged, concentration_id)

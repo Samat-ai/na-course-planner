@@ -10,18 +10,18 @@ default_min_grade: null
 # concentration (choose one of English Language Arts / Mathematics / Physical
 # Education / Elementary Education) + 24 unrestricted electives = 120 credits.
 #
-# ── KNOWN MODELING CAVEATS (Elementary Education track) ──────────────────────
-# The catalog's Elementary Education concentration deviates from the rest of the
-# program in ways the current program schema cannot express (it has no notion of
-# concentration-dependent core or concentration-specific gen-ed). These are NOT
-# encoded here; an Elementary Education student must apply them manually:
-#   * Core substitutions: take PHED 4320 in place of EDUC 4324, and ARTS 3312 in
-#     place of EDUC 4321.
-#   * Gen-ed: a fixed "must take" list (incl. HIST 1311, HIST 1312, HIST 2311,
-#     GOVT 2311, GOVT 2312, MATH 1311, ECON 2311 or 2312, ARTS 1311 or MUSI 1306).
-#   * Electives: no free electives — the 24 elective credits are a fixed required
-#     set (EDUC 3201, EDUC 4434, EDUC 4699, BIOL 1311, HIST 2314, GEOG 2312,
-#     PSYC 2311).
+# ── CONCENTRATION-DEPENDENT REQUIREMENTS (encoded via concentration_variants) ─
+# The catalog varies gen-ed, core, and electives by concentration; those edits
+# live in `concentration_variants` at the bottom of this file and apply once a
+# concentration is DECLARED:
+#   * Elementary Education (catalog p.124): fixed 36-cr "must take" gen-ed list,
+#     core substitutions (PHED 4320 for EDUC 4324, ARTS 3312 for EDUC 4321), and
+#     NO free electives — a fixed 24-cr required-elective set.
+#   * English Language Arts / Mathematics / Physical Education (catalog p.125):
+#     the courses marked "part of the X curriculum and must be taken as an
+#     elective" are encoded as forced members of the elective bucket.
+#     ⚠ BEST-EFFORT reading pending advisor confirmation: the catalog wording
+#     doesn't say outright that every listed course is mandatory for its track.
 #
 # Two further best-effort choices keep the audit's single-allocation rule honest
 # (a completed course satisfies at most one group):
@@ -688,6 +688,176 @@ courses:
       kind: min_credits
       credits: 90
 
+  # ── Concentration-variant courses (catalog pp. 124-126 + course descriptions) ─
+  EDUC 3201:
+    code: EDUC 3201
+    # p.124 lists it as "Seminar for STR Exam"; the course description (p.160)
+    # titles it "Seminar for STR/ESL Exam Prep". Description title used.
+    title: Seminar for STR/ESL Exam Prep
+    credits: 2
+    offering: every
+    prereq:
+      kind: none
+
+  EDUC 4434:
+    code: EDUC 4434
+    title: Content Exam Prep Course
+    credits: 4
+    offering: every
+    # ⚠ Educated guess pending advisor confirmation: the description states no
+    # prerequisite, but this preps the end-of-program Core Subjects EC-6 exam —
+    # gate on senior standing like the EDUC 3102/4101 seminars.
+    prereq:
+      kind: min_credits
+      credits: 90
+
+  EDUC 4699:
+    code: EDUC 4699
+    title: Student Teaching
+    credits: 6
+    offering: every
+    # Catalog: "Prerequisite: Completion of all coursework." ⚠ Approximated as
+    # 114 earned credits (120 - this course's 6) pending advisor confirmation.
+    prereq:
+      kind: min_credits
+      credits: 114
+
+  ARTS 3312:
+    code: ARTS 3312
+    title: "Essentials of Children's Art and Music"
+    credits: 3
+    offering: every
+    prereq:
+      kind: min_credits
+      credits: 30
+
+  PHED 4320:
+    code: PHED 4320
+    title: Physical Education Teaching Methods
+    credits: 3
+    offering: every
+    prereq:
+      kind: min_credits
+      credits: 60
+
+  ENGL 3323:
+    code: ENGL 3323
+    title: English Grammar and Syntax
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: ENGL 1312
+        - kind: min_credits
+          credits: 30
+
+  ENGL 3326:
+    code: ENGL 3326
+    title: Literary Theory and Criticism
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: ENGL 1312
+        - kind: min_credits
+          credits: 30
+
+  ENGL 4324:
+    code: ENGL 4324
+    title: Methods of Teaching English in Secondary Schools
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: ENGL 1312
+        - kind: min_credits
+          credits: 60
+
+  ENGL 4327:
+    code: ENGL 4327
+    title: Special Topics
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: ENGL 1312
+        - kind: min_credits
+          credits: 60
+
+  MATH 1312:
+    code: MATH 1312
+    title: Statistics
+    credits: 3
+    offering: every
+    prereq:
+      kind: course
+      course: MATH 1311
+
+  MATH 3326:
+    code: MATH 3326
+    title: Introduction to Number Theory
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: MATH 1311
+        - kind: min_credits
+          credits: 30
+
+  MATH 4322:
+    code: MATH 4322
+    title: Teaching Problem Solving in Mathematics
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: MATH 1311
+        - kind: min_credits
+          credits: 60
+
+  MATH 4324:
+    code: MATH 4324
+    title: Teaching Secondary School Mathematics
+    credits: 3
+    offering: every
+    prereq:
+      kind: all_of
+      children:
+        - kind: course
+          course: MATH 1311
+        - kind: min_credits
+          credits: 60
+
+  PHED 3311:
+    code: PHED 3311
+    title: Health and Physical Education for Children
+    credits: 3
+    offering: every
+    prereq:
+      kind: min_credits
+      credits: 30
+
+  PHED 3319:
+    code: PHED 3319
+    title: "Strategies & Principles of Coaching"
+    credits: 3
+    offering: every
+    prereq:
+      kind: min_credits
+      credits: 30
+
 # ─────────────────────────────────────────────────────────────────────────────
 # REQUIREMENT GROUPS
 # ─────────────────────────────────────────────────────────────────────────────
@@ -883,11 +1053,158 @@ groups:
           - EDUC 4133
 
   # ── 8. Unrestricted Electives (24 credits) ────────────────────────────────
-  # Elementary Education has no free electives; its 24 elective credits are a
-  # fixed required set (see caveats at the top of this file).
+  # FRSH 1311 is "a required elective, part of the Elective hours" (catalog
+  # p.117): forced. Concentration variants below add each track's required
+  # electives; Elementary replaces this bucket entirely (no free electives).
   - id: unrestricted_electives
     name: Unrestricted Electives
     kind: credits_from_filter
     min_credits: 24
+    forced:
+      - FRSH 1311
     course_filter:
       unrestricted: true
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CONCENTRATION VARIANTS — group edits applied once a concentration is DECLARED
+# (catalog pp. 124-125). ⚠ ELA/Math/PE required-elective readings and the PE
+# gen-ed science adjustment are best-effort pending advisor confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+concentration_variants:
+  # Elementary Education (catalog p.124): fixed gen-ed, core substitutions, and
+  # a fixed 24-cr required-elective set ("There are no free elective courses").
+  concentration_elementary_education:
+    removes:
+      - gen_ed_composition_comm
+      - gen_ed_humanities
+      - gen_ed_social
+      - gen_ed_natural_science_math
+      - gen_ed_additional
+      - unrestricted_electives
+    groups:
+      # "Must Take General Education Courses (36 credits)" — 10 named courses
+      # plus an ECON choice and an ARTS/MUSI choice. The catalog line
+      # "MUSI 1311 – Music Appreciation" is a known catalog typo for MUSI 1306.
+      - id: gen_ed_elementary
+        name: "Gen-Ed: Elementary Education fixed list"
+        kind: choose
+        min_count: 12
+        forced:
+          - FRSH 1311
+          - ENGL 1311
+          - ENGL 1312
+          - COMM 1311
+          - GOVT 2311
+          - GOVT 2312
+          - HIST 1311
+          - HIST 1312
+          - HIST 2311
+          - MATH 1311
+        forced_choices:
+          - any_of:
+              - ECON 2311
+              - ECON 2312
+          - any_of:
+              - ARTS 1311
+              - MUSI 1306
+        courses: []
+
+      # Core substitutions: PHED 4320 in place of EDUC 4324, ARTS 3312 in place
+      # of EDUC 4321 (catalog p.123 parentheticals).
+      - id: education_core
+        name: Education Core (Elementary substitutions)
+        kind: all_of
+        courses:
+          - EDUC 2311
+          - EDUC 2312
+          - EDUC 3314
+          - EDUC 3315
+          - EDUC 3316
+          - EDUC 3317
+          - EDUC 4318
+          - EDUC 4320
+          - ARTS 3312
+          - PHED 4320
+          - COMP 1314
+          - ENGL 3330
+
+      # "Must Take Elective Courses (24 credits)" — replaces the free bucket.
+      # Catalog "PSYCH 2311" is a known catalog typo for PSYC 2311.
+      - id: required_electives
+        name: Required Electives (Elementary)
+        kind: all_of
+        courses:
+          - EDUC 3201
+          - EDUC 4434
+          - EDUC 4699
+          - BIOL 1311
+          - HIST 2314
+          - GEOG 2312
+          - PSYC 2311
+
+  # English Language Arts (catalog p.125): ENGL 3323/3326/4324/4327 are "part of
+  # the English education curriculum and must be taken as an elective".
+  concentration_english_language_arts:
+    groups:
+      - id: unrestricted_electives
+        name: Electives (ELA required + free)
+        kind: credits_from_filter
+        min_credits: 24
+        forced:
+          - FRSH 1311
+          - ENGL 3323
+          - ENGL 3326
+          - ENGL 4324
+          - ENGL 4327
+        course_filter:
+          unrestricted: true
+
+  # Mathematics (catalog p.125): MATH 3326/4322/4324 "must be taken as an elective".
+  concentration_mathematics:
+    groups:
+      - id: unrestricted_electives
+        name: Electives (Math required + free)
+        kind: credits_from_filter
+        min_credits: 24
+        forced:
+          - FRSH 1311
+          - MATH 3326
+          - MATH 4322
+          - MATH 4324
+        course_filter:
+          unrestricted: true
+
+  # Physical Education (catalog p.125): PHED 3311/3319/4320, BIOL 1311/1312 and
+  # MATH 1312 "must be taken as an elective".
+  concentration_physical_education:
+    groups:
+      - id: unrestricted_electives
+        name: Electives (PE required + free)
+        kind: credits_from_filter
+        min_credits: 24
+        forced:
+          - FRSH 1311
+          - PHED 3311
+          - PHED 3319
+          - PHED 4320
+          - BIOL 1311
+          - BIOL 1312
+          - MATH 1312
+        course_filter:
+          unrestricted: true
+
+      # ⚠ Consistency adjustment (best-effort): BIOL 1311/1312 are owned by the
+      # PE required electives above, so the gen-ed science slot for PE students
+      # offers the remaining science options only (no double-counting).
+      - id: gen_ed_natural_science_math
+        name: "Gen-Ed: Natural Sciences and Mathematics"
+        kind: choose
+        min_count: 2
+        forced:
+          - MATH 1311
+        forced_choices:
+          - any_of:
+              - GEOG 2311
+              - GEOG 2312
+              - GEOL 1311
+        courses: []

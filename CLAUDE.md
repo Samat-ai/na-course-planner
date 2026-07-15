@@ -30,7 +30,13 @@ FRSH 1311 everywhere and COMP 1314 for BUSA; **best-effort catalog reading, advi
 confirmation pending** on guesses flagged in `educ-bs-2026.yaml` comments), and smaller
 audit items (PR #19: 16 title fixes, CRJS 3309/3311 prereq-or-coreq, CS catalog electives,
 parser row-drop/term-header warnings, parsed major honored, 10 MB PDF cap, blank grades
-warn instead of becoming F).
+warn instead of becoming F), and user-reported engine fixes (PR #20: gen-ed-additional
+filler labeled "Gen-Ed elective"/GENED distinct from free electives, split remaining
+counters; PR #23: `final_term` flag relocates COMP 4393 into the graduation term, loads
+and graduation preserved; PR #24: difficulty tolerance made real — `member_difficulty`
+group tags propagate to courses, planning stays difficulty-neutral, a rebalance post-pass
+caps tough courses per term at 3/4/∞ via equal-credit swaps without moving graduation,
+and the pace toggle visibly bounds the credit slider).
 Deployed via Vercel. Ongoing work is incremental fixes and features on top of a working base;
 the plans remain useful as design records rather than a from-scratch build order. Open/deferred
 items for triage live in the auto-memory (see the "accuracy audit" note).

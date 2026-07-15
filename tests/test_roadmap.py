@@ -593,3 +593,26 @@ def test_final_term_course_already_registered_stays_put():
                                target_season="fall", target_year=2026)
     rec = recommend(student, prog, prefs, offering_seasons={})
     assert any(c.code == "CAP 4393" for c in rec.next_term.courses)
+
+
+def test_max_hard_courses_never_changes_graduation():
+    # Difficulty tolerance reallocates courses but must not move graduation.
+    courses = {}
+    for i in range(4):
+        courses[f"HARD {i}311"] = Course(code=f"HARD {i}311", credits=3,
+                                         difficulty="hard")
+        courses[f"EASY {i}311"] = Course(code=f"EASY {i}311", credits=3,
+                                         difficulty="easy")
+    groups = [RequirementGroup(id="core", name="Core", kind="all_of",
+                               courses=list(courses))]
+    prog = Program(code="X", name="X", catalog_year=2026, total_credits_required=24,
+                   courses=courses, groups=groups)
+    student = StudentRecord(program_code="X", catalog_year=2026)
+    grads = set()
+    for cap in (1, 3, 4, 99):
+        prefs = StudentPreferences(target_credits=12, max_hard_courses=cap,
+                                   target_season="fall", target_year=2026)
+        rec = recommend(student, prog, prefs, offering_seasons={})
+        grads.add(rec.projected_graduation)
+        assert rec.projected_graduation is not None
+    assert len(grads) == 1, grads

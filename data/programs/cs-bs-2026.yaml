@@ -755,6 +755,45 @@ courses:
         - kind: min_credits
           credits: 60
 
+  # ── Catalog "Electives" list (p.122) ──────────────────────────────────────
+  # Not members of any requirement group (they count via the unrestricted
+  # bucket); present so the transfer dropdown and elective slots can name real
+  # courses. Instructor-approval prerequisites are not machine-checkable.
+  COMP 4198:
+    code: COMP 4198
+    title: Internship
+    credits: 1
+    offering: every
+    prereq:
+      kind: min_credits
+      credits: 30
+
+  COMP 4394:
+    code: COMP 4394
+    title: Senior Research Project
+    credits: 3
+    offering: every
+    prereq:  # catalog: instructor approval only
+      kind: none
+
+  COMP 4398:
+    code: COMP 4398
+    title: Internship
+    credits: 3
+    offering: every
+    prereq:
+      kind: min_credits
+      credits: 30
+
+  COMP 4399:
+    code: COMP 4399
+    title: Special Topics
+    credits: 3
+    offering: every
+    prereq:
+      kind: min_credits
+      credits: 60
+
 # ─────────────────────────────────────────────────────────────────────────────
 # REQUIREMENT GROUPS
 # ─────────────────────────────────────────────────────────────────────────────

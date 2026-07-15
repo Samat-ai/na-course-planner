@@ -83,6 +83,40 @@ def test_full_distribution_audits_complete():
     assert result.credits_remaining == 0
 
 
+def test_titles_match_catalog_descriptions():
+    # Accuracy audit: title drifts vs the 2026-27 catalog course descriptions.
+    prog = load_program(CRJS)
+    expected = {
+        "CRJS 2302": "Police Systems & Practices",
+        "CRJS 2305": "Criminal Trial and Courts",
+        "CRJS 3308": "Evidence and Procedures",
+        "CRJS 3309": "Technique Writing for Criminal Justice",
+        "CRJS 3310": "Criminal Investigation",
+        "CRJS 3311": "Research Methods In Criminal Justice",
+        "CRJS 3313": "Diversity and Multiculturalism in Criminal Justice",
+        "FORS 3330": "Introduction to Forensic Investigations",
+        "FORS 4333": "Digital Forensics",
+    }
+    for code, title in expected.items():
+        assert prog.courses[code].title == title, code
+
+
+def test_crjs_3309_and_3311_coreq_not_hard_prereq():
+    # Catalog: "Prerequisites or Corequisites" — the course requirement must not
+    # block registration as a prior-term prereq; only the 30-credit gate remains.
+    from na_planner.prereqs import prereqs_satisfied
+
+    prog = load_program(CRJS)
+    c3309 = prog.courses["CRJS 3309"]
+    c3311 = prog.courses["CRJS 3311"]
+    assert set(c3309.coreqs) == {"ENGL 1311", "ENGL 1312"}
+    assert set(c3311.coreqs) == {"CRJS 1301"}
+    # 30 credits, none of the coreq courses passed -> prereq side satisfied
+    assert prereqs_satisfied(c3309.prereq, {}, 30.0)
+    assert prereqs_satisfied(c3311.prereq, {}, 30.0)
+    assert not prereqs_satisfied(c3309.prereq, {}, 15.0)
+
+
 def test_frsh_1311_is_a_required_elective():
     prog = load_program(CRJS)
     elec = next(g for g in prog.groups if g.id == "unrestricted_electives")

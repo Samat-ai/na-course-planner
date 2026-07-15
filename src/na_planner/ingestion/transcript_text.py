@@ -16,6 +16,10 @@ _TRANSFER_ROW_RE = re.compile(
     r"([\d.]+)\s+[\d.]+\s+[\d.]+\s+[\d.]+\s*$"
 )
 _CONC_RE = re.compile(r"^(.*?)\s*-\s*Conc:\s*(.*)$")
+# A line that LOOKS like a course row (leading "SUBJ 1234" / "SUBJ R300" code) —
+# used to warn about rows the strict row regex rejects instead of dropping them
+# silently (merged columns, lab formats, ...).
+_COURSE_LIKE_RE = re.compile(r"^[A-Z]{2,5}\s+(?:R\d{3}|\d{4})\b")
 _SKIP = (
     "Subterm Totals", "Term Totals", "Cumulative Totals", "Probation",
     "Subterm :", "Page :", "Course Number", "NORTH AMERICAN", "ID :",
@@ -61,6 +65,14 @@ def parse_transcript_text(text: str) -> ParsedTranscript:
             in_transfer = False                  # academic-year sections begin
             current_term = _term_label(term.group(1), term.group(2), term.group(3))
             continue
+        if "academic y" in line.casefold():
+            # A term header we couldn't parse: following courses land in term
+            # "Unknown", which breaks in-progress (WIP) boundary detection.
+            warnings.append(
+                f"Unrecognized term header {line!r} — courses after it have no "
+                "term, so in-progress detection may be off."
+            )
+            continue
         if any(s in line for s in _SKIP):
             continue
         if in_transfer:
@@ -80,6 +92,14 @@ def parse_transcript_text(text: str) -> ParsedTranscript:
                 credits=float(row.group(5)), term_label=current_term,
                 remedial=row.group(3) == "RM",
             ))
+        elif _COURSE_LIKE_RE.match(line):
+            # Looks like a course row but the strict format didn't match
+            # (merged columns, lab row, ...): tell the student instead of
+            # dropping it silently — they can add the course manually.
+            warnings.append(
+                f"Row not recognized and skipped: {line!r} — add it manually "
+                "if it is a course."
+            )
 
     if not courses:
         warnings.append("No course rows recognized — paste may be incomplete or unformatted.")

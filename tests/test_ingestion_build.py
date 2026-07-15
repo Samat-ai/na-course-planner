@@ -104,3 +104,37 @@ def test_builds_external_credit_from_transfers():
     assert e.source == "CLEP"
     assert e.equivalent_code == "College Algebra"   # title; remappable in the UI
     assert e.credits == 3.0
+
+
+def test_parsed_major_overrides_requested_program():
+    # The transcript names the major; the requested program_code (a UI default,
+    # historically always CS-BS) must not silently win over it.
+    parsed = ParsedTranscript(
+        major="Business Administration",
+        courses=[ParsedCourse(code="ACCT 2311", title="", grade="A", credits=3,
+                              term_label="Fall 2025")],
+    )
+    student = to_student_record(parsed, "CS-BS", 2026)
+    assert student.program_code == "BUSA-BS"
+    assert any("BUSA-BS" in w for w in parsed.warnings)
+
+
+def test_parsed_major_matching_requested_program_is_quiet():
+    parsed = ParsedTranscript(
+        major="Computer Science - BS",
+        courses=[ParsedCourse(code="COMP 1411", title="", grade="A", credits=4,
+                              term_label="Fall 2025")],
+    )
+    student = to_student_record(parsed, "CS-BS", 2026)
+    assert student.program_code == "CS-BS"
+    assert parsed.warnings == []
+
+
+def test_unrecognized_major_keeps_requested_program():
+    parsed = ParsedTranscript(
+        major="Underwater Basket Weaving",
+        courses=[ParsedCourse(code="COMP 1411", title="", grade="A", credits=4,
+                              term_label="Fall 2025")],
+    )
+    student = to_student_record(parsed, "CS-BS", 2026)
+    assert student.program_code == "CS-BS"

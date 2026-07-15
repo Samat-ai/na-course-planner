@@ -46,3 +46,16 @@ def test_parse_pdf_image_only_returns_422():
     )
     assert r.status_code == 422
     assert "text layer" in r.json()["detail"].lower()
+
+
+def test_parse_pdf_oversized_upload_returns_413():
+    # Unbounded uploads previously read fully into memory; anything over the
+    # cap is rejected before parsing.
+    big = b"%PDF-1.4 " + b"0" * (10 * 1024 * 1024 + 1)
+    r = client.post(
+        "/parse/pdf",
+        files={"file": ("big.pdf", big, "application/pdf")},
+        data={"program_code": "CS-BS", "catalog_year": "2026"},
+    )
+    assert r.status_code == 413
+    assert "10" in r.json()["detail"]

@@ -86,6 +86,11 @@ def test_full_distribution_audits_complete():
     assert result.credits_remaining == 0
 
 
+def test_mngt_2311_title_matches_catalog():
+    prog = load_program(BUSA)
+    assert prog.courses["MNGT 2311"].title == "Management & Organizational Behavior"
+
+
 def test_frsh_and_comp_1314_are_required_electives():
     # Catalog: FRSH 1311 (all programs) and COMP 1314 (Computer Literacy, BUSA
     # specified elective) are named members of the elective hours.

@@ -143,13 +143,20 @@ def create_app() -> FastAPI:
         return ParseResponse(student=_resolve_transfers(student, req.catalog_year),
                              warnings=parsed.warnings)
 
+    MAX_PDF_BYTES = 10 * 1024 * 1024  # transcripts are a few pages; 10 MB is generous
+
     @app.post("/parse/pdf", response_model=ParseResponse)
     def parse_pdf(
         file: UploadFile = File(...),  # noqa: B008
         program_code: str = Form(...),  # noqa: B008
         catalog_year: int = Form(...),  # noqa: B008
     ) -> ParseResponse:
-        data = file.file.read()
+        data = file.file.read(MAX_PDF_BYTES + 1)
+        if len(data) > MAX_PDF_BYTES:
+            raise HTTPException(
+                status_code=413,
+                detail="PDF larger than the 10 MB upload limit.",
+            )
         try:
             parsed = parse_transcript_pdf(data)
         except NoTextLayerError as e:

@@ -235,3 +235,35 @@ def test_second_transcript_reproduces_120_credit_plan():
         f"but got status='{baseline_conc.status}'. This would mean the contrast is lost "
         f"and the 2024-pin overlay is not load-bearing."
     )
+
+
+def test_comp_4393_scheduled_in_final_semester_for_reference_transcript():
+    # Real-transcript regression (user report 2026-07-15): COMP 4393 Senior Design
+    # was planned for Fall 2027 while graduation projected Spring 2028. With
+    # final_term on COMP 4393 it must be in the projected-graduation term, with
+    # graduation date and term loads unchanged.
+    from pathlib import Path
+
+    from na_planner.concentration_loader import load_program_with_concentration
+    from na_planner.ingestion.build import to_student_record
+    from na_planner.ingestion.transcript_text import parse_transcript_text
+    from na_planner.models.preferences import StudentPreferences
+    from na_planner.roadmap import recommend
+
+    ref = Path(__file__).parent.parent / "docs" / "reference" / \
+        "transcript-format-sample-REDACTED.txt"
+    parsed = parse_transcript_text(ref.read_text(encoding="utf-8"))
+    student = to_student_record(parsed, "CS-BS", 2026)
+    program = load_program_with_concentration(
+        "CS-BS", 2026, "concentration_software_engineering", 2024)
+    prefs = StudentPreferences(
+        declared_concentration="concentration_software_engineering",
+        target_season="fall", target_year=2026)
+    rec = recommend(student, program, prefs)
+    terms = [rec.next_term, *rec.roadmap]
+    cap_terms = [t.label for t in terms
+                 if any(c.code == "COMP 4393" for c in t.courses)]
+    assert rec.projected_graduation == "Spring 2028"     # unchanged by the rule
+    assert cap_terms == ["Spring 2028"], f"COMP 4393 in {cap_terms}"
+    assert all(t.total_credits == 15 for t in terms), \
+        [(t.label, t.total_credits) for t in terms]      # loads preserved

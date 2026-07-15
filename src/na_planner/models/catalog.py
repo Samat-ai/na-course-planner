@@ -38,6 +38,7 @@ class Course(BaseModel):
     offering: OfferingPattern = OfferingPattern.EVERY
     difficulty: Literal["easy", "medium", "hard"] | None = None
     discontinued: bool = False            # current catalog no longer offers it; match-only
+    final_term: bool = False              # capstone: belongs in the final (graduation) term
 
 
 class ForcedChoice(BaseModel):

@@ -538,3 +538,58 @@ def test_gen_ed_filter_credits_get_distinct_placeholder():
     assert gened_reasons and all("gen-ed" in r.lower() for r in gened_reasons)
     assert display_label("GENED") == "Gen-Ed elective"
     assert rec.projected_graduation is not None
+
+
+def test_final_term_course_relocated_to_graduation_term():
+    # 3 required courses (9 cr) incl. a final_term capstone, plus a 3-cr elective
+    # bucket; target 6 cr/term -> 2 terms. B is gated on A, so term 1's only
+    # eligible pair is A + capstone — without relocation the capstone provably
+    # packs into term 1; with it, it must swap into the LAST term, loads preserved.
+    courses = {
+        "A 1000": Course(code="A 1000", credits=3),
+        "B 1000": Course(code="B 1000", credits=3,
+                         prereq=PrereqExpr(kind="course", course="A 1000")),
+        "CAP 4393": Course(code="CAP 4393", credits=3, final_term=True),
+    }
+    groups = [
+        RequirementGroup(id="core", name="Core", kind="all_of",
+                         courses=["A 1000", "B 1000", "CAP 4393"]),
+        RequirementGroup(id="elec", name="Unrestricted Electives",
+                         kind="credits_from_filter", min_credits=3,
+                         course_filter=CourseFilter(unrestricted=True)),
+    ]
+    prog = Program(code="X", name="X", catalog_year=2026, total_credits_required=12,
+                   courses=courses, groups=groups)
+    student = StudentRecord(program_code="X", catalog_year=2026)
+    prefs = StudentPreferences(target_credits=6, max_load=6.0,
+                               target_season="fall", target_year=2026)
+    rec = recommend(student, prog, prefs, offering_seasons={})
+    terms = [rec.next_term, *rec.roadmap]
+    assert rec.projected_graduation == terms[-1].label
+    cap_terms = [t.label for t in terms if any(c.code == "CAP 4393" for c in t.courses)]
+    assert cap_terms == [terms[-1].label], (
+        f"capstone in {cap_terms}, expected only final term {terms[-1].label}")
+    # loads preserved: every term still totals 6
+    assert all(t.total_credits == 6 for t in terms), [t.total_credits for t in terms]
+
+
+def test_final_term_course_already_registered_stays_put():
+    # A student early-registered (WIP) for the flagged course in the next term keeps
+    # it there — we never move what the student already registered.
+    courses = {
+        "A 1000": Course(code="A 1000", credits=3),
+        "B 1000": Course(code="B 1000", credits=3),
+        "CAP 4393": Course(code="CAP 4393", credits=3, final_term=True),
+    }
+    groups = [RequirementGroup(id="core", name="Core", kind="all_of",
+                               courses=["A 1000", "B 1000", "CAP 4393"])]
+    prog = Program(code="X", name="X", catalog_year=2026, total_credits_required=9,
+                   courses=courses, groups=groups)
+    student = StudentRecord(program_code="X", catalog_year=2026, completed=[
+        CompletedCourse(code="CAP 4393", credits=3, grade=Grade.WIP,
+                        in_progress=True, term="Fall 2026"),
+    ])
+    prefs = StudentPreferences(target_credits=3, max_load=6.0,
+                               target_season="fall", target_year=2026)
+    rec = recommend(student, prog, prefs, offering_seasons={})
+    assert any(c.code == "CAP 4393" for c in rec.next_term.courses)

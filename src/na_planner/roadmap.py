@@ -318,6 +318,8 @@ def recommend(
                     prev_t.total_credits += c.credits
                 terms.pop()
 
+    _relocate_final_term_courses(terms, program)
+
     if not terms:
         empty = TermPlan(season=prefs.target_season, year=prefs.target_year,
                          label=f"{prefs.target_season.capitalize()} {prefs.target_year}")
@@ -361,3 +363,36 @@ def _fill_elective_slots(term: TermPlan, capacity: float, remaining: float,
         term.total_credits += slot
         used += slot
     return used
+
+
+def _relocate_final_term_courses(terms: list[TermPlan], program: Program) -> None:
+    """Courses flagged final_term belong in the LAST planned term (the graduation
+    term). Move them there and swap placeholder rows (ELECTIVE/GENED) of equal
+    credits back into the vacated term so every term's load is preserved. Moving a
+    course later never violates prereqs (prior-terms-only rule); moving placeholders
+    earlier is safe (no prereqs) and only adds prior credit in front of later
+    courses, so min_credits gates stay satisfied. Registered (pinned) courses and
+    already-last-term courses are left alone; a moved course drops its timetabled
+    section (sections are term-specific)."""
+    if len(terms) < 2:
+        return
+    last = terms[-1]
+    for term in terms[:-1]:
+        for c in list(term.courses):
+            course = program.courses.get(c.code)
+            if course is None or not course.final_term or c.registered:
+                continue
+            term.courses.remove(c)
+            term.total_credits -= c.credits
+            moved = 0.0                    # placeholder credits swapped back
+            for p in list(last.courses):
+                if moved + 1e-6 >= c.credits:
+                    break
+                if p.code in _PLACEHOLDER_LABELS and p.credits <= c.credits - moved + 1e-6:
+                    last.courses.remove(p)
+                    last.total_credits -= p.credits
+                    term.courses.append(p)
+                    term.total_credits += p.credits
+                    moved += p.credits
+            last.courses.append(c.model_copy(update={"section": None}))
+            last.total_credits += c.credits
